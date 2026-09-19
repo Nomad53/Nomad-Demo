@@ -1,16 +1,68 @@
-export default async function Dashboard() {
-  const response = await fetch(
-    `${process.env.SUPABASE_URL}/rest/v1/leads?select=*&order=created_at.desc`,
-    {
-      headers: {
-        apikey: process.env.SUPABASE_SECRET_KEY,
-        Authorization: `Bearer ${process.env.SUPABASE_SECRET_KEY}`,
-      },
-      cache: "no-store",
-    }
-  );
+"use client";
 
-  const leads = await response.json();
+import { useEffect, useState } from "react";
+
+export default function Dashboard() {
+  const [leads, setLeads] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [updatingId, setUpdatingId] = useState(null);
+
+  useEffect(() => {
+    loadLeads();
+  }, []);
+
+  async function loadLeads() {
+    try {
+      const response = await fetch("/api/leads", {
+        cache: "no-store",
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setLeads(data.leads);
+      } else {
+        console.error("Failed to load leads:", data);
+      }
+    } catch (error) {
+      console.error("Lead loading error:", error);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function updateLeadStatus(id, lead_status) {
+    setUpdatingId(id);
+
+    try {
+      const response = await fetch("/api/update-lead-status", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          id,
+          lead_status,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setLeads((prev) =>
+          prev.map((lead) =>
+            lead.id === id ? { ...lead, lead_status } : lead
+          )
+        );
+      } else {
+        console.error("Status update failed:", data);
+      }
+    } catch (error) {
+      console.error("Status update error:", error);
+    } finally {
+      setUpdatingId(null);
+    }
+  }
 
   return (
     <main
@@ -50,65 +102,7 @@ export default async function Dashboard() {
             boxShadow: "0 8px 30px rgba(0,0,0,0.08)",
           }}
         >
-          <table
-            style={{
-              width: "100%",
-              borderCollapse: "collapse",
-              minWidth: "1200px",
-            }}
-          >
-            <thead>
-              <tr
-                style={{
-                  background: "#075e54",
-                  color: "white",
-                  textAlign: "left",
-                }}
-              >
-                <th style={thStyle}>Name</th>
-                <th style={thStyle}>Phone</th>
-                <th style={thStyle}>Intent</th>
-                <th style={thStyle}>Property</th>
-                <th style={thStyle}>Location</th>
-                <th style={thStyle}>Budget</th>
-                <th style={thStyle}>Status</th>
-                <th style={thStyle}>Financing</th>
-                <th style={thStyle}>Timeline</th>
-                <th style={thStyle}>Callback</th>
-                <th style={thStyle}>Lead Status</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {Array.isArray(leads) &&
-                leads.map((lead) => (
-                  <tr
-                    key={lead.id}
-                    style={{
-                      borderBottom: "1px solid #eee",
-                    }}
-                  >
-                    <td style={tdStyle}>{lead.name || "-"}</td>
-                    <td style={tdStyle}>{lead.phone || "-"}</td>
-                    <td style={tdStyle}>{lead.intent || "-"}</td>
-                    <td style={tdStyle}>
-                      {lead.bedrooms
-                        ? `${lead.bedrooms} Bedroom ${lead.property_type || ""}`
-                        : lead.property_type || "-"}
-                    </td>
-                    <td style={tdStyle}>{lead.location || "-"}</td>
-                    <td style={tdStyle}>{lead.budget || "-"}</td>
-                    <td style={tdStyle}>{lead.property_status || "-"}</td>
-                    <td style={tdStyle}>{lead.financing || "-"}</td>
-                    <td style={tdStyle}>{lead.timeline || "-"}</td>
-                    <td style={tdStyle}>{lead.callback_time || "-"}</td>
-                    <td style={tdStyle}>{lead.lead_status || "-"}</td>
-                  </tr>
-                ))}
-            </tbody>
-          </table>
-
-          {Array.isArray(leads) && leads.length === 0 && (
+          {loading ? (
             <div
               style={{
                 padding: "40px",
@@ -116,8 +110,109 @@ export default async function Dashboard() {
                 color: "#777",
               }}
             >
-              No leads yet.
+              Loading leads...
             </div>
+          ) : (
+            <>
+              <table
+                style={{
+                  width: "100%",
+                  borderCollapse: "collapse",
+                  minWidth: "1200px",
+                }}
+              >
+                <thead>
+                  <tr
+                    style={{
+                      background: "#075e54",
+                      color: "white",
+                      textAlign: "left",
+                    }}
+                  >
+                    <th style={thStyle}>Name</th>
+                    <th style={thStyle}>Phone</th>
+                    <th style={thStyle}>Intent</th>
+                    <th style={thStyle}>Property</th>
+                    <th style={thStyle}>Location</th>
+                    <th style={thStyle}>Budget</th>
+                    <th style={thStyle}>Status</th>
+                    <th style={thStyle}>Financing</th>
+                    <th style={thStyle}>Timeline</th>
+                    <th style={thStyle}>Callback</th>
+                    <th style={thStyle}>Lead Status</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {leads.map((lead) => (
+                    <tr
+                      key={lead.id}
+                      style={{
+                        borderBottom: "1px solid #eee",
+                      }}
+                    >
+                      <td style={tdStyle}>{lead.name || "-"}</td>
+                      <td style={tdStyle}>{lead.phone || "-"}</td>
+                      <td style={tdStyle}>{lead.intent || "-"}</td>
+
+                      <td style={tdStyle}>
+                        {lead.bedrooms
+                          ? `${lead.bedrooms} Bedroom ${
+                              lead.property_type || ""
+                            }`
+                          : lead.property_type || "-"}
+                      </td>
+
+                      <td style={tdStyle}>{lead.location || "-"}</td>
+                      <td style={tdStyle}>{lead.budget || "-"}</td>
+                      <td style={tdStyle}>{lead.property_status || "-"}</td>
+                      <td style={tdStyle}>{lead.financing || "-"}</td>
+                      <td style={tdStyle}>{lead.timeline || "-"}</td>
+                      <td style={tdStyle}>{lead.callback_time || "-"}</td>
+
+                      <td style={tdStyle}>
+                        <select
+                          value={lead.lead_status || "Qualified"}
+                          disabled={updatingId === lead.id}
+                          onChange={(e) =>
+                            updateLeadStatus(lead.id, e.target.value)
+                          }
+                          style={{
+                            padding: "8px 10px",
+                            borderRadius: "8px",
+                            border: "1px solid #ccc",
+                            background: "white",
+                            cursor:
+                              updatingId === lead.id
+                                ? "not-allowed"
+                                : "pointer",
+                          }}
+                        >
+                          <option value="Qualified">Qualified</option>
+                          <option value="Assigned">Assigned</option>
+                          <option value="Contacted">Contacted</option>
+                          <option value="Follow-up">Follow-up</option>
+                          <option value="Won">Won</option>
+                          <option value="Lost">Lost</option>
+                        </select>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+
+              {leads.length === 0 && (
+                <div
+                  style={{
+                    padding: "40px",
+                    textAlign: "center",
+                    color: "#777",
+                  }}
+                >
+                  No leads yet.
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>
