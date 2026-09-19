@@ -10,6 +10,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [updatingStatusId, setUpdatingStatusId] = useState(null);
   const [updatingAssignmentId, setUpdatingAssignmentId] = useState(null);
+  const [statusFilter, setStatusFilter] = useState("All");
 
   useEffect(() => {
     loadLeads();
@@ -105,6 +106,21 @@ export default function Dashboard() {
     router.push(`/dashboard/lead/${id}`);
   }
 
+  const filters = [
+    "All",
+    "Qualified",
+    "Assigned",
+    "Contacted",
+    "Follow-up",
+    "Won",
+    "Lost",
+  ];
+
+  const filteredLeads =
+    statusFilter === "All"
+      ? leads
+      : leads.filter((lead) => lead.lead_status === statusFilter);
+
   return (
     <main
       style={{
@@ -133,6 +149,48 @@ export default function Dashboard() {
           >
             Qualified property leads captured by NOMAD
           </p>
+        </div>
+
+        <div
+          style={{
+            display: "flex",
+            gap: "10px",
+            flexWrap: "wrap",
+            marginBottom: "20px",
+          }}
+        >
+          {filters.map((filter) => (
+            <button
+              key={filter}
+              onClick={() => setStatusFilter(filter)}
+              style={{
+                padding: "10px 16px",
+                borderRadius: "20px",
+                border:
+                  statusFilter === filter
+                    ? "1px solid #075e54"
+                    : "1px solid #d6d6d6",
+                background:
+                  statusFilter === filter ? "#075e54" : "white",
+                color:
+                  statusFilter === filter ? "white" : "#333",
+                cursor: "pointer",
+                fontWeight: "600",
+              }}
+            >
+              {filter}
+            </button>
+          ))}
+        </div>
+
+        <div
+          style={{
+            marginBottom: "12px",
+            color: "#666",
+            fontSize: "14px",
+          }}
+        >
+          Showing {filteredLeads.length} of {leads.length} leads
         </div>
 
         <div
@@ -186,7 +244,7 @@ export default function Dashboard() {
                 </thead>
 
                 <tbody>
-                  {leads.map((lead) => (
+                  {filteredLeads.map((lead) => (
                     <tr
                       key={lead.id}
                       onClick={() => openLead(lead.id)}
@@ -265,7 +323,7 @@ export default function Dashboard() {
                 </tbody>
               </table>
 
-              {leads.length === 0 && (
+              {filteredLeads.length === 0 && (
                 <div
                   style={{
                     padding: "40px",
@@ -273,7 +331,7 @@ export default function Dashboard() {
                     color: "#777",
                   }}
                 >
-                  No leads yet.
+                  No leads found for this status.
                 </div>
               )}
             </>
