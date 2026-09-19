@@ -82,6 +82,7 @@ export default function Home() {
           conversation: conversationWithReply,
         };
 
+        // Save lead to Supabase
         const saveResponse = await fetch("/api/save-lead", {
           method: "POST",
           headers: {
@@ -95,6 +96,27 @@ export default function Home() {
         if (saveData.success) {
           setLeadSaved(true);
           console.log("Lead saved successfully");
+
+          // Send email notification
+          try {
+            const notifyResponse = await fetch("/api/notify-lead", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(extractionData.lead),
+            });
+
+            const notifyData = await notifyResponse.json();
+
+            if (notifyData.success) {
+              console.log("Lead notification sent");
+            } else {
+              console.error("Lead notification failed:", notifyData);
+            }
+          } catch (notifyError) {
+            console.error("Notification request failed:", notifyError);
+          }
         } else {
           console.error("Lead save failed:", saveData);
         }
