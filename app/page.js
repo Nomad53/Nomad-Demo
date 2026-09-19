@@ -11,29 +11,56 @@ export default function Home() {
   ]);
 
   const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  function sendMessage() {
-    if (!input.trim()) return;
+  async function sendMessage() {
+    if (!input.trim() || loading) return;
 
     const userMessage = {
       role: "user",
-      text: input,
+      text: input.trim(),
     };
 
-    setMessages((prev) => [...prev, userMessage]);
+    const updatedMessages = [...messages, userMessage];
 
-    const currentInput = input;
+    setMessages(updatedMessages);
     setInput("");
+    setLoading(true);
 
-    setTimeout(() => {
+    try {
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          messages: updatedMessages.map((message) => ({
+            role: message.role,
+            content: message.text,
+          })),
+        }),
+      });
+
+      const data = await response.json();
+
       setMessages((prev) => [
         ...prev,
         {
           role: "assistant",
-          text: `Got it. You said: "${currentInput}"\n\nWhat budget are you working with?`,
+          text: data.reply || "Sorry, I couldn't respond. Please try again.",
         },
       ]);
-    }, 500);
+    } catch (error) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          text: "Sorry, something went wrong. Please try again.",
+        },
+      ]);
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -65,7 +92,7 @@ export default function Home() {
         >
           <strong>NOMAD Property Assistant</strong>
           <div style={{ fontSize: "13px", marginTop: "4px" }}>
-            Online
+            {loading ? "Typing..." : "Online"}
           </div>
         </div>
 
@@ -118,6 +145,7 @@ export default function Home() {
               if (e.key === "Enter") sendMessage();
             }}
             placeholder="Type your message..."
+            disabled={loading}
             style={{
               flex: 1,
               padding: "12px",
@@ -128,16 +156,18 @@ export default function Home() {
 
           <button
             onClick={sendMessage}
+            disabled={loading}
             style={{
               border: "none",
               background: "#075e54",
               color: "white",
               padding: "0 18px",
               borderRadius: "20px",
-              cursor: "pointer",
+              cursor: loading ? "not-allowed" : "pointer",
+              opacity: loading ? 0.7 : 1,
             }}
           >
-            Send
+            {loading ? "..." : "Send"}
           </button>
         </div>
       </div>
