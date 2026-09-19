@@ -11,7 +11,7 @@ export async function POST(req) {
           Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
         },
         body: JSON.stringify({
-          model: "llama-3.3-70b-versatile",
+          model: "qwen/qwen3.6-27b",
           messages: [
             {
               role: "system",
@@ -46,24 +46,26 @@ Important rules:
 - If the customer gives multiple details in one message, capture all of them.
 - Do not invent property listings, prices, availability, or market facts.
 - If the customer asks something you cannot confirm, say a property consultant can confirm it.
-- Once all main property requirements are collected, ask for name and phone number.
+- Once the main property requirements are collected, ask for name and phone number.
 - After contact details are collected, ask for preferred callback time.
 - When qualification is complete, provide a short summary and say a property consultant will follow up.
 
 Example:
 
-Customer: I want to buy a 2-bedroom apartment in Dubai Marina. Budget is AED 2 million.
+Customer:
+I want to buy a 2-bedroom apartment in Dubai Marina. Budget is AED 2 million.
 
 Good response:
-"Are you looking for a ready property or are you open to off-plan? And when are you hoping to buy?"
+Are you looking for a ready property or are you open to off-plan? And when are you hoping to buy?
 
 Bad response:
-"Thanks. What is your name and phone number?"
+Thanks. What is your name and phone number?
 `,
             },
             ...messages,
           ],
           temperature: 0.4,
+          max_tokens: 350,
         }),
       }
     );
@@ -81,11 +83,20 @@ Bad response:
       );
     }
 
-    return Response.json({
-      reply:
-        data.choices?.[0]?.message?.content ||
-        "Sorry, I couldn't generate a response.",
-    });
+    const reply = data.choices?.[0]?.message?.content;
+
+    if (!reply) {
+      console.error("Groq returned no reply:", data);
+
+      return Response.json(
+        {
+          reply: "Sorry, I couldn't generate a response. Please try again.",
+        },
+        { status: 500 }
+      );
+    }
+
+    return Response.json({ reply });
   } catch (error) {
     console.error("NOMAD API error:", error);
 
