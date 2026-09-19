@@ -12,6 +12,7 @@ export default function Home() {
 
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [leadSaved, setLeadSaved] = useState(false);
 
   async function sendMessage() {
     if (!input.trim() || loading) return;
@@ -43,14 +44,64 @@ export default function Home() {
 
       const data = await response.json();
 
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "assistant",
-          text: data.reply || "Sorry, I couldn't respond. Please try again.",
+      const assistantMessage = {
+        role: "assistant",
+        text: data.reply || "Sorry, I couldn't respond. Please try again.",
+      };
+
+      const conversationWithReply = [
+        ...updatedMessages,
+        assistantMessage,
+      ];
+
+      setMessages(conversationWithReply);
+
+      // Extract structured lead data from the full conversation
+      const extractionResponse = await fetch("/api/extract-lead", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
         },
-      ]);
+        body: JSON.stringify({
+          messages: conversationWithReply.map((message) => ({
+            role: message.role,
+            content: message.text,
+          })),
+        }),
+      });
+
+      const extractionData = await extractionResponse.json();
+
+      if (
+        extractionData.success &&
+        extractionData.lead?.lead_status === "Qualified" &&
+        !leadSaved
+      ) {
+        const leadToSave = {
+          ...extractionData.lead,
+          conversation: conversationWithReply,
+        };
+
+        const saveResponse = await fetch("/api/save-lead", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(leadToSave),
+        });
+
+        const saveData = await saveResponse.json();
+
+        if (saveData.success) {
+          setLeadSaved(true);
+          console.log("Lead saved successfully");
+        } else {
+          console.error("Lead save failed:", saveData);
+        }
+      }
     } catch (error) {
+      console.error("Chat error:", error);
+
       setMessages((prev) => [
         ...prev,
         {
