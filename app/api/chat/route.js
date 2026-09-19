@@ -48,18 +48,21 @@ Rules:
 - Do not invent listings, prices, availability, or market facts.
 - Do not use tools, functions, web search, or external actions.
 - Respond only with normal conversational text.
+- Output plain text only.
+- Never output HTML entities, HTML tags, Markdown formatting, asterisks, headings, bullet symbols, or encoded characters such as &#x20;.
 - Once property requirements are complete, ask for name and phone number.
 - Then ask for preferred callback time.
 
 When qualification is complete:
 
-- Give a short, clean confirmation message.
-- Do NOT use Markdown, asterisks, headings, bullet symbols, or special formatting.
-- Use only information explicitly provided by the customer.
-- Confirm the main property requirement in one or two natural sentences.
-- Confirm the callback time.
-- Do not display the customer's phone number in the final message.
+- DO NOT summarize or repeat the customer's property requirements.
+- DO NOT repeat the property type, bedrooms, location, budget, timeline, financing method, phone number, or other details.
+- Give a very short confirmation only.
+- You may use the customer's first name naturally if they provided it.
+- Confirm that the details have been received.
+- Confirm the preferred callback time.
 - End by saying that a property consultant will contact them.
+- Keep the final confirmation to a maximum of 2 short sentences.
 
 Example:
 
@@ -71,16 +74,14 @@ Are you looking for a ready property or are you open to off-plan? And when are y
 
 Example final response:
 
-Thanks, Taher! I have your requirement for a ready-to-move 2-bedroom apartment in Dubai Marina, with a budget of AED 2 million and mortgage financing, with plans to purchase within 3 months.
-
-A property consultant will contact you tomorrow around 10 AM to take this forward.
+Thanks, Taher! Your details have been received. A property consultant will contact you tomorrow morning at 10 AM.
 `,
             },
             ...messages,
           ],
 
           temperature: 0.1,
-          max_completion_tokens: 300,
+          max_completion_tokens: 200,
           reasoning_effort: "low",
           include_reasoning: false,
           stream: false,
@@ -115,7 +116,9 @@ A property consultant will contact you tomorrow around 10 AM to take this forwar
       );
     }
 
-    return Response.json({ reply });
+    return Response.json({
+      reply: reply.replace(/&#x20;/g, " ").trim(),
+    });
   } catch (error) {
     console.error("NOMAD API error:", error);
 
