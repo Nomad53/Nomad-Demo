@@ -1,8 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function Dashboard() {
+  const router = useRouter();
+
   const [leads, setLeads] = useState([]);
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState(null);
@@ -62,6 +65,10 @@ export default function Dashboard() {
     } finally {
       setUpdatingId(null);
     }
+  }
+
+  function openLead(id) {
+    router.push(`/dashboard/lead/${id}`);
   }
 
   return (
@@ -147,8 +154,16 @@ export default function Dashboard() {
                   {leads.map((lead) => (
                     <tr
                       key={lead.id}
+                      onClick={() => openLead(lead.id)}
                       style={{
                         borderBottom: "1px solid #eee",
+                        cursor: "pointer",
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = "#f8faf9";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = "white";
                       }}
                     >
                       <td style={tdStyle}>{lead.name || "-"}</td>
@@ -170,7 +185,10 @@ export default function Dashboard() {
                       <td style={tdStyle}>{lead.timeline || "-"}</td>
                       <td style={tdStyle}>{lead.callback_time || "-"}</td>
 
-                      <td style={tdStyle}>
+                      <td
+                        style={tdStyle}
+                        onClick={(e) => e.stopPropagation()}
+                      >
                         <select
                           value={lead.lead_status || "Qualified"}
                           disabled={updatingId === lead.id}
