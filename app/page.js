@@ -29,16 +29,46 @@ export default function Home() {
     setLoading(true);
 
     try {
+      const formattedMessages = updatedMessages.map((message) => ({
+        role: message.role,
+        content: message.text,
+      }));
+
+      // STEP 1:
+      // Extract the current structured state BEFORE generating the AI reply
+      const preExtractionResponse = await fetch("/api/extract-lead", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          messages: formattedMessages,
+        }),
+      });
+
+      const preExtractionData = await preExtractionResponse.json();
+
+      const currentState =
+        preExtractionData.success && preExtractionData.state
+          ? preExtractionData.state
+          : {
+              location_options: [],
+              property_type_options: [],
+              property_status_options: [],
+              uncertainties: [],
+              missing_fields: [],
+            };
+
+      // STEP 2:
+      // Send the conversation AND structured state to NOMAD
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          messages: updatedMessages.map((message) => ({
-            role: message.role,
-            content: message.text,
-          })),
+          messages: formattedMessages,
+          state: currentState,
         }),
       });
 
@@ -46,7 +76,9 @@ export default function Home() {
 
       const assistantMessage = {
         role: "assistant",
-        text: data.reply || "Sorry, I couldn't respond. Please try again.",
+        text:
+          data.reply ||
+          "Sorry, I couldn't respond. Please try again.",
       };
 
       const conversationWithReply = [
@@ -56,8 +88,9 @@ export default function Home() {
 
       setMessages(conversationWithReply);
 
-      // Extract structured lead data from the full conversation
-      const extractionResponse = await fetch("/api/extract-lead", {
+      // STEP 3:
+      // Re-extract after NOMAD replies so we have the latest lead state
+      const postExtractionResponse = await fetch("/api/extract-lead", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -70,8 +103,10 @@ export default function Home() {
         }),
       });
 
-      const extractionData = await extractionResponse.json();
+      const extractionData = await postExtractionResponse.json();
 
+      // STEP 4:
+      // Save only when the lead is fully qualified
       if (
         extractionData.success &&
         extractionData.lead?.lead_status === "Qualified" &&
@@ -82,7 +117,6 @@ export default function Home() {
           conversation: conversationWithReply,
         };
 
-        // Save lead to Supabase
         const saveResponse = await fetch("/api/save-lead", {
           method: "POST",
           headers: {
@@ -97,7 +131,8 @@ export default function Home() {
           setLeadSaved(true);
           console.log("Lead saved successfully");
 
-          // Send email notification
+          // STEP 5:
+          // Send notification email
           try {
             const notifyResponse = await fetch("/api/notify-lead", {
               method: "POST",
@@ -112,10 +147,16 @@ export default function Home() {
             if (notifyData.success) {
               console.log("Lead notification sent");
             } else {
-              console.error("Lead notification failed:", notifyData);
+              console.error(
+                "Lead notification failed:",
+                notifyData
+              );
             }
           } catch (notifyError) {
-            console.error("Notification request failed:", notifyError);
+            console.error(
+              "Notification request failed:",
+              notifyError
+            );
           }
         } else {
           console.error("Lead save failed:", saveData);
@@ -164,7 +205,13 @@ export default function Home() {
           }}
         >
           <strong>NOMAD Property Assistant</strong>
-          <div style={{ fontSize: "13px", marginTop: "4px" }}>
+
+          <div
+            style={{
+              fontSize: "13px",
+              marginTop: "4px",
+            }}
+          >
             {loading ? "Typing..." : "Online"}
           </div>
         </div>
@@ -183,14 +230,18 @@ export default function Home() {
               style={{
                 display: "flex",
                 justifyContent:
-                  message.role === "user" ? "flex-end" : "flex-start",
+                  message.role === "user"
+                    ? "flex-end"
+                    : "flex-start",
                 marginBottom: "12px",
               }}
             >
               <div
                 style={{
                   background:
-                    message.role === "user" ? "#dcf8c6" : "#f0f2f5",
+                    message.role === "user"
+                      ? "#dcf8c6"
+                      : "#f0f2f5",
                   padding: "12px 16px",
                   borderRadius: "12px",
                   maxWidth: "80%",
@@ -236,7 +287,9 @@ export default function Home() {
               color: "white",
               padding: "0 18px",
               borderRadius: "20px",
-              cursor: loading ? "not-allowed" : "pointer",
+              cursor: loading
+                ? "not-allowed"
+                : "pointer",
               opacity: loading ? 0.7 : 1,
             }}
           >
