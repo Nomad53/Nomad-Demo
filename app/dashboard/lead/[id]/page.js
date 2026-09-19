@@ -101,6 +101,7 @@ export default async function LeadDetails({ params }) {
             }}
           >
             <Detail label="Intent" value={lead.intent} />
+
             <Detail
               label="Property"
               value={
@@ -109,12 +110,19 @@ export default async function LeadDetails({ params }) {
                   : lead.property_type
               }
             />
+
             <Detail label="Location" value={lead.location} />
             <Detail label="Budget" value={lead.budget} />
             <Detail label="Property Status" value={lead.property_status} />
             <Detail label="Financing" value={lead.financing} />
             <Detail label="Timeline" value={lead.timeline} />
             <Detail label="Callback Time" value={lead.callback_time} />
+
+            <Detail
+              label="Assigned To"
+              value={lead.assigned_to || "Unassigned"}
+            />
+
             <Detail label="Lead Status" value={lead.lead_status} />
           </div>
         </div>
