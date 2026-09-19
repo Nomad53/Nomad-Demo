@@ -8,7 +8,8 @@ export default function Dashboard() {
 
   const [leads, setLeads] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [updatingId, setUpdatingId] = useState(null);
+  const [updatingStatusId, setUpdatingStatusId] = useState(null);
+  const [updatingAssignmentId, setUpdatingAssignmentId] = useState(null);
 
   useEffect(() => {
     loadLeads();
@@ -35,7 +36,7 @@ export default function Dashboard() {
   }
 
   async function updateLeadStatus(id, lead_status) {
-    setUpdatingId(id);
+    setUpdatingStatusId(id);
 
     try {
       const response = await fetch("/api/update-lead-status", {
@@ -63,7 +64,40 @@ export default function Dashboard() {
     } catch (error) {
       console.error("Status update error:", error);
     } finally {
-      setUpdatingId(null);
+      setUpdatingStatusId(null);
+    }
+  }
+
+  async function updateLeadAssignment(id, assigned_to) {
+    setUpdatingAssignmentId(id);
+
+    try {
+      const response = await fetch("/api/update-lead-assignment", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          id,
+          assigned_to,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setLeads((prev) =>
+          prev.map((lead) =>
+            lead.id === id ? { ...lead, assigned_to } : lead
+          )
+        );
+      } else {
+        console.error("Assignment update failed:", data);
+      }
+    } catch (error) {
+      console.error("Assignment update error:", error);
+    } finally {
+      setUpdatingAssignmentId(null);
     }
   }
 
@@ -82,7 +116,7 @@ export default function Dashboard() {
     >
       <div
         style={{
-          maxWidth: "1400px",
+          maxWidth: "1500px",
           margin: "0 auto",
         }}
       >
@@ -125,7 +159,7 @@ export default function Dashboard() {
                 style={{
                   width: "100%",
                   borderCollapse: "collapse",
-                  minWidth: "1200px",
+                  minWidth: "1400px",
                 }}
               >
                 <thead>
@@ -146,6 +180,7 @@ export default function Dashboard() {
                     <th style={thStyle}>Financing</th>
                     <th style={thStyle}>Timeline</th>
                     <th style={thStyle}>Callback</th>
+                    <th style={thStyle}>Assigned To</th>
                     <th style={thStyle}>Lead Status</th>
                   </tr>
                 </thead>
@@ -190,21 +225,32 @@ export default function Dashboard() {
                         onClick={(e) => e.stopPropagation()}
                       >
                         <select
+                          value={lead.assigned_to || ""}
+                          disabled={updatingAssignmentId === lead.id}
+                          onChange={(e) =>
+                            updateLeadAssignment(lead.id, e.target.value)
+                          }
+                          style={selectStyle}
+                        >
+                          <option value="">Unassigned</option>
+                          <option value="Ahmed">Ahmed</option>
+                          <option value="Sarah">Sarah</option>
+                          <option value="Ali">Ali</option>
+                          <option value="Sales Team A">Sales Team A</option>
+                        </select>
+                      </td>
+
+                      <td
+                        style={tdStyle}
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <select
                           value={lead.lead_status || "Qualified"}
-                          disabled={updatingId === lead.id}
+                          disabled={updatingStatusId === lead.id}
                           onChange={(e) =>
                             updateLeadStatus(lead.id, e.target.value)
                           }
-                          style={{
-                            padding: "8px 10px",
-                            borderRadius: "8px",
-                            border: "1px solid #ccc",
-                            background: "white",
-                            cursor:
-                              updatingId === lead.id
-                                ? "not-allowed"
-                                : "pointer",
-                          }}
+                          style={selectStyle}
                         >
                           <option value="Qualified">Qualified</option>
                           <option value="Assigned">Assigned</option>
@@ -248,4 +294,12 @@ const tdStyle = {
   padding: "16px",
   fontSize: "14px",
   whiteSpace: "nowrap",
+};
+
+const selectStyle = {
+  padding: "8px 10px",
+  borderRadius: "8px",
+  border: "1px solid #ccc",
+  background: "white",
+  cursor: "pointer",
 };
