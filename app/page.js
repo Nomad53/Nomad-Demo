@@ -35,8 +35,7 @@ export default function Home() {
       }));
 
       // STEP 1:
-      // Extract the latest lead + structured state.
-      // The extractor only trusts customer messages.
+      // Extract the latest lead data and structured state
       const extractionResponse = await fetch("/api/extract-lead", {
         method: "POST",
         headers: {
@@ -69,10 +68,25 @@ export default function Home() {
         console.error("Lead extraction failed:", extractionData);
       }
 
+      // IMPORTANT:
+      // Send both the actual lead values AND the structured state to chat
       const currentState =
-        extractionData.success && extractionData.state
-          ? extractionData.state
+        extractionData.success
+          ? {
+              lead: extractionData.lead || {},
+              location_options:
+                extractionData.state?.location_options || [],
+              property_type_options:
+                extractionData.state?.property_type_options || [],
+              property_status_options:
+                extractionData.state?.property_status_options || [],
+              uncertainties:
+                extractionData.state?.uncertainties || [],
+              missing_fields:
+                extractionData.state?.missing_fields || [],
+            }
           : {
+              lead: {},
               location_options: [],
               property_type_options: [],
               property_status_options: [],
@@ -81,7 +95,7 @@ export default function Home() {
             };
 
       // STEP 2:
-      // Generate NOMAD's response using the structured state.
+      // Generate NOMAD response using structured lead state
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: {
@@ -97,7 +111,6 @@ export default function Home() {
 
       if (!response.ok) {
         console.error("Chat API failed:", data);
-
         throw new Error("Chat API request failed");
       }
 
@@ -116,11 +129,8 @@ export default function Home() {
       setMessages(conversationWithReply);
 
       // STEP 3:
-      // No second extraction is needed.
-      // The customer's latest message has already been extracted above.
-      //
-      // If that message supplied the final missing information
-      // (for example callback time), the lead will now be Qualified.
+      // If the latest customer message completed qualification,
+      // save the lead and send the notification
       if (
         extractionData.success &&
         extractionData.lead?.lead_status === "Qualified" &&
@@ -131,8 +141,7 @@ export default function Home() {
           conversation: conversationWithReply,
         };
 
-        // STEP 4:
-        // Save qualified lead to Supabase.
+        // Save qualified lead to Supabase
         const saveResponse = await fetch("/api/save-lead", {
           method: "POST",
           headers: {
@@ -147,8 +156,7 @@ export default function Home() {
           setLeadSaved(true);
           console.log("Lead saved successfully");
 
-          // STEP 5:
-          // Send qualified lead email notification.
+          // Send email notification
           try {
             const notifyResponse = await fetch("/api/notify-lead", {
               method: "POST",
