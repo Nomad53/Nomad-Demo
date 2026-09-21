@@ -47,11 +47,13 @@ export default function Home() {
 
   const [leadMemory, setLeadMemory] = useState(initialLeadMemory);
 
-  // NEW:
-  // Controls the structured lead summary panel.
   const [showLeadSummary, setShowLeadSummary] = useState(false);
 
   const chatEndRef = useRef(null);
+
+  // FIX:
+  // Keeps a direct reference to the message input.
+  const inputRef = useRef(null);
 
   useEffect(() => {
     if (!showDemo) return;
@@ -61,6 +63,31 @@ export default function Home() {
       block: "end",
     });
   }, [messages, loading, showDemo, leadSaved]);
+
+  // FIX:
+  // Automatically return the typing cursor to the input
+  // after NOMAD finishes replying.
+  useEffect(() => {
+    if (!showDemo) return;
+    if (loading) return;
+    if (leadSaved) return;
+    if (showLeadSummary) return;
+
+    const focusInput = () => {
+      inputRef.current?.focus({
+        preventScroll: true,
+      });
+    };
+
+    const frame = requestAnimationFrame(focusInput);
+
+    return () => cancelAnimationFrame(frame);
+  }, [
+    loading,
+    showDemo,
+    leadSaved,
+    showLeadSummary,
+  ]);
 
   function openDemo() {
     setShowDemo(true);
@@ -124,11 +151,20 @@ export default function Home() {
       try {
         extractionData = await extractionResponse.json();
       } catch (error) {
-        console.error("Could not read extraction response:", error);
+        console.error(
+          "Could not read extraction response:",
+          error
+        );
       }
 
-      if (!extractionResponse.ok || !extractionData.success) {
-        console.error("Lead extraction failed:", extractionData);
+      if (
+        !extractionResponse.ok ||
+        !extractionData.success
+      ) {
+        console.error(
+          "Lead extraction failed:",
+          extractionData
+        );
       }
 
       const currentState =
@@ -163,7 +199,9 @@ export default function Home() {
       if (extractionData.success) {
         setLeadMemory({
           lead: extractionData.lead || {},
-          state: extractionData.state || initialLeadMemory.state,
+          state:
+            extractionData.state ||
+            initialLeadMemory.state,
         });
       }
 
@@ -182,7 +220,9 @@ export default function Home() {
 
       if (!response.ok) {
         console.error("Chat API failed:", data);
-        throw new Error("Chat API request failed");
+        throw new Error(
+          "Chat API request failed"
+        );
       }
 
       const assistantMessage = {
@@ -201,7 +241,8 @@ export default function Home() {
 
       if (
         extractionData.success &&
-        extractionData.lead?.lead_status === "Qualified" &&
+        extractionData.lead?.lead_status ===
+          "Qualified" &&
         !leadSaved
       ) {
         const leadToSave = {
@@ -209,34 +250,51 @@ export default function Home() {
           conversation: conversationWithReply,
         };
 
-        const saveResponse = await fetch("/api/save-lead", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(leadToSave),
-        });
+        const saveResponse = await fetch(
+          "/api/save-lead",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type":
+                "application/json",
+            },
+            body: JSON.stringify(leadToSave),
+          }
+        );
 
-        const saveData = await saveResponse.json();
+        const saveData =
+          await saveResponse.json();
 
         if (saveData.success) {
           setLeadSaved(true);
 
-          console.log("Lead saved successfully");
+          console.log(
+            "Lead saved successfully"
+          );
 
           try {
-            const notifyResponse = await fetch("/api/notify-lead", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify(extractionData.lead),
-            });
+            const notifyResponse =
+              await fetch(
+                "/api/notify-lead",
+                {
+                  method: "POST",
+                  headers: {
+                    "Content-Type":
+                      "application/json",
+                  },
+                  body: JSON.stringify(
+                    extractionData.lead
+                  ),
+                }
+              );
 
-            const notifyData = await notifyResponse.json();
+            const notifyData =
+              await notifyResponse.json();
 
             if (notifyData.success) {
-              console.log("Lead notification sent");
+              console.log(
+                "Lead notification sent"
+              );
             } else {
               console.error(
                 "Lead notification failed:",
@@ -250,7 +308,10 @@ export default function Home() {
             );
           }
         } else {
-          console.error("Lead save failed:", saveData);
+          console.error(
+            "Lead save failed:",
+            saveData
+          );
         }
       }
     } catch (error) {
@@ -450,8 +511,6 @@ export default function Home() {
           }
         `}</style>
 
-        {/* HERO */}
-
         <section
           style={{
             minHeight: "100vh",
@@ -491,7 +550,8 @@ export default function Home() {
               background:
                 "radial-gradient(circle, rgba(195,159,99,.22), rgba(195,159,99,.05) 46%, transparent 72%)",
               filter: "blur(12px)",
-              animation: "glowPulse 8s ease-in-out infinite",
+              animation:
+                "glowPulse 8s ease-in-out infinite",
             }}
           />
 
@@ -503,7 +563,8 @@ export default function Home() {
               position: "relative",
               zIndex: 10,
               display: "flex",
-              justifyContent: "space-between",
+              justifyContent:
+                "space-between",
               alignItems: "center",
             }}
           >
@@ -524,15 +585,24 @@ export default function Home() {
                   alignItems: "center",
                 }}
               >
-                <a href="#solutions" className="navLink">
+                <a
+                  href="#solutions"
+                  className="navLink"
+                >
                   Solutions
                 </a>
 
-                <a href="#for-teams" className="navLink">
+                <a
+                  href="#for-teams"
+                  className="navLink"
+                >
                   For Teams
                 </a>
 
-                <a href="#how-it-works" className="navLink">
+                <a
+                  href="#how-it-works"
+                  className="navLink"
+                >
                   How It Works
                 </a>
               </div>
@@ -541,7 +611,8 @@ export default function Home() {
                 className="nomadButton"
                 onClick={openDemo}
                 style={{
-                  border: "1px solid rgba(211,181,126,.68)",
+                  border:
+                    "1px solid rgba(211,181,126,.68)",
                   background:
                     "linear-gradient(135deg, #082F27, #0D483B)",
                   color: "white",
@@ -555,7 +626,13 @@ export default function Home() {
                 }}
               >
                 Enter Live Experience
-                <span style={{ marginLeft: "12px" }}>↗</span>
+                <span
+                  style={{
+                    marginLeft: "12px",
+                  }}
+                >
+                  ↗
+                </span>
               </button>
             </div>
           </nav>
@@ -566,7 +643,8 @@ export default function Home() {
               width: "100%",
               maxWidth: "1360px",
               margin: "0 auto",
-              padding: "66px 38px 72px",
+              padding:
+                "66px 38px 72px",
               position: "relative",
               zIndex: 5,
             }}
@@ -575,7 +653,8 @@ export default function Home() {
               className="heroGrid"
               style={{
                 display: "grid",
-                gridTemplateColumns: "1.02fr .98fr",
+                gridTemplateColumns:
+                  "1.02fr .98fr",
                 gap: "76px",
                 alignItems: "center",
               }}
@@ -587,22 +666,27 @@ export default function Home() {
                     alignItems: "center",
                     gap: "12px",
                     color: "#A57F43",
-                    textTransform: "uppercase",
-                    letterSpacing: "1.8px",
+                    textTransform:
+                      "uppercase",
+                    letterSpacing:
+                      "1.8px",
                     fontSize: "10px",
                     fontWeight: "800",
-                    marginBottom: "28px",
+                    marginBottom:
+                      "28px",
                   }}
                 >
                   <span
                     style={{
                       width: "34px",
                       height: "1px",
-                      background: "#A57F43",
+                      background:
+                        "#A57F43",
                     }}
                   />
 
-                  Intelligent Property Qualification
+                  Intelligent Property
+                  Qualification
                 </div>
 
                 <h1
@@ -610,9 +694,11 @@ export default function Home() {
                   style={{
                     margin: 0,
                     maxWidth: "680px",
-                    fontSize: "clamp(62px, 6vw, 94px)",
+                    fontSize:
+                      "clamp(62px, 6vw, 94px)",
                     lineHeight: ".94",
-                    letterSpacing: "-5px",
+                    letterSpacing:
+                      "-5px",
                     fontWeight: "710",
                   }}
                 >
@@ -623,14 +709,18 @@ export default function Home() {
 
                   <span
                     style={{
-                      display: "inline-block",
+                      display:
+                        "inline-block",
                       marginTop: "7px",
                       fontFamily:
                         'Georgia, "Times New Roman", serif',
                       fontWeight: "400",
-                      fontStyle: "italic",
-                      color: colors.emerald,
-                      letterSpacing: "-3px",
+                      fontStyle:
+                        "italic",
+                      color:
+                        colors.emerald,
+                      letterSpacing:
+                        "-3px",
                     }}
                   >
                     better conversation.
@@ -640,16 +730,21 @@ export default function Home() {
                 <p
                   style={{
                     maxWidth: "610px",
-                    margin: "32px 0 0",
+                    margin:
+                      "32px 0 0",
                     color: "#5D6862",
                     fontSize: "16px",
                     lineHeight: "1.75",
                   }}
                 >
-                  NOMAD qualifies buyers and tenants naturally,
-                  understands intent in real time, structures every
-                  requirement, and hands your sales team an
-                  opportunity ready for action.
+                  NOMAD qualifies buyers
+                  and tenants naturally,
+                  understands intent in
+                  real time, structures
+                  every requirement, and
+                  hands your sales team an
+                  opportunity ready for
+                  action.
                 </p>
 
                 <div
@@ -666,10 +761,13 @@ export default function Home() {
                     onClick={openDemo}
                     style={{
                       border: "none",
-                      background: colors.forest,
+                      background:
+                        colors.forest,
                       color: "white",
-                      borderRadius: "999px",
-                      padding: "16px 25px",
+                      borderRadius:
+                        "999px",
+                      padding:
+                        "16px 25px",
                       fontSize: "13px",
                       fontWeight: "800",
                       cursor: "pointer",
@@ -678,7 +776,14 @@ export default function Home() {
                     }}
                   >
                     Experience NOMAD
-                    <span style={{ marginLeft: "13px" }}>→</span>
+                    <span
+                      style={{
+                        marginLeft:
+                          "13px",
+                      }}
+                    >
+                      →
+                    </span>
                   </button>
 
                   <div
@@ -687,7 +792,8 @@ export default function Home() {
                       color: "#696F6B",
                     }}
                   >
-                    No forms. No scripts. Just conversation.
+                    No forms. No scripts.
+                    Just conversation.
                   </div>
                 </div>
 
@@ -726,20 +832,23 @@ export default function Home() {
                   minHeight: "620px",
                   position: "relative",
                   display: "flex",
-                  justifyContent: "center",
+                  justifyContent:
+                    "center",
                   alignItems: "center",
                 }}
               >
                 <div
                   style={{
-                    position: "absolute",
+                    position:
+                      "absolute",
                     width: "78%",
                     height: "82%",
                     right: "-2%",
                     top: "4%",
                     border:
                       "1px solid rgba(201,166,106,.35)",
-                    borderRadius: "240px 240px 24px 24px",
+                    borderRadius:
+                      "240px 240px 24px 24px",
                   }}
                 />
 
@@ -748,11 +857,13 @@ export default function Home() {
                   style={{
                     width: "100%",
                     maxWidth: "465px",
-                    borderRadius: "26px",
+                    borderRadius:
+                      "26px",
                     overflow: "hidden",
                     background:
                       "rgba(255,253,248,.91)",
-                    backdropFilter: "blur(20px)",
+                    backdropFilter:
+                      "blur(20px)",
                     border:
                       "1px solid rgba(255,255,255,.72)",
                     boxShadow:
@@ -768,16 +879,21 @@ export default function Home() {
                       background:
                         "linear-gradient(135deg,#062F27,#0A473A)",
                       color: "white",
-                      padding: "19px 20px",
+                      padding:
+                        "19px 20px",
                       display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
+                      justifyContent:
+                        "space-between",
+                      alignItems:
+                        "center",
                     }}
                   >
                     <div
                       style={{
-                        display: "flex",
-                        alignItems: "center",
+                        display:
+                          "flex",
+                        alignItems:
+                          "center",
                         gap: "12px",
                       }}
                     >
@@ -785,16 +901,22 @@ export default function Home() {
                         style={{
                           width: "40px",
                           height: "40px",
-                          borderRadius: "50%",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
+                          borderRadius:
+                            "50%",
+                          display:
+                            "flex",
+                          alignItems:
+                            "center",
+                          justifyContent:
+                            "center",
                           background:
                             "linear-gradient(135deg,#226654,#0F4035)",
                           border:
                             "1px solid rgba(255,255,255,.14)",
-                          fontWeight: "800",
-                          fontSize: "13px",
+                          fontWeight:
+                            "800",
+                          fontSize:
+                            "13px",
                         }}
                       >
                         N
@@ -803,24 +925,30 @@ export default function Home() {
                       <div>
                         <div
                           style={{
-                            fontSize: "13px",
-                            fontWeight: "750",
+                            fontSize:
+                              "13px",
+                            fontWeight:
+                              "750",
                           }}
                         >
-                          NOMAD Property Assistant
+                          NOMAD Property
+                          Assistant
                         </div>
 
                         <div
                           style={{
-                            marginTop: "4px",
-                            fontSize: "10px",
+                            marginTop:
+                              "4px",
+                            fontSize:
+                              "10px",
                             color:
                               "rgba(255,255,255,.64)",
                           }}
                         >
                           <span
                             style={{
-                              color: "#69C19B",
+                              color:
+                                "#69C19B",
                             }}
                           >
                             ●
@@ -832,10 +960,13 @@ export default function Home() {
 
                     <div
                       style={{
-                        color: "#D6BC8E",
+                        color:
+                          "#D6BC8E",
                         fontSize: "9px",
-                        fontWeight: "800",
-                        letterSpacing: "1.4px",
+                        fontWeight:
+                          "800",
+                        letterSpacing:
+                          "1.4px",
                       }}
                     >
                       LIVE
@@ -844,74 +975,105 @@ export default function Home() {
 
                   <div
                     style={{
-                      padding: "28px 24px",
+                      padding:
+                        "28px 24px",
                       background:
                         "rgba(253,250,244,.94)",
                     }}
                   >
-                    <PreviewBubblePremium left>
-                      Hi 👋 Are you looking to buy or rent a
+                    <PreviewBubblePremium
+                      left
+                    >
+                      Hi 👋 Are you looking
+                      to buy or rent a
                       property in Dubai?
                     </PreviewBubblePremium>
 
                     <PreviewBubblePremium>
-                      I’m looking to buy a 3-bedroom villa in
-                      Dubai Hills around AED 4 million.
+                      I’m looking to buy a
+                      3-bedroom villa in
+                      Dubai Hills around
+                      AED 4 million.
                     </PreviewBubblePremium>
 
-                    <PreviewBubblePremium left>
-                      Are you considering ready-to-move,
+                    <PreviewBubblePremium
+                      left
+                    >
+                      Are you considering
+                      ready-to-move,
                       off-plan, or both?
                     </PreviewBubblePremium>
 
                     <PreviewBubblePremium>
-                      Both are fine. I’ll be using a mortgage.
+                      Both are fine. I’ll be
+                      using a mortgage.
                     </PreviewBubblePremium>
 
                     <div
                       style={{
-                        marginTop: "27px",
-                        paddingTop: "18px",
+                        marginTop:
+                          "27px",
+                        paddingTop:
+                          "18px",
                         borderTop:
                           "1px solid rgba(16,24,20,.08)",
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
+                        display:
+                          "flex",
+                        justifyContent:
+                          "space-between",
+                        alignItems:
+                          "center",
                         gap: "20px",
                       }}
                     >
                       <div>
                         <div
                           style={{
-                            color: "#A9844D",
-                            fontSize: "9px",
-                            letterSpacing: "1.35px",
-                            textTransform: "uppercase",
-                            fontWeight: "800",
+                            color:
+                              "#A9844D",
+                            fontSize:
+                              "9px",
+                            letterSpacing:
+                              "1.35px",
+                            textTransform:
+                              "uppercase",
+                            fontWeight:
+                              "800",
                           }}
                         >
-                          Qualification engine
+                          Qualification
+                          engine
                         </div>
 
                         <div
                           style={{
-                            marginTop: "6px",
-                            fontSize: "13px",
-                            fontWeight: "750",
-                            color: colors.forest,
+                            marginTop:
+                              "6px",
+                            fontSize:
+                              "13px",
+                            fontWeight:
+                              "750",
+                            color:
+                              colors.forest,
                           }}
                         >
-                          Requirement captured
+                          Requirement
+                          captured
                         </div>
 
                         <div
                           style={{
-                            marginTop: "3px",
-                            color: "#7C847F",
-                            fontSize: "10px",
+                            marginTop:
+                              "3px",
+                            color:
+                              "#7C847F",
+                            fontSize:
+                              "10px",
                           }}
                         >
-                          Structured automatically in real time
+                          Structured
+                          automatically in
+                          real time
                         </div>
                       </div>
 
@@ -919,13 +1081,19 @@ export default function Home() {
                         style={{
                           width: "38px",
                           height: "38px",
-                          borderRadius: "50%",
-                          background: colors.forest,
+                          borderRadius:
+                            "50%",
+                          background:
+                            colors.forest,
                           color: "white",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          fontWeight: "800",
+                          display:
+                            "flex",
+                          alignItems:
+                            "center",
+                          justifyContent:
+                            "center",
+                          fontWeight:
+                            "800",
                         }}
                       >
                         ✓
@@ -937,7 +1105,8 @@ export default function Home() {
                 <FloatingTag
                   className="floatingIntent"
                   style={{
-                    position: "absolute",
+                    position:
+                      "absolute",
                     top: "100px",
                     left: "-8px",
                     zIndex: 4,
@@ -949,7 +1118,8 @@ export default function Home() {
                 <FloatingTag
                   className="floatingStatus"
                   style={{
-                    position: "absolute",
+                    position:
+                      "absolute",
                     right: "-5px",
                     bottom: "90px",
                     zIndex: 4,
@@ -969,24 +1139,26 @@ export default function Home() {
                 color: "#9A7844",
                 fontSize: "9px",
                 fontWeight: "800",
-                textTransform: "uppercase",
-                letterSpacing: "1.7px",
+                textTransform:
+                  "uppercase",
+                letterSpacing:
+                  "1.7px",
               }}
             >
               <span
                 style={{
                   width: "38px",
                   height: "1px",
-                  background: "#A9844D",
+                  background:
+                    "#A9844D",
                 }}
               />
 
-              Built for Dubai&apos;s real estate teams
+              Built for Dubai&apos;s real
+              estate teams
             </div>
           </div>
         </section>
-
-        {/* POSITIONING */}
 
         <section
           id="solutions"
@@ -995,8 +1167,10 @@ export default function Home() {
             color: "white",
             position: "relative",
             overflow: "hidden",
-            padding: "82px 34px 76px",
-            scrollMarginTop: "20px",
+            padding:
+              "82px 34px 76px",
+            scrollMarginTop:
+              "20px",
           }}
         >
           <div
@@ -1021,24 +1195,31 @@ export default function Home() {
           >
             <div
               style={{
-                color: colors.champagneSoft,
+                color:
+                  colors.champagneSoft,
                 fontSize: "10px",
                 fontWeight: "800",
-                letterSpacing: "1.7px",
-                textTransform: "uppercase",
-                marginBottom: "18px",
+                letterSpacing:
+                  "1.7px",
+                textTransform:
+                  "uppercase",
+                marginBottom:
+                  "18px",
               }}
             >
-              Designed for the modern brokerage
+              Designed for the modern
+              brokerage
             </div>
 
             <h2
               style={{
                 maxWidth: "980px",
                 margin: 0,
-                fontSize: "clamp(40px,4.3vw,60px)",
+                fontSize:
+                  "clamp(40px,4.3vw,60px)",
                 lineHeight: "1.03",
-                letterSpacing: "-2.6px",
+                letterSpacing:
+                  "-2.6px",
                 fontWeight: "620",
               }}
             >
@@ -1051,12 +1232,14 @@ export default function Home() {
                     'Georgia, "Times New Roman", serif',
                   fontWeight: "400",
                   fontStyle: "italic",
-                  color: colors.champagneSoft,
+                  color:
+                    colors.champagneSoft,
                 }}
               >
                 The intelligence layer
               </span>{" "}
-              between your enquiry and your sales team.
+              between your enquiry and
+              your sales team.
             </h2>
 
             <div
@@ -1068,7 +1251,8 @@ export default function Home() {
                 marginTop: "52px",
                 borderTop:
                   "1px solid rgba(255,255,255,.10)",
-                scrollMarginTop: "28px",
+                scrollMarginTop:
+                  "28px",
               }}
             >
               <EditorialFeature
@@ -1092,14 +1276,15 @@ export default function Home() {
           </div>
         </section>
 
-        {/* HOW IT WORKS */}
-
         <section
           id="how-it-works"
           style={{
-            background: colors.ivorySoft,
-            padding: "92px 34px 96px",
-            scrollMarginTop: "20px",
+            background:
+              colors.ivorySoft,
+            padding:
+              "92px 34px 96px",
+            scrollMarginTop:
+              "20px",
           }}
         >
           <div
@@ -1120,12 +1305,17 @@ export default function Home() {
               <div>
                 <div
                   style={{
-                    color: colors.champagne,
+                    color:
+                      colors.champagne,
                     fontSize: "10px",
-                    textTransform: "uppercase",
-                    letterSpacing: "1.7px",
-                    fontWeight: "800",
-                    marginBottom: "18px",
+                    textTransform:
+                      "uppercase",
+                    letterSpacing:
+                      "1.7px",
+                    fontWeight:
+                      "800",
+                    marginBottom:
+                      "18px",
                   }}
                 >
                   The NOMAD journey
@@ -1133,11 +1323,15 @@ export default function Home() {
 
                 <h2
                   style={{
-                    fontSize: "clamp(40px,4vw,56px)",
-                    lineHeight: "1.04",
-                    letterSpacing: "-2.2px",
+                    fontSize:
+                      "clamp(40px,4vw,56px)",
+                    lineHeight:
+                      "1.04",
+                    letterSpacing:
+                      "-2.2px",
                     margin: 0,
-                    fontWeight: "640",
+                    fontWeight:
+                      "640",
                   }}
                 >
                   From hello to
@@ -1155,10 +1349,13 @@ export default function Home() {
                   color: "#66716B",
                 }}
               >
-                Every conversation becomes useful before a
-                consultant ever needs to step in. NOMAD captures
-                intent, qualifies the opportunity, structures the
-                data and creates the handoff.
+                Every conversation becomes
+                useful before a consultant
+                ever needs to step in.
+                NOMAD captures intent,
+                qualifies the opportunity,
+                structures the data and
+                creates the handoff.
               </p>
             </div>
 
@@ -1168,7 +1365,8 @@ export default function Home() {
                 display: "grid",
                 gridTemplateColumns:
                   "repeat(auto-fit,minmax(220px,1fr))",
-                background: colors.line,
+                background:
+                  colors.line,
                 gap: "1px",
                 border: `1px solid ${colors.line}`,
               }}
@@ -1209,10 +1407,13 @@ export default function Home() {
                 onClick={openDemo}
                 style={{
                   border: "none",
-                  background: colors.forest,
+                  background:
+                    colors.forest,
                   color: "white",
-                  borderRadius: "999px",
-                  padding: "16px 28px",
+                  borderRadius:
+                    "999px",
+                  padding:
+                    "16px 28px",
                   fontSize: "13px",
                   fontWeight: "800",
                   cursor: "pointer",
@@ -1221,7 +1422,13 @@ export default function Home() {
                 }}
               >
                 Start a live conversation
-                <span style={{ marginLeft: "12px" }}>↗</span>
+                <span
+                  style={{
+                    marginLeft: "12px",
+                  }}
+                >
+                  ↗
+                </span>
               </button>
             </div>
           </div>
@@ -1239,7 +1446,8 @@ export default function Home() {
               margin: "0 auto",
               display: "flex",
               flexWrap: "wrap",
-              justifyContent: "space-between",
+              justifyContent:
+                "space-between",
               gap: "20px",
               alignItems: "center",
             }}
@@ -1248,12 +1456,14 @@ export default function Home() {
 
             <div
               style={{
-                color: "rgba(255,255,255,.46)",
+                color:
+                  "rgba(255,255,255,.46)",
                 fontSize: "10px",
                 letterSpacing: ".35px",
               }}
             >
-              Intelligent property qualification for modern real
+              Intelligent property
+              qualification for modern real
               estate teams.
             </div>
           </div>
@@ -1262,13 +1472,8 @@ export default function Home() {
     );
   }
 
-  /*
-    ======================================================
-    LIVE DEMO
-    ======================================================
-  */
-
-  const qualifiedLead = leadMemory?.lead || {};
+  const qualifiedLead =
+    leadMemory?.lead || {};
 
   return (
     <main
@@ -1324,16 +1529,20 @@ export default function Home() {
           left: "22px",
           zIndex: 10,
           border: `1px solid ${colors.line}`,
-          background: "rgba(255,253,248,.88)",
+          background:
+            "rgba(255,253,248,.88)",
           color: colors.forest,
           padding: "10px 15px",
           borderRadius: "999px",
-          cursor: loading ? "not-allowed" : "pointer",
+          cursor: loading
+            ? "not-allowed"
+            : "pointer",
           fontWeight: "800",
           fontSize: "11px",
           boxShadow:
             "0 8px 22px rgba(16,24,20,.05)",
-          backdropFilter: "blur(12px)",
+          backdropFilter:
+            "blur(12px)",
         }}
       >
         ← Back to NOMAD
@@ -1343,7 +1552,8 @@ export default function Home() {
         style={{
           width: "100%",
           maxWidth: "470px",
-          height: "min(730px, calc(100vh - 40px))",
+          height:
+            "min(730px, calc(100vh - 40px))",
           minHeight: "580px",
           background: colors.paper,
           borderRadius: "28px",
@@ -1356,15 +1566,15 @@ export default function Home() {
             "1px solid rgba(16,24,20,.08)",
         }}
       >
-        {/* HEADER */}
-
         <div
           style={{
-            background: colors.forest,
+            background:
+              colors.forest,
             color: "white",
             padding: "18px",
             display: "flex",
-            justifyContent: "space-between",
+            justifyContent:
+              "space-between",
             alignItems: "center",
           }}
         >
@@ -1383,7 +1593,8 @@ export default function Home() {
                   "linear-gradient(135deg,#206250,#0F4035)",
                 display: "flex",
                 alignItems: "center",
-                justifyContent: "center",
+                justifyContent:
+                  "center",
                 fontWeight: "800",
                 marginRight: "12px",
               }}
@@ -1404,7 +1615,8 @@ export default function Home() {
               <div
                 style={{
                   marginTop: "4px",
-                  color: "rgba(255,255,255,.62)",
+                  color:
+                    "rgba(255,255,255,.62)",
                   fontSize: "10px",
                 }}
               >
@@ -1417,13 +1629,17 @@ export default function Home() {
                 >
                   ●
                 </span>{" "}
-                {loading ? "Typing..." : "Available now"}
+                {loading
+                  ? "Typing..."
+                  : "Available now"}
               </div>
             </div>
           </div>
 
           <button
-            onClick={startNewConversation}
+            onClick={
+              startNewConversation
+            }
             disabled={loading}
             title="Start a new conversation"
             style={{
@@ -1445,89 +1661,115 @@ export default function Home() {
           </button>
         </div>
 
-        {/* CHAT BODY */}
-
         <div
           style={{
             flex: 1,
             overflowY: "auto",
-            padding: "24px 18px 28px",
-            background: colors.ivorySoft,
+            padding:
+              "24px 18px 28px",
+            background:
+              colors.ivorySoft,
           }}
         >
           <div
             style={{
               textAlign: "center",
               marginBottom: "24px",
-              color: colors.champagne,
+              color:
+                colors.champagne,
               fontSize: "9px",
               fontWeight: "800",
-              letterSpacing: "1.3px",
-              textTransform: "uppercase",
+              letterSpacing:
+                "1.3px",
+              textTransform:
+                "uppercase",
             }}
           >
             Private Property Concierge
           </div>
 
-          {messages.map((message, index) => {
-            const isUser = message.role === "user";
+          {messages.map(
+            (message, index) => {
+              const isUser =
+                message.role ===
+                "user";
 
-            return (
-              <div
-                key={index}
-                style={{
-                  display: "flex",
-                  justifyContent: isUser
-                    ? "flex-end"
-                    : "flex-start",
-                  marginBottom: "14px",
-                }}
-              >
-                {!isUser && (
-                  <div
-                    style={{
-                      width: "28px",
-                      height: "28px",
-                      borderRadius: "50%",
-                      background: colors.forest,
-                      color: "white",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: "9px",
-                      fontWeight: "800",
-                      marginRight: "8px",
-                      marginTop: "2px",
-                      flexShrink: 0,
-                    }}
-                  >
-                    N
-                  </div>
-                )}
-
+              return (
                 <div
+                  key={index}
                   style={{
-                    background: isUser
-                      ? "#E8E3D7"
-                      : colors.paper,
-                    color: colors.ink,
-                    padding: "11px 14px",
-                    borderRadius: isUser
-                      ? "16px 16px 4px 16px"
-                      : "16px 16px 16px 4px",
-                    maxWidth: "78%",
-                    fontSize: "13px",
-                    lineHeight: "1.55",
-                    whiteSpace: "pre-line",
-                    boxShadow:
-                      "0 2px 8px rgba(16,24,20,.05)",
+                    display: "flex",
+                    justifyContent:
+                      isUser
+                        ? "flex-end"
+                        : "flex-start",
+                    marginBottom:
+                      "14px",
                   }}
                 >
-                  {message.text}
+                  {!isUser && (
+                    <div
+                      style={{
+                        width: "28px",
+                        height: "28px",
+                        borderRadius:
+                          "50%",
+                        background:
+                          colors.forest,
+                        color: "white",
+                        display:
+                          "flex",
+                        alignItems:
+                          "center",
+                        justifyContent:
+                          "center",
+                        fontSize:
+                          "9px",
+                        fontWeight:
+                          "800",
+                        marginRight:
+                          "8px",
+                        marginTop:
+                          "2px",
+                        flexShrink: 0,
+                      }}
+                    >
+                      N
+                    </div>
+                  )}
+
+                  <div
+                    style={{
+                      background:
+                        isUser
+                          ? "#E8E3D7"
+                          : colors.paper,
+                      color:
+                        colors.ink,
+                      padding:
+                        "11px 14px",
+                      borderRadius:
+                        isUser
+                          ? "16px 16px 4px 16px"
+                          : "16px 16px 16px 4px",
+                      maxWidth:
+                        "78%",
+                      fontSize:
+                        "13px",
+                      lineHeight:
+                        "1.55",
+                      whiteSpace:
+                        "pre-line",
+                      boxShadow:
+                        "0 2px 8px rgba(16,24,20,.05)",
+                    }}
+                  >
+                    {message.text}
+                  </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            }
+          )}
 
           {loading && (
             <div
@@ -1539,12 +1781,15 @@ export default function Home() {
                 style={{
                   width: "28px",
                   height: "28px",
-                  borderRadius: "50%",
-                  background: colors.forest,
+                  borderRadius:
+                    "50%",
+                  background:
+                    colors.forest,
                   color: "white",
                   display: "flex",
                   alignItems: "center",
-                  justifyContent: "center",
+                  justifyContent:
+                    "center",
                   fontSize: "9px",
                   fontWeight: "800",
                   marginRight: "8px",
@@ -1555,19 +1800,21 @@ export default function Home() {
 
               <div
                 style={{
-                  padding: "11px 14px",
-                  borderRadius: "16px",
-                  background: colors.paper,
+                  padding:
+                    "11px 14px",
+                  borderRadius:
+                    "16px",
+                  background:
+                    colors.paper,
                   color: "#8B8579",
-                  letterSpacing: "2px",
+                  letterSpacing:
+                    "2px",
                 }}
               >
                 •••
               </div>
             </div>
           )}
-
-          {/* NEW QUALIFIED SUCCESS MOMENT */}
 
           {leadSaved && (
             <div
@@ -1582,22 +1829,26 @@ export default function Home() {
                   background:
                     "linear-gradient(135deg,#0A392F,#0B4B3D)",
                   color: "white",
-                  borderRadius: "20px",
+                  borderRadius:
+                    "20px",
                   padding: "20px",
                   boxShadow:
                     "0 18px 38px rgba(8,47,39,.15)",
-                  position: "relative",
+                  position:
+                    "relative",
                   overflow: "hidden",
                 }}
               >
                 <div
                   style={{
-                    position: "absolute",
+                    position:
+                      "absolute",
                     right: "-40px",
                     top: "-60px",
                     width: "150px",
                     height: "150px",
-                    borderRadius: "50%",
+                    borderRadius:
+                      "50%",
                     border:
                       "1px solid rgba(216,198,166,.18)",
                   }}
@@ -1606,25 +1857,32 @@ export default function Home() {
                 <div
                   style={{
                     display: "flex",
-                    alignItems: "flex-start",
+                    alignItems:
+                      "flex-start",
                     gap: "13px",
-                    position: "relative",
+                    position:
+                      "relative",
                   }}
                 >
                   <div
                     style={{
                       width: "38px",
                       height: "38px",
-                      borderRadius: "50%",
+                      borderRadius:
+                        "50%",
                       flexShrink: 0,
                       background:
                         "rgba(255,255,255,.10)",
                       border:
                         "1px solid rgba(255,255,255,.14)",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: "15px",
+                      display:
+                        "flex",
+                      alignItems:
+                        "center",
+                      justifyContent:
+                        "center",
+                      fontSize:
+                        "15px",
                       animation:
                         "checkPop .5s ease-out both",
                     }}
@@ -1635,21 +1893,30 @@ export default function Home() {
                   <div>
                     <div
                       style={{
-                        color: colors.champagneSoft,
-                        textTransform: "uppercase",
-                        letterSpacing: "1.25px",
-                        fontSize: "8px",
-                        fontWeight: "800",
+                        color:
+                          colors.champagneSoft,
+                        textTransform:
+                          "uppercase",
+                        letterSpacing:
+                          "1.25px",
+                        fontSize:
+                          "8px",
+                        fontWeight:
+                          "800",
                       }}
                     >
-                      Qualification complete
+                      Qualification
+                      complete
                     </div>
 
                     <div
                       style={{
-                        marginTop: "6px",
-                        fontSize: "16px",
-                        fontWeight: "750",
+                        marginTop:
+                          "6px",
+                        fontSize:
+                          "16px",
+                        fontWeight:
+                          "750",
                       }}
                     >
                       Lead qualified
@@ -1657,14 +1924,18 @@ export default function Home() {
 
                     <div
                       style={{
-                        marginTop: "7px",
+                        marginTop:
+                          "7px",
                         color:
                           "rgba(255,255,255,.64)",
-                        fontSize: "11px",
-                        lineHeight: "1.6",
+                        fontSize:
+                          "11px",
+                        lineHeight:
+                          "1.6",
                       }}
                     >
-                      Requirement captured · Callback scheduled ·
+                      Requirement captured ·
+                      Callback scheduled ·
                       Consultant handoff ready
                     </div>
                   </div>
@@ -1672,22 +1943,31 @@ export default function Home() {
 
                 <button
                   onClick={() =>
-                    setShowLeadSummary(true)
+                    setShowLeadSummary(
+                      true
+                    )
                   }
                   style={{
                     width: "100%",
-                    marginTop: "17px",
+                    marginTop:
+                      "17px",
                     border:
                       "1px solid rgba(255,255,255,.14)",
                     background:
                       "rgba(255,255,255,.08)",
                     color: "white",
-                    borderRadius: "12px",
-                    padding: "11px 14px",
-                    cursor: "pointer",
-                    fontSize: "10px",
-                    fontWeight: "800",
-                    letterSpacing: ".35px",
+                    borderRadius:
+                      "12px",
+                    padding:
+                      "11px 14px",
+                    cursor:
+                      "pointer",
+                    fontSize:
+                      "10px",
+                    fontWeight:
+                      "800",
+                    letterSpacing:
+                      ".35px",
                   }}
                 >
                   View Lead Summary →
@@ -1699,11 +1979,10 @@ export default function Home() {
           <div ref={chatEndRef} />
         </div>
 
-        {/* COMPOSER */}
-
         <div
           style={{
-            padding: "13px 14px 16px",
+            padding:
+              "13px 14px 16px",
             background: colors.paper,
             borderTop: `1px solid ${colors.line}`,
           }}
@@ -1713,20 +1992,27 @@ export default function Home() {
               display: "flex",
               alignItems: "center",
               gap: "10px",
-              padding: "5px 5px 5px 16px",
+              padding:
+                "5px 5px 5px 16px",
               background: "#F3EFE7",
-              borderRadius: "999px",
+              borderRadius:
+                "999px",
               border:
                 "1px solid rgba(16,24,20,.07)",
             }}
           >
             <input
+              ref={inputRef}
               value={input}
               onChange={(e) =>
-                setInput(e.target.value)
+                setInput(
+                  e.target.value
+                )
               }
               onKeyDown={(e) => {
-                if (e.key === "Enter") {
+                if (
+                  e.key === "Enter"
+                ) {
                   sendMessage();
                 }
               }}
@@ -1735,16 +2021,21 @@ export default function Home() {
                   ? "Lead qualified"
                   : "Ask NOMAD..."
               }
-              disabled={loading || leadSaved}
+              disabled={
+                loading || leadSaved
+              }
               style={{
                 flex: 1,
                 border: "none",
                 outline: "none",
-                background: "transparent",
+                background:
+                  "transparent",
                 padding: "10px 0",
                 fontSize: "13px",
                 color: colors.ink,
-                opacity: leadSaved ? 0.5 : 1,
+                opacity: leadSaved
+                  ? 0.5
+                  : 1,
               }}
             />
 
@@ -1760,7 +2051,8 @@ export default function Home() {
                 height: "40px",
                 border: "none",
                 borderRadius: "50%",
-                background: colors.forest,
+                background:
+                  colors.forest,
                 color: "white",
                 fontSize: "15px",
                 cursor:
@@ -1790,12 +2082,11 @@ export default function Home() {
               letterSpacing: ".4px",
             }}
           >
-            Intelligent qualification · Real-time lead capture
+            Intelligent qualification ·
+            Real-time lead capture
           </div>
         </div>
       </div>
-
-      {/* NEW LEAD SUMMARY MODAL */}
 
       {showLeadSummary && (
         <LeadSummaryModal
@@ -1813,11 +2104,9 @@ export default function Home() {
   );
 }
 
-/* ======================================================
-   COMPONENTS
-   ====================================================== */
-
-function BrandMark({ dark = false }) {
+function BrandMark({
+  dark = false,
+}) {
   return (
     <div
       style={{
@@ -1834,7 +2123,9 @@ function BrandMark({ dark = false }) {
           background: dark
             ? colors.champagne
             : colors.forest,
-          color: dark ? colors.ink : "white",
+          color: dark
+            ? colors.ink
+            : "white",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
@@ -1870,7 +2161,8 @@ function BrandMark({ dark = false }) {
               : "#757D78",
             fontSize: "8px",
             letterSpacing: "1.8px",
-            textTransform: "uppercase",
+            textTransform:
+              "uppercase",
           }}
         >
           Property Intelligence
@@ -1880,7 +2172,10 @@ function BrandMark({ dark = false }) {
   );
 }
 
-function Metric({ value, label }) {
+function Metric({
+  value,
+  label,
+}) {
   return (
     <div
       style={{
@@ -1902,7 +2197,8 @@ function Metric({ value, label }) {
           color: "#7F8882",
           marginTop: "4px",
           fontSize: "9px",
-          textTransform: "uppercase",
+          textTransform:
+            "uppercase",
           letterSpacing: "1px",
         }}
       >
@@ -1963,7 +2259,8 @@ function FloatingTag({
         padding: "12px 14px",
         background:
           "rgba(255,253,248,.92)",
-        backdropFilter: "blur(14px)",
+        backdropFilter:
+          "blur(14px)",
         borderRadius: "12px",
         border:
           "1px solid rgba(16,24,20,.07)",
@@ -1974,9 +2271,11 @@ function FloatingTag({
     >
       <div
         style={{
-          color: colors.champagne,
+          color:
+            colors.champagne,
           fontSize: "8px",
-          textTransform: "uppercase",
+          textTransform:
+            "uppercase",
           letterSpacing: "1.2px",
           fontWeight: "850",
         }}
@@ -2006,14 +2305,16 @@ function EditorialFeature({
   return (
     <div
       style={{
-        padding: "28px 32px 30px 0",
+        padding:
+          "28px 32px 30px 0",
         borderRight:
           "1px solid rgba(255,255,255,.08)",
       }}
     >
       <div
         style={{
-          color: colors.champagneSoft,
+          color:
+            colors.champagneSoft,
           fontSize: "9px",
           letterSpacing: "1.4px",
           fontWeight: "800",
@@ -2038,7 +2339,8 @@ function EditorialFeature({
           marginTop: "10px",
           fontSize: "12px",
           lineHeight: "1.7",
-          color: "rgba(255,255,255,.52)",
+          color:
+            "rgba(255,255,255,.52)",
         }}
       >
         {text}
@@ -2055,14 +2357,17 @@ function ProcessStep({
   return (
     <div
       style={{
-        background: colors.paper,
-        padding: "26px 24px 28px",
+        background:
+          colors.paper,
+        padding:
+          "26px 24px 28px",
         minHeight: "180px",
       }}
     >
       <div
         style={{
-          color: colors.champagne,
+          color:
+            colors.champagne,
           fontSize: "9px",
           fontWeight: "850",
           letterSpacing: "1.3px",
@@ -2096,12 +2401,6 @@ function ProcessStep({
   );
 }
 
-/*
-  ======================================================
-  NEW: STRUCTURED LEAD SUMMARY
-  ======================================================
-*/
-
 function LeadSummaryModal({
   lead,
   onClose,
@@ -2113,12 +2412,18 @@ function LeadSummaryModal({
     ["Bedrooms", lead.bedrooms],
     ["Budget", lead.budget],
     ["Location", lead.location],
-    ["Property status", lead.property_status],
+    [
+      "Property status",
+      lead.property_status,
+    ],
     ["Financing", lead.financing],
     ["Timeline", lead.timeline],
     ["Name", lead.name],
     ["Phone", lead.phone],
-    ["Callback", lead.callback_time],
+    [
+      "Callback",
+      lead.callback_time,
+    ],
   ].filter(([, value]) => value);
 
   return (
@@ -2130,7 +2435,8 @@ function LeadSummaryModal({
         zIndex: 100,
         background:
           "rgba(8,20,17,.58)",
-        backdropFilter: "blur(10px)",
+        backdropFilter:
+          "blur(10px)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -2146,7 +2452,8 @@ function LeadSummaryModal({
         style={{
           width: "100%",
           maxWidth: "510px",
-          maxHeight: "calc(100vh - 40px)",
+          maxHeight:
+            "calc(100vh - 40px)",
           overflowY: "auto",
           background: colors.paper,
           borderRadius: "26px",
@@ -2158,8 +2465,10 @@ function LeadSummaryModal({
       >
         <div
           style={{
-            padding: "24px 24px 22px",
-            background: colors.forest,
+            padding:
+              "24px 24px 22px",
+            background:
+              colors.forest,
             color: "white",
             borderRadius:
               "26px 26px 0 0",
@@ -2169,7 +2478,8 @@ function LeadSummaryModal({
         >
           <div
             style={{
-              position: "absolute",
+              position:
+                "absolute",
               width: "170px",
               height: "170px",
               borderRadius: "50%",
@@ -2183,7 +2493,8 @@ function LeadSummaryModal({
           <button
             onClick={onClose}
             style={{
-              position: "absolute",
+              position:
+                "absolute",
               right: "18px",
               top: "18px",
               width: "34px",
@@ -2204,11 +2515,14 @@ function LeadSummaryModal({
 
           <div
             style={{
-              color: colors.champagneSoft,
-              textTransform: "uppercase",
+              color:
+                colors.champagneSoft,
+              textTransform:
+                "uppercase",
               fontSize: "8px",
               fontWeight: "800",
-              letterSpacing: "1.35px",
+              letterSpacing:
+                "1.35px",
             }}
           >
             NOMAD qualification
@@ -2233,7 +2547,8 @@ function LeadSummaryModal({
                   "1px solid rgba(255,255,255,.14)",
                 display: "flex",
                 alignItems: "center",
-                justifyContent: "center",
+                justifyContent:
+                  "center",
                 fontWeight: "800",
               }}
             >
@@ -2258,7 +2573,8 @@ function LeadSummaryModal({
                   fontSize: "10px",
                 }}
               >
-                Ready for consultant follow-up
+                Ready for consultant
+                follow-up
               </div>
             </div>
           </div>
@@ -2266,16 +2582,20 @@ function LeadSummaryModal({
 
         <div
           style={{
-            padding: "22px 24px 25px",
+            padding:
+              "22px 24px 25px",
           }}
         >
           {lead.summary && (
             <div
               style={{
                 marginBottom: "22px",
-                padding: "15px 16px",
-                background: "#F3EFE6",
-                borderRadius: "14px",
+                padding:
+                  "15px 16px",
+                background:
+                  "#F3EFE6",
+                borderRadius:
+                  "14px",
                 color: "#59635D",
                 fontSize: "12px",
                 lineHeight: "1.65",
@@ -2287,9 +2607,12 @@ function LeadSummaryModal({
 
           <div
             style={{
-              color: colors.champagne,
-              textTransform: "uppercase",
-              letterSpacing: "1.25px",
+              color:
+                colors.champagne,
+              textTransform:
+                "uppercase",
+              letterSpacing:
+                "1.25px",
               fontSize: "8px",
               fontWeight: "800",
               marginBottom: "7px",
@@ -2300,7 +2623,10 @@ function LeadSummaryModal({
 
           <div>
             {rows.map(
-              ([label, value], index) => (
+              (
+                [label, value],
+                index
+              ) => (
                 <div
                   key={label}
                   style={{
@@ -2308,17 +2634,21 @@ function LeadSummaryModal({
                     gridTemplateColumns:
                       "135px 1fr",
                     gap: "18px",
-                    padding: "12px 0",
+                    padding:
+                      "12px 0",
                     borderBottom:
-                      index === rows.length - 1
+                      index ===
+                      rows.length - 1
                         ? "none"
                         : `1px solid ${colors.line}`,
                   }}
                 >
                   <div
                     style={{
-                      color: "#8A918C",
-                      fontSize: "10px",
+                      color:
+                        "#8A918C",
+                      fontSize:
+                        "10px",
                     }}
                   >
                     {label}
@@ -2326,10 +2656,14 @@ function LeadSummaryModal({
 
                   <div
                     style={{
-                      color: colors.forest,
-                      fontSize: "11px",
-                      fontWeight: "700",
-                      textAlign: "right",
+                      color:
+                        colors.forest,
+                      fontSize:
+                        "11px",
+                      fontWeight:
+                        "700",
+                      textAlign:
+                        "right",
                     }}
                   >
                     {formatLeadValue(
@@ -2345,7 +2679,8 @@ function LeadSummaryModal({
           <div
             style={{
               marginTop: "20px",
-              padding: "13px 14px",
+              padding:
+                "13px 14px",
               borderRadius: "13px",
               background: "#EDF4F0",
               display: "flex",
@@ -2358,10 +2693,12 @@ function LeadSummaryModal({
                 width: "28px",
                 height: "28px",
                 borderRadius: "50%",
-                background: colors.forest,
+                background:
+                  colors.forest,
                 color: "white",
                 display: "flex",
-                justifyContent: "center",
+                justifyContent:
+                  "center",
                 alignItems: "center",
                 fontSize: "11px",
                 fontWeight: "800",
@@ -2375,7 +2712,8 @@ function LeadSummaryModal({
                 style={{
                   fontSize: "10px",
                   fontWeight: "800",
-                  color: colors.forest,
+                  color:
+                    colors.forest,
                 }}
               >
                 Consultant handoff ready
@@ -2388,7 +2726,8 @@ function LeadSummaryModal({
                   fontSize: "9px",
                 }}
               >
-                Lead captured and sent to the sales workflow
+                Lead captured and sent to
+                the sales workflow
               </div>
             </div>
           </div>
@@ -2418,13 +2757,16 @@ function LeadSummaryModal({
             </button>
 
             <button
-              onClick={onNewConversation}
+              onClick={
+                onNewConversation
+              }
               style={{
                 flex: 1,
                 padding: "12px",
                 borderRadius: "12px",
                 border: "none",
-                background: colors.forest,
+                background:
+                  colors.forest,
                 color: "white",
                 cursor: "pointer",
                 fontSize: "10px",
@@ -2440,7 +2782,10 @@ function LeadSummaryModal({
   );
 }
 
-function formatLeadValue(label, value) {
+function formatLeadValue(
+  label,
+  value
+) {
   if (!value) return "";
 
   if (
