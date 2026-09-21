@@ -24,15 +24,18 @@ const colors = {
   ivory: "#F7F3EB",
   ivorySoft: "#FBF9F4",
   paper: "#FFFDF8",
-  ink: "#111915",
-  forest: "#0C332B",
-  forest2: "#123F35",
-  emerald: "#0B6E5D",
-  champagne: "#B89A67",
-  champagneSoft: "#D4C2A1",
-  sage: "#83938C",
-  line: "rgba(17,25,21,0.10)",
+  ink: "#101814",
+  forest: "#082F27",
+  forest2: "#0D4539",
+  emerald: "#0B7663",
+  champagne: "#B99862",
+  champagneSoft: "#D8C6A6",
+  sage: "#82918A",
+  line: "rgba(16,24,20,0.10)",
 };
+
+const dubaiHero =
+  "https://images.unsplash.com/photo-1634007626524-f47fa37810a7?auto=format&fit=crop&fm=jpg&q=88&w=2600";
 
 export default function Home() {
   const [showDemo, setShowDemo] = useState(false);
@@ -94,8 +97,6 @@ export default function Home() {
         content: message.text,
       }));
 
-      // STEP 1:
-      // Extract/update structured lead memory
       const extractionResponse = await fetch("/api/extract-lead", {
         method: "POST",
         headers: {
@@ -159,8 +160,6 @@ export default function Home() {
         });
       }
 
-      // STEP 2:
-      // Generate conversational response
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: {
@@ -193,8 +192,6 @@ export default function Home() {
 
       setMessages(conversationWithReply);
 
-      // STEP 3:
-      // Save only once deterministic extractor says Qualified
       if (
         extractionData.success &&
         extractionData.lead?.lead_status === "Qualified" &&
@@ -269,569 +266,689 @@ export default function Home() {
       <main
         style={{
           minHeight: "100vh",
-          background: colors.ivory,
+          background: colors.ivorySoft,
           color: colors.ink,
           fontFamily:
             'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif',
-          overflow: "hidden",
         }}
       >
         <style>{`
-          @keyframes floatNomad {
-            0% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
-            100% { transform: translateY(0px); }
-          }
-
-          @keyframes pulseSoft {
-            0%, 100% { opacity: 0.55; transform: scale(1); }
-            50% { opacity: 0.85; transform: scale(1.05); }
-          }
-
-          @keyframes shimmerLine {
-            0% { transform: translateX(-120%); }
-            100% { transform: translateX(240%); }
-          }
-
           * {
             box-sizing: border-box;
+          }
+
+          html {
+            scroll-behavior: smooth;
+          }
+
+          body {
+            margin: 0;
           }
 
           button {
             font-family: inherit;
           }
 
-          button:hover {
-            transform: translateY(-1px);
+          .nomadButton {
+            transition:
+              transform .22s ease,
+              box-shadow .22s ease,
+              background .22s ease;
           }
 
-          @media (max-width: 860px) {
-            .nomadHeroGrid {
+          .nomadButton:hover {
+            transform: translateY(-2px);
+          }
+
+          .nomadGlass {
+            transition:
+              transform .35s ease,
+              box-shadow .35s ease;
+          }
+
+          .nomadGlass:hover {
+            transform: translateY(-5px);
+            box-shadow:
+              0 45px 110px rgba(0,0,0,.22),
+              0 12px 40px rgba(5,45,35,.16);
+          }
+
+          @keyframes floatNomad {
+            0% {
+              transform: translateY(0px);
+            }
+
+            50% {
+              transform: translateY(-9px);
+            }
+
+            100% {
+              transform: translateY(0px);
+            }
+          }
+
+          @keyframes glowPulse {
+            0%, 100% {
+              opacity: .45;
+              transform: scale(1);
+            }
+
+            50% {
+              opacity: .72;
+              transform: scale(1.05);
+            }
+          }
+
+          @media (max-width: 960px) {
+            .heroGrid {
               grid-template-columns: 1fr !important;
             }
 
-            .nomadHeroTitle {
-              font-size: 52px !important;
+            .heroContent {
+              padding-top: 30px !important;
             }
 
-            .nomadPreviewWrap {
-              margin-top: 20px;
+            .heroPreview {
+              min-height: 570px !important;
             }
 
-            .nomadNav {
-              padding-left: 18px !important;
-              padding-right: 18px !important;
+            .desktopNavLinks {
+              display: none !important;
             }
           }
 
-          @media (max-width: 560px) {
-            .nomadHeroTitle {
-              font-size: 42px !important;
-              letter-spacing: -2px !important;
-            }
-
-            .nomadHeroSection {
+          @media (max-width: 600px) {
+            .heroSection {
               padding-left: 18px !important;
               padding-right: 18px !important;
+            }
+
+            .heroTitle {
+              font-size: 48px !important;
+              letter-spacing: -2.5px !important;
+            }
+
+            .heroStats {
+              grid-template-columns: 1fr 1fr !important;
+            }
+
+            .floatingIntent,
+            .floatingStatus {
+              display: none !important;
+            }
+
+            .previewCard {
+              max-width: 100% !important;
             }
           }
         `}</style>
 
-        {/* AMBIENT BACKGROUND */}
-        <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            pointerEvents: "none",
-            background:
-              "radial-gradient(circle at 72% 16%, rgba(184,154,103,0.15), transparent 23%), radial-gradient(circle at 18% 78%, rgba(12,51,43,0.08), transparent 28%)",
-          }}
-        />
+        {/* ================= HERO ================= */}
 
-        {/* NAV */}
-        <nav
-          className="nomadNav"
-          style={{
-            width: "100%",
-            maxWidth: "1280px",
-            margin: "0 auto",
-            padding: "28px 34px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            position: "relative",
-            zIndex: 5,
-          }}
-        >
-          <BrandMark />
-
-          <button
-            onClick={openDemo}
-            style={{
-              border: `1px solid ${colors.line}`,
-              background: "rgba(255,253,248,0.72)",
-              color: colors.forest,
-              padding: "11px 18px",
-              borderRadius: "999px",
-              cursor: "pointer",
-              fontWeight: "700",
-              fontSize: "12px",
-              letterSpacing: "0.2px",
-              backdropFilter: "blur(14px)",
-              boxShadow: "0 8px 26px rgba(17,25,21,0.04)",
-              transition: "0.2s ease",
-            }}
-          >
-            Enter Live Experience
-          </button>
-        </nav>
-
-        {/* HERO */}
-        <section
-          className="nomadHeroSection"
-          style={{
-            width: "100%",
-            maxWidth: "1280px",
-            margin: "0 auto",
-            padding: "76px 34px 116px",
-            position: "relative",
-            zIndex: 2,
-          }}
-        >
-          <div
-            className="nomadHeroGrid"
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1.02fr 0.98fr",
-              gap: "86px",
-              alignItems: "center",
-            }}
-          >
-            {/* LEFT */}
-            <div>
-              <div
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "10px",
-                  marginBottom: "28px",
-                  color: colors.champagne,
-                  fontSize: "11px",
-                  fontWeight: "800",
-                  letterSpacing: "1.65px",
-                  textTransform: "uppercase",
-                }}
-              >
-                <span
-                  style={{
-                    width: "28px",
-                    height: "1px",
-                    background: colors.champagne,
-                  }}
-                />
-
-                Intelligent Property Qualification
-              </div>
-
-              <h1
-                className="nomadHeroTitle"
-                style={{
-                  margin: 0,
-                  maxWidth: "760px",
-                  fontSize: "clamp(58px, 5.8vw, 88px)",
-                  lineHeight: "0.98",
-                  letterSpacing: "-4.6px",
-                  fontWeight: "720",
-                }}
-              >
-                Every enquiry
-                <br />
-                deserves a
-                <br />
-                <span
-                  style={{
-                    fontFamily:
-                      'Georgia, "Times New Roman", serif',
-                    fontStyle: "italic",
-                    fontWeight: "400",
-                    color: colors.emerald,
-                    letterSpacing: "-3px",
-                  }}
-                >
-                  better conversation.
-                </span>
-              </h1>
-
-              <p
-                style={{
-                  maxWidth: "610px",
-                  marginTop: "34px",
-                  marginBottom: 0,
-                  fontSize: "17px",
-                  lineHeight: "1.75",
-                  color: "#5E6862",
-                }}
-              >
-                NOMAD qualifies buyers and tenants naturally,
-                understands intent in real time, structures every
-                requirement, and hands your sales team a lead that
-                is ready for action.
-              </p>
-
-              <div
-                style={{
-                  marginTop: "38px",
-                  display: "flex",
-                  flexWrap: "wrap",
-                  alignItems: "center",
-                  gap: "15px",
-                }}
-              >
-                <button
-                  onClick={openDemo}
-                  style={{
-                    border: "none",
-                    background: colors.forest,
-                    color: colors.paper,
-                    padding: "16px 24px",
-                    borderRadius: "999px",
-                    cursor: "pointer",
-                    fontWeight: "800",
-                    fontSize: "13px",
-                    letterSpacing: "0.15px",
-                    boxShadow:
-                      "0 18px 40px rgba(12,51,43,0.18)",
-                    transition: "0.2s ease",
-                  }}
-                >
-                  Experience NOMAD
-                  <span style={{ marginLeft: "12px" }}>↗</span>
-                </button>
-
-                <div
-                  style={{
-                    color: "#767F79",
-                    fontSize: "12px",
-                    letterSpacing: "0.15px",
-                  }}
-                >
-                  No forms. No scripts. Just conversation.
-                </div>
-              </div>
-
-              {/* META */}
-              <div
-                style={{
-                  marginTop: "58px",
-                  display: "grid",
-                  gridTemplateColumns:
-                    "repeat(3, minmax(120px, 1fr))",
-                  maxWidth: "560px",
-                  borderTop: `1px solid ${colors.line}`,
-                }}
-              >
-                <Metric
-                  value="24/7"
-                  label="qualification"
-                />
-                <Metric
-                  value="Live"
-                  label="lead capture"
-                />
-                <Metric
-                  value="Instant"
-                  label="sales handoff"
-                />
-              </div>
-            </div>
-
-            {/* RIGHT */}
-            <div
-              className="nomadPreviewWrap"
-              style={{
-                position: "relative",
-                minHeight: "600px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              {/* Ambient halo */}
-              <div
-                style={{
-                  position: "absolute",
-                  width: "430px",
-                  height: "430px",
-                  borderRadius: "50%",
-                  background:
-                    "radial-gradient(circle, rgba(184,154,103,0.16), rgba(184,154,103,0.03) 45%, transparent 70%)",
-                  animation:
-                    "pulseSoft 7s ease-in-out infinite",
-                }}
-              />
-
-              {/* Decorative architectural frame */}
-              <div
-                style={{
-                  position: "absolute",
-                  top: "36px",
-                  right: "12px",
-                  width: "78%",
-                  height: "78%",
-                  border: `1px solid rgba(184,154,103,0.28)`,
-                  borderRadius: "180px 180px 30px 30px",
-                }}
-              />
-
-              <div
-                style={{
-                  position: "absolute",
-                  bottom: "26px",
-                  left: "6%",
-                  width: "72px",
-                  height: "1px",
-                  background: colors.champagne,
-                }}
-              />
-
-              <div
-                style={{
-                  width: "100%",
-                  maxWidth: "420px",
-                  background: "rgba(255,253,248,0.92)",
-                  border: `1px solid rgba(17,25,21,0.08)`,
-                  borderRadius: "26px",
-                  overflow: "hidden",
-                  boxShadow:
-                    "0 40px 90px rgba(17,25,21,0.18), 0 8px 30px rgba(12,51,43,0.08)",
-                  position: "relative",
-                  animation:
-                    "floatNomad 8s ease-in-out infinite",
-                  backdropFilter: "blur(18px)",
-                }}
-              >
-                <div
-                  style={{
-                    padding: "17px 18px",
-                    background: colors.forest,
-                    color: colors.paper,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                  }}
-                >
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "12px",
-                    }}
-                  >
-                    <div
-                      style={{
-                        width: "38px",
-                        height: "38px",
-                        borderRadius: "50%",
-                        background:
-                          "linear-gradient(135deg, #1D5A4B, #0F3E34)",
-                        border:
-                          "1px solid rgba(255,255,255,0.12)",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        fontSize: "13px",
-                        fontWeight: "800",
-                      }}
-                    >
-                      N
-                    </div>
-
-                    <div>
-                      <div
-                        style={{
-                          fontSize: "13px",
-                          fontWeight: "700",
-                        }}
-                      >
-                        NOMAD Property Assistant
-                      </div>
-
-                      <div
-                        style={{
-                          marginTop: "4px",
-                          fontSize: "10px",
-                          color: "rgba(255,255,255,0.64)",
-                        }}
-                      >
-                        ● Available now
-                      </div>
-                    </div>
-                  </div>
-
-                  <div
-                    style={{
-                      fontSize: "9px",
-                      textTransform: "uppercase",
-                      letterSpacing: "1px",
-                      color: colors.champagneSoft,
-                    }}
-                  >
-                    Live
-                  </div>
-                </div>
-
-                <div
-                  style={{
-                    position: "relative",
-                    padding: "26px 22px 24px",
-                    background: colors.ivorySoft,
-                    minHeight: "420px",
-                  }}
-                >
-                  <PreviewBubblePremium left>
-                    Hi 👋 Are you looking to buy or rent a
-                    property in Dubai?
-                  </PreviewBubblePremium>
-
-                  <PreviewBubblePremium>
-                    I’m looking to buy a 3-bedroom villa in
-                    Dubai Hills around AED 4 million.
-                  </PreviewBubblePremium>
-
-                  <PreviewBubblePremium left>
-                    Are you considering ready-to-move,
-                    off-plan, or both?
-                  </PreviewBubblePremium>
-
-                  <PreviewBubblePremium>
-                    Both are fine. I’ll be using a mortgage.
-                  </PreviewBubblePremium>
-
-                  <div
-                    style={{
-                      marginTop: "28px",
-                      borderTop: `1px solid rgba(17,25,21,0.08)`,
-                      paddingTop: "18px",
-                      display: "grid",
-                      gridTemplateColumns: "1fr auto",
-                      alignItems: "center",
-                      gap: "14px",
-                    }}
-                  >
-                    <div>
-                      <div
-                        style={{
-                          fontSize: "10px",
-                          color: colors.champagne,
-                          textTransform: "uppercase",
-                          letterSpacing: "1.2px",
-                          fontWeight: "800",
-                        }}
-                      >
-                        Qualification engine
-                      </div>
-
-                      <div
-                        style={{
-                          fontSize: "13px",
-                          fontWeight: "700",
-                          marginTop: "5px",
-                          color: colors.forest,
-                        }}
-                      >
-                        Requirement captured
-                      </div>
-
-                      <div
-                        style={{
-                          fontSize: "11px",
-                          color: "#7C857F",
-                          marginTop: "3px",
-                        }}
-                      >
-                        Structured automatically in real time
-                      </div>
-                    </div>
-
-                    <div
-                      style={{
-                        width: "36px",
-                        height: "36px",
-                        borderRadius: "50%",
-                        background: colors.forest,
-                        color: colors.paper,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        fontWeight: "800",
-                        fontSize: "14px",
-                        boxShadow:
-                          "0 8px 20px rgba(12,51,43,0.16)",
-                      }}
-                    >
-                      ✓
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* floating labels */}
-              <FloatingTag
-                style={{
-                  position: "absolute",
-                  left: "0",
-                  top: "88px",
-                }}
-                eyebrow="LIVE INTENT"
-                text="Buy · Villa"
-              />
-
-              <FloatingTag
-                style={{
-                  position: "absolute",
-                  right: "-2px",
-                  bottom: "88px",
-                }}
-                eyebrow="LEAD STATUS"
-                text="Qualified"
-              />
-            </div>
-          </div>
-        </section>
-
-        {/* BRAND STATEMENT */}
         <section
           style={{
-            background: colors.forest,
-            color: colors.paper,
-            padding: "96px 34px",
+            minHeight: "100vh",
             position: "relative",
             overflow: "hidden",
+            backgroundImage: `url("${dubaiHero}")`,
+            backgroundSize: "cover",
+            backgroundPosition: "center 48%",
           }}
         >
+          {/* IMAGE TREATMENT */}
           <div
             style={{
               position: "absolute",
-              right: "-80px",
-              top: "-100px",
-              width: "400px",
-              height: "400px",
-              borderRadius: "50%",
-              border:
-                "1px solid rgba(184,154,103,0.16)",
+              inset: 0,
+              background:
+                "linear-gradient(90deg, rgba(248,244,235,.98) 0%, rgba(248,244,235,.94) 28%, rgba(248,244,235,.72) 49%, rgba(248,244,235,.28) 72%, rgba(8,40,33,.10) 100%)",
             }}
           />
 
           <div
             style={{
               position: "absolute",
-              right: "40px",
-              top: "-15px",
-              width: "280px",
-              height: "280px",
+              inset: 0,
+              background:
+                "linear-gradient(180deg, rgba(255,252,245,.25), transparent 45%, rgba(8,32,27,.22))",
+            }}
+          />
+
+          <div
+            style={{
+              position: "absolute",
+              width: "600px",
+              height: "600px",
+              borderRadius: "50%",
+              right: "13%",
+              top: "13%",
+              background:
+                "radial-gradient(circle, rgba(195,159,99,.22), rgba(195,159,99,.05) 46%, transparent 72%)",
+              filter: "blur(12px)",
+              animation: "glowPulse 8s ease-in-out infinite",
+            }}
+          />
+
+          {/* NAV */}
+
+          <nav
+            style={{
+              maxWidth: "1360px",
+              margin: "0 auto",
+              padding: "28px 38px",
+              position: "relative",
+              zIndex: 10,
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
+            <BrandMark />
+
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "34px",
+              }}
+            >
+              <div
+                className="desktopNavLinks"
+                style={{
+                  display: "flex",
+                  gap: "30px",
+                  color: "#2E3934",
+                  fontSize: "10px",
+                  letterSpacing: "1.5px",
+                  textTransform: "uppercase",
+                  fontWeight: "700",
+                }}
+              >
+                <span>Solutions</span>
+                <span>For Teams</span>
+                <span>How it works</span>
+              </div>
+
+              <button
+                className="nomadButton"
+                onClick={openDemo}
+                style={{
+                  border: "1px solid rgba(211,181,126,.68)",
+                  background:
+                    "linear-gradient(135deg, #082F27, #0D483B)",
+                  color: "white",
+                  padding: "13px 21px",
+                  borderRadius: "999px",
+                  cursor: "pointer",
+                  fontWeight: "800",
+                  fontSize: "12px",
+                  boxShadow:
+                    "0 14px 38px rgba(8,47,39,.20)",
+                }}
+              >
+                Enter Live Experience
+                <span style={{ marginLeft: "12px" }}>↗</span>
+              </button>
+            </div>
+          </nav>
+
+          {/* HERO CONTENT */}
+
+          <div
+            className="heroSection"
+            style={{
+              width: "100%",
+              maxWidth: "1360px",
+              margin: "0 auto",
+              padding: "66px 38px 72px",
+              position: "relative",
+              zIndex: 5,
+            }}
+          >
+            <div
+              className="heroGrid"
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1.02fr .98fr",
+                gap: "76px",
+                alignItems: "center",
+              }}
+            >
+              {/* LEFT */}
+
+              <div className="heroContent">
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "12px",
+                    color: "#A57F43",
+                    textTransform: "uppercase",
+                    letterSpacing: "1.8px",
+                    fontSize: "10px",
+                    fontWeight: "800",
+                    marginBottom: "28px",
+                  }}
+                >
+                  <span
+                    style={{
+                      width: "34px",
+                      height: "1px",
+                      background: "#A57F43",
+                    }}
+                  />
+
+                  Intelligent Property Qualification
+                </div>
+
+                <h1
+                  className="heroTitle"
+                  style={{
+                    margin: 0,
+                    maxWidth: "680px",
+                    fontSize: "clamp(62px, 6vw, 94px)",
+                    lineHeight: ".94",
+                    letterSpacing: "-5px",
+                    fontWeight: "710",
+                  }}
+                >
+                  Every enquiry
+                  <br />
+                  deserves a
+                  <br />
+
+                  <span
+                    style={{
+                      display: "inline-block",
+                      marginTop: "7px",
+                      fontFamily:
+                        'Georgia, "Times New Roman", serif',
+                      fontWeight: "400",
+                      fontStyle: "italic",
+                      color: colors.emerald,
+                      letterSpacing: "-3px",
+                    }}
+                  >
+                    better conversation.
+                  </span>
+                </h1>
+
+                <p
+                  style={{
+                    maxWidth: "610px",
+                    margin: "32px 0 0",
+                    color: "#5D6862",
+                    fontSize: "16px",
+                    lineHeight: "1.75",
+                  }}
+                >
+                  NOMAD qualifies buyers and tenants naturally,
+                  understands intent in real time, structures every
+                  requirement, and hands your sales team an
+                  opportunity ready for action.
+                </p>
+
+                <div
+                  style={{
+                    marginTop: "36px",
+                    display: "flex",
+                    flexWrap: "wrap",
+                    alignItems: "center",
+                    gap: "16px",
+                  }}
+                >
+                  <button
+                    className="nomadButton"
+                    onClick={openDemo}
+                    style={{
+                      border: "none",
+                      background: colors.forest,
+                      color: "white",
+                      borderRadius: "999px",
+                      padding: "16px 25px",
+                      fontSize: "13px",
+                      fontWeight: "800",
+                      cursor: "pointer",
+                      boxShadow:
+                        "0 17px 38px rgba(8,47,39,.22)",
+                    }}
+                  >
+                    Experience NOMAD
+                    <span style={{ marginLeft: "13px" }}>→</span>
+                  </button>
+
+                  <div
+                    style={{
+                      fontSize: "12px",
+                      color: "#696F6B",
+                    }}
+                  >
+                    No forms. No scripts. Just conversation.
+                  </div>
+                </div>
+
+                <div
+                  className="heroStats"
+                  style={{
+                    marginTop: "56px",
+                    display: "grid",
+                    gridTemplateColumns:
+                      "repeat(3, minmax(100px,1fr))",
+                    maxWidth: "570px",
+                    borderTop:
+                      "1px solid rgba(17,25,21,.13)",
+                  }}
+                >
+                  <Metric
+                    value="24/7"
+                    label="Qualification"
+                  />
+
+                  <Metric
+                    value="Live"
+                    label="Lead capture"
+                  />
+
+                  <Metric
+                    value="Instant"
+                    label="Sales handoff"
+                  />
+                </div>
+              </div>
+
+              {/* RIGHT PRODUCT */}
+
+              <div
+                className="heroPreview"
+                style={{
+                  minHeight: "620px",
+                  position: "relative",
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                {/* architectural line */}
+
+                <div
+                  style={{
+                    position: "absolute",
+                    width: "78%",
+                    height: "82%",
+                    right: "-2%",
+                    top: "4%",
+                    border:
+                      "1px solid rgba(201,166,106,.35)",
+                    borderRadius: "240px 240px 24px 24px",
+                  }}
+                />
+
+                <div
+                  className="previewCard nomadGlass"
+                  style={{
+                    width: "100%",
+                    maxWidth: "465px",
+                    borderRadius: "26px",
+                    overflow: "hidden",
+                    background:
+                      "rgba(255,253,248,.91)",
+                    backdropFilter: "blur(20px)",
+                    border:
+                      "1px solid rgba(255,255,255,.72)",
+                    boxShadow:
+                      "0 38px 95px rgba(11,31,26,.24), 0 10px 30px rgba(7,55,44,.10)",
+                    position: "relative",
+                    zIndex: 3,
+                    animation:
+                      "floatNomad 8s ease-in-out infinite",
+                  }}
+                >
+                  <div
+                    style={{
+                      background:
+                        "linear-gradient(135deg,#062F27,#0A473A)",
+                      color: "white",
+                      padding: "19px 20px",
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "12px",
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: "40px",
+                          height: "40px",
+                          borderRadius: "50%",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          background:
+                            "linear-gradient(135deg,#226654,#0F4035)",
+                          border:
+                            "1px solid rgba(255,255,255,.14)",
+                          fontWeight: "800",
+                          fontSize: "13px",
+                        }}
+                      >
+                        N
+                      </div>
+
+                      <div>
+                        <div
+                          style={{
+                            fontSize: "13px",
+                            fontWeight: "750",
+                          }}
+                        >
+                          NOMAD Property Assistant
+                        </div>
+
+                        <div
+                          style={{
+                            marginTop: "4px",
+                            fontSize: "10px",
+                            color:
+                              "rgba(255,255,255,.64)",
+                          }}
+                        >
+                          <span
+                            style={{
+                              color: "#69C19B",
+                            }}
+                          >
+                            ●
+                          </span>{" "}
+                          Available now
+                        </div>
+                      </div>
+                    </div>
+
+                    <div
+                      style={{
+                        color: "#D6BC8E",
+                        fontSize: "9px",
+                        fontWeight: "800",
+                        letterSpacing: "1.4px",
+                      }}
+                    >
+                      LIVE
+                    </div>
+                  </div>
+
+                  <div
+                    style={{
+                      padding: "28px 24px",
+                      background:
+                        "rgba(253,250,244,.94)",
+                    }}
+                  >
+                    <PreviewBubblePremium left>
+                      Hi 👋 Are you looking to buy or rent a
+                      property in Dubai?
+                    </PreviewBubblePremium>
+
+                    <PreviewBubblePremium>
+                      I’m looking to buy a 3-bedroom villa in
+                      Dubai Hills around AED 4 million.
+                    </PreviewBubblePremium>
+
+                    <PreviewBubblePremium left>
+                      Are you considering ready-to-move,
+                      off-plan, or both?
+                    </PreviewBubblePremium>
+
+                    <PreviewBubblePremium>
+                      Both are fine. I’ll be using a mortgage.
+                    </PreviewBubblePremium>
+
+                    <div
+                      style={{
+                        marginTop: "27px",
+                        paddingTop: "18px",
+                        borderTop:
+                          "1px solid rgba(16,24,20,.08)",
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        gap: "20px",
+                      }}
+                    >
+                      <div>
+                        <div
+                          style={{
+                            color: "#A9844D",
+                            fontSize: "9px",
+                            letterSpacing: "1.35px",
+                            textTransform: "uppercase",
+                            fontWeight: "800",
+                          }}
+                        >
+                          Qualification engine
+                        </div>
+
+                        <div
+                          style={{
+                            marginTop: "6px",
+                            fontSize: "13px",
+                            fontWeight: "750",
+                            color: colors.forest,
+                          }}
+                        >
+                          Requirement captured
+                        </div>
+
+                        <div
+                          style={{
+                            marginTop: "3px",
+                            color: "#7C847F",
+                            fontSize: "10px",
+                          }}
+                        >
+                          Structured automatically in real time
+                        </div>
+                      </div>
+
+                      <div
+                        style={{
+                          width: "38px",
+                          height: "38px",
+                          borderRadius: "50%",
+                          background: colors.forest,
+                          color: "white",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontWeight: "800",
+                        }}
+                      >
+                        ✓
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <FloatingTag
+                  className="floatingIntent"
+                  style={{
+                    position: "absolute",
+                    top: "100px",
+                    left: "-8px",
+                    zIndex: 4,
+                  }}
+                  eyebrow="LIVE INTENT"
+                  text="Buy · Villa"
+                />
+
+                <FloatingTag
+                  className="floatingStatus"
+                  style={{
+                    position: "absolute",
+                    right: "-5px",
+                    bottom: "90px",
+                    zIndex: 4,
+                  }}
+                  eyebrow="LEAD STATUS"
+                  text="Qualified"
+                />
+              </div>
+            </div>
+
+            {/* BOTTOM HERO CAPTION */}
+
+            <div
+              style={{
+                marginTop: "16px",
+                display: "flex",
+                alignItems: "center",
+                gap: "14px",
+                color: "#9A7844",
+                fontSize: "9px",
+                fontWeight: "800",
+                textTransform: "uppercase",
+                letterSpacing: "1.7px",
+              }}
+            >
+              <span
+                style={{
+                  width: "38px",
+                  height: "1px",
+                  background: "#A9844D",
+                }}
+              />
+
+              Built for Dubai's real estate teams
+            </div>
+          </div>
+        </section>
+
+        {/* ================= POSITIONING ================= */}
+
+        <section
+          style={{
+            background: colors.forest,
+            color: "white",
+            position: "relative",
+            overflow: "hidden",
+            padding: "108px 34px",
+          }}
+        >
+          <div
+            style={{
+              position: "absolute",
+              width: "540px",
+              height: "540px",
+              right: "-180px",
+              top: "-200px",
               borderRadius: "50%",
               border:
-                "1px solid rgba(184,154,103,0.08)",
+                "1px solid rgba(211,185,137,.14)",
             }}
           />
 
@@ -840,89 +957,85 @@ export default function Home() {
               maxWidth: "1180px",
               margin: "0 auto",
               position: "relative",
-              zIndex: 2,
             }}
           >
             <div
               style={{
-                maxWidth: "760px",
+                color: colors.champagneSoft,
+                fontSize: "10px",
+                fontWeight: "800",
+                letterSpacing: "1.7px",
+                textTransform: "uppercase",
+                marginBottom: "22px",
               }}
             >
-              <div
-                style={{
-                  color: colors.champagneSoft,
-                  fontSize: "10px",
-                  fontWeight: "800",
-                  textTransform: "uppercase",
-                  letterSpacing: "1.8px",
-                  marginBottom: "20px",
-                }}
-              >
-                Built around the way property teams sell
-              </div>
-
-              <h2
-                style={{
-                  margin: 0,
-                  fontSize: "clamp(38px, 5vw, 64px)",
-                  lineHeight: "1.05",
-                  letterSpacing: "-2.8px",
-                  fontWeight: "650",
-                }}
-              >
-                Not another chatbot.
-                <br />
-                <span
-                  style={{
-                    fontFamily:
-                      'Georgia, "Times New Roman", serif',
-                    fontStyle: "italic",
-                    color: colors.champagneSoft,
-                    fontWeight: "400",
-                  }}
-                >
-                  A qualification layer
-                </span>{" "}
-                for your sales operation.
-              </h2>
+              Designed for the modern brokerage
             </div>
+
+            <h2
+              style={{
+                maxWidth: "850px",
+                margin: 0,
+                fontSize: "clamp(42px,5vw,68px)",
+                lineHeight: "1.04",
+                letterSpacing: "-3px",
+                fontWeight: "620",
+              }}
+            >
+              Not another chatbot.
+              <br />
+
+              <span
+                style={{
+                  fontFamily:
+                    'Georgia, "Times New Roman", serif',
+                  fontWeight: "400",
+                  fontStyle: "italic",
+                  color: colors.champagneSoft,
+                }}
+              >
+                The intelligence layer
+              </span>{" "}
+              between your enquiry and your sales team.
+            </h2>
 
             <div
               style={{
-                marginTop: "68px",
                 display: "grid",
                 gridTemplateColumns:
-                  "repeat(auto-fit, minmax(220px, 1fr))",
+                  "repeat(auto-fit,minmax(230px,1fr))",
+                marginTop: "76px",
                 borderTop:
-                  "1px solid rgba(255,255,255,0.10)",
+                  "1px solid rgba(255,255,255,.10)",
               }}
             >
               <EditorialFeature
                 number="01"
-                title="Natural qualification"
-                text="NOMAD adapts to the customer instead of forcing them through a rigid lead form."
+                title="Understands naturally"
+                text="NOMAD adapts to the customer instead of forcing them through a rigid form or scripted decision tree."
               />
 
               <EditorialFeature
                 number="02"
-                title="Structured intelligence"
-                text="Every requirement, preference, timeline and contact detail becomes usable sales data."
+                title="Structures automatically"
+                text="Property type, budget, location, timing, financing and contact details become usable sales intelligence."
               />
 
               <EditorialFeature
                 number="03"
-                title="Immediate handoff"
-                text="Qualified opportunities flow into your team’s workflow ready for follow-up."
+                title="Hands off intelligently"
+                text="Your consultant receives a qualified opportunity with context before the first human call."
               />
             </div>
           </div>
         </section>
 
-        {/* PROCESS */}
+        {/* ================= FLOW ================= */}
+
         <section
           style={{
-            padding: "102px 34px",
             background: colors.ivorySoft,
+            padding: "110px 34px",
           }}
         >
           <div
@@ -935,8 +1048,8 @@ export default function Home() {
               style={{
                 display: "grid",
                 gridTemplateColumns:
-                  "repeat(auto-fit, minmax(280px, 1fr))",
-                gap: "60px",
+                  "repeat(auto-fit,minmax(300px,1fr))",
+                gap: "80px",
                 alignItems: "end",
               }}
             >
@@ -944,78 +1057,80 @@ export default function Home() {
                 <div
                   style={{
                     color: colors.champagne,
-                    textTransform: "uppercase",
-                    letterSpacing: "1.6px",
                     fontSize: "10px",
+                    textTransform: "uppercase",
+                    letterSpacing: "1.7px",
                     fontWeight: "800",
-                    marginBottom: "18px",
+                    marginBottom: "20px",
                   }}
                 >
-                  The NOMAD flow
+                  The NOMAD journey
                 </div>
 
                 <h2
                   style={{
+                    fontSize: "clamp(42px,4.5vw,60px)",
+                    lineHeight: "1.05",
+                    letterSpacing: "-2.4px",
                     margin: 0,
-                    fontSize: "46px",
-                    lineHeight: "1.06",
-                    letterSpacing: "-2px",
-                    maxWidth: "520px",
-                    fontWeight: "650",
+                    fontWeight: "640",
                   }}
                 >
-                  From first message to sales-ready opportunity.
+                  From hello to
+                  <br />
+                  sales-ready.
                 </h2>
               </div>
 
               <p
                 style={{
                   margin: 0,
+                  maxWidth: "490px",
                   fontSize: "15px",
                   lineHeight: "1.8",
-                  color: "#68716B",
-                  maxWidth: "500px",
+                  color: "#66716B",
                 }}
               >
-                NOMAD sits between the customer and your sales
-                team, making every conversation useful before a
-                consultant ever needs to step in.
+                Every conversation becomes useful before a
+                consultant ever needs to step in. NOMAD captures
+                intent, qualifies the opportunity, structures the
+                data and creates the handoff.
               </p>
             </div>
 
             <div
               style={{
-                marginTop: "64px",
+                marginTop: "66px",
                 display: "grid",
                 gridTemplateColumns:
-                  "repeat(auto-fit, minmax(220px, 1fr))",
-                gap: "1px",
+                  "repeat(auto-fit,minmax(220px,1fr))",
                 background: colors.line,
+                gap: "1px",
                 border: `1px solid ${colors.line}`,
               }}
             >
               <ProcessStep
                 number="01"
                 title="Enquiry"
-                text="A buyer or tenant starts a natural conversation."
+                text="A buyer or tenant begins a natural conversation."
               />
 
               <ProcessStep
                 number="02"
                 title="Qualification"
-                text="NOMAD understands intent, budget, location, timing and requirements."
+                text="NOMAD understands property requirements and intent."
               />
 
               <ProcessStep
                 number="03"
-                title="Capture"
-                text="The conversation becomes structured lead data."
+                title="Intelligence"
+                text="Conversation becomes structured lead data automatically."
               />
 
               <ProcessStep
                 number="04"
                 title="Handoff"
-                text="Your sales team receives a qualified opportunity ready for action."
+                text="Your sales team receives a qualified opportunity ready to act."
               />
             </div>
 
@@ -1026,18 +1141,19 @@ export default function Home() {
               }}
             >
               <button
+                className="nomadButton"
                 onClick={openDemo}
                 style={{
                   border: "none",
                   background: colors.forest,
-                  color: colors.paper,
+                  color: "white",
                   borderRadius: "999px",
-                  padding: "16px 26px",
+                  padding: "16px 28px",
                   fontSize: "13px",
                   fontWeight: "800",
                   cursor: "pointer",
                   boxShadow:
-                    "0 18px 36px rgba(12,51,43,0.16)",
+                    "0 18px 38px rgba(8,47,39,.18)",
                 }}
               >
                 Start a live conversation
@@ -1048,11 +1164,11 @@ export default function Home() {
         </section>
 
         {/* FOOTER */}
+
         <footer
           style={{
-            padding: "30px 34px",
             background: colors.ink,
-            color: "rgba(255,255,255,0.60)",
+            padding: "31px 34px",
           }}
         >
           <div
@@ -1061,17 +1177,18 @@ export default function Home() {
               margin: "0 auto",
               display: "flex",
               flexWrap: "wrap",
+              justifyContent: "space-between",
               gap: "20px",
               alignItems: "center",
-              justifyContent: "space-between",
             }}
           >
             <BrandMark dark />
 
             <div
               style={{
-                fontSize: "11px",
-                letterSpacing: "0.25px",
+                color: "rgba(255,255,255,.46)",
+                fontSize: "10px",
+                letterSpacing: ".35px",
               }}
             >
               Intelligent property qualification for modern real
@@ -1083,50 +1200,48 @@ export default function Home() {
     );
   }
 
-  /* LIVE DEMO */
+  /* ======================================================
+     LIVE DEMO
+     BUSINESS LOGIC UNCHANGED
+     ====================================================== */
+
   return (
     <main
       style={{
         minHeight: "100vh",
         background:
-          "radial-gradient(circle at 80% 20%, rgba(184,154,103,0.13), transparent 30%), linear-gradient(135deg, #F5F1E8 0%, #FAF8F3 100%)",
+          "radial-gradient(circle at 78% 18%, rgba(184,154,103,.15), transparent 30%), linear-gradient(135deg,#F5F0E7,#FBF9F4)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
         fontFamily:
           'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif',
         padding: "20px",
-        boxSizing: "border-box",
       }}
     >
-      <div
+      <button
+        onClick={backToLanding}
+        disabled={loading}
         style={{
           position: "fixed",
           top: "22px",
           left: "22px",
           zIndex: 10,
+          border: `1px solid ${colors.line}`,
+          background: "rgba(255,253,248,.88)",
+          color: colors.forest,
+          padding: "10px 15px",
+          borderRadius: "999px",
+          cursor: loading ? "not-allowed" : "pointer",
+          fontWeight: "800",
+          fontSize: "11px",
+          boxShadow:
+            "0 8px 22px rgba(16,24,20,.05)",
+          backdropFilter: "blur(12px)",
         }}
       >
-        <button
-          onClick={backToLanding}
-          disabled={loading}
-          style={{
-            border: `1px solid ${colors.line}`,
-            background: "rgba(255,253,248,0.84)",
-            color: colors.forest,
-            padding: "10px 14px",
-            borderRadius: "999px",
-            cursor: loading ? "not-allowed" : "pointer",
-            fontSize: "11px",
-            fontWeight: "800",
-            opacity: loading ? 0.5 : 1,
-            boxShadow: "0 8px 20px rgba(17,25,21,0.05)",
-            backdropFilter: "blur(12px)",
-          }}
-        >
-          ← Back to NOMAD
-        </button>
-      </div>
+        ← Back to NOMAD
+      </button>
 
       <div
         style={{
@@ -1137,31 +1252,30 @@ export default function Home() {
           background: colors.paper,
           borderRadius: "28px",
           boxShadow:
-            "0 35px 90px rgba(17,25,21,0.16), 0 7px 25px rgba(12,51,43,0.06)",
+            "0 35px 90px rgba(16,24,20,.17)",
           overflow: "hidden",
           display: "flex",
           flexDirection: "column",
-          border: `1px solid rgba(17,25,21,0.08)`,
+          border:
+            "1px solid rgba(16,24,20,.08)",
         }}
       >
-        {/* HEADER */}
+        {/* CHAT HEADER */}
+
         <div
           style={{
             background: colors.forest,
-            color: colors.paper,
+            color: "white",
             padding: "18px",
             display: "flex",
-            alignItems: "center",
             justifyContent: "space-between",
-            gap: "14px",
-            flexShrink: 0,
+            alignItems: "center",
           }}
         >
           <div
             style={{
               display: "flex",
               alignItems: "center",
-              minWidth: 0,
             }}
           >
             <div
@@ -1170,29 +1284,22 @@ export default function Home() {
                 height: "44px",
                 borderRadius: "50%",
                 background:
-                  "linear-gradient(135deg, #1D5A4B, #103D34)",
-                border:
-                  "1px solid rgba(255,255,255,0.14)",
+                  "linear-gradient(135deg,#206250,#0F4035)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                fontSize: "15px",
                 fontWeight: "800",
                 marginRight: "12px",
-                flexShrink: 0,
               }}
             >
               N
             </div>
 
-            <div style={{ minWidth: 0 }}>
+            <div>
               <div
                 style={{
                   fontSize: "14px",
-                  fontWeight: "700",
-                  whiteSpace: "nowrap",
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
+                  fontWeight: "750",
                 }}
               >
                 NOMAD Property Assistant
@@ -1200,25 +1307,20 @@ export default function Home() {
 
               <div
                 style={{
+                  marginTop: "4px",
+                  color: "rgba(255,255,255,.62)",
                   fontSize: "10px",
-                  marginTop: "5px",
-                  color: "rgba(255,255,255,0.62)",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "6px",
                 }}
               >
                 <span
                   style={{
-                    width: "6px",
-                    height: "6px",
-                    borderRadius: "50%",
-                    background: loading
-                      ? colors.champagneSoft
-                      : "#78C7A9",
+                    color: loading
+                      ? "#D4C2A1"
+                      : "#71C3A3",
                   }}
-                />
-
+                >
+                  ●
+                </span>{" "}
                 {loading ? "Typing..." : "Available now"}
               </div>
             </div>
@@ -1227,27 +1329,27 @@ export default function Home() {
           <button
             onClick={startNewConversation}
             disabled={loading}
-            title="Start new conversation"
             style={{
-              border:
-                "1px solid rgba(255,255,255,0.16)",
-              background: "rgba(255,255,255,0.06)",
-              color: colors.paper,
               width: "38px",
               height: "38px",
               borderRadius: "50%",
+              border:
+                "1px solid rgba(255,255,255,.14)",
+              background:
+                "rgba(255,255,255,.06)",
+              color: "white",
               cursor: loading
                 ? "not-allowed"
                 : "pointer",
               fontSize: "18px",
-              opacity: loading ? 0.55 : 1,
             }}
           >
             ↻
           </button>
         </div>
 
-        {/* CHAT */}
+        {/* CHAT BODY */}
+
         <div
           style={{
             flex: 1,
@@ -1260,20 +1362,14 @@ export default function Home() {
             style={{
               textAlign: "center",
               marginBottom: "24px",
+              color: colors.champagne,
+              fontSize: "9px",
+              fontWeight: "800",
+              letterSpacing: "1.3px",
+              textTransform: "uppercase",
             }}
           >
-            <span
-              style={{
-                display: "inline-block",
-                fontSize: "9px",
-                fontWeight: "800",
-                letterSpacing: "1.2px",
-                textTransform: "uppercase",
-                color: colors.champagne,
-              }}
-            >
-              Private property concierge
-            </span>
+            Private Property Concierge
           </div>
 
           {messages.map((message, index) => {
@@ -1297,7 +1393,7 @@ export default function Home() {
                       height: "28px",
                       borderRadius: "50%",
                       background: colors.forest,
-                      color: colors.paper,
+                      color: "white",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
@@ -1315,7 +1411,7 @@ export default function Home() {
                 <div
                   style={{
                     background: isUser
-                      ? "#E8E4D8"
+                      ? "#E8E3D7"
                       : colors.paper,
                     color: colors.ink,
                     padding: "11px 14px",
@@ -1323,12 +1419,11 @@ export default function Home() {
                       ? "16px 16px 4px 16px"
                       : "16px 16px 16px 4px",
                     maxWidth: "78%",
-                    whiteSpace: "pre-line",
                     fontSize: "13px",
                     lineHeight: "1.55",
+                    whiteSpace: "pre-line",
                     boxShadow:
-                      "0 2px 8px rgba(17,25,21,0.05)",
-                    border: `1px solid rgba(17,25,21,0.04)`,
+                      "0 2px 8px rgba(16,24,20,.05)",
                   }}
                 >
                   {message.text}
@@ -1341,7 +1436,6 @@ export default function Home() {
             <div
               style={{
                 display: "flex",
-                alignItems: "center",
               }}
             >
               <div
@@ -1350,7 +1444,7 @@ export default function Home() {
                   height: "28px",
                   borderRadius: "50%",
                   background: colors.forest,
-                  color: colors.paper,
+                  color: "white",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -1364,12 +1458,11 @@ export default function Home() {
 
               <div
                 style={{
-                  background: colors.paper,
-                  borderRadius: "16px",
                   padding: "11px 14px",
-                  color: "#847F73",
+                  borderRadius: "16px",
+                  background: colors.paper,
+                  color: "#8B8579",
                   letterSpacing: "2px",
-                  border: `1px solid rgba(17,25,21,0.04)`,
                 }}
               >
                 •••
@@ -1380,7 +1473,8 @@ export default function Home() {
           <div ref={chatEndRef} />
         </div>
 
-        {/* INPUT */}
+        {/* COMPOSER */}
+
         <div
           style={{
             padding: "13px 14px 16px",
@@ -1393,10 +1487,11 @@ export default function Home() {
               display: "flex",
               alignItems: "center",
               gap: "10px",
-              background: "#F4F1E9",
-              border: `1px solid rgba(17,25,21,0.07)`,
-              borderRadius: "999px",
               padding: "5px 5px 5px 16px",
+              background: "#F3EFE7",
+              borderRadius: "999px",
+              border:
+                "1px solid rgba(16,24,20,.07)",
             }}
           >
             <input
@@ -1413,10 +1508,10 @@ export default function Home() {
               disabled={loading}
               style={{
                 flex: 1,
-                padding: "10px 0",
                 border: "none",
                 outline: "none",
                 background: "transparent",
+                padding: "10px 0",
                 fontSize: "13px",
                 color: colors.ink,
               }}
@@ -1426,12 +1521,13 @@ export default function Home() {
               onClick={sendMessage}
               disabled={loading || !input.trim()}
               style={{
-                border: "none",
                 width: "40px",
                 height: "40px",
-                background: colors.forest,
-                color: colors.paper,
+                border: "none",
                 borderRadius: "50%",
+                background: colors.forest,
+                color: "white",
+                fontSize: "15px",
                 cursor:
                   loading || !input.trim()
                     ? "not-allowed"
@@ -1440,7 +1536,6 @@ export default function Home() {
                   loading || !input.trim()
                     ? 0.38
                     : 1,
-                fontSize: "15px",
               }}
             >
               ↑
@@ -1451,9 +1546,9 @@ export default function Home() {
             style={{
               textAlign: "center",
               marginTop: "9px",
+              color: "#999186",
               fontSize: "9px",
-              color: "#999287",
-              letterSpacing: "0.45px",
+              letterSpacing: ".4px",
             }}
           >
             Intelligent qualification · Real-time lead capture
@@ -1464,34 +1559,36 @@ export default function Home() {
   );
 }
 
+/* ======================================================
+   COMPONENTS
+   ====================================================== */
+
 function BrandMark({ dark = false }) {
   return (
     <div
       style={{
         display: "flex",
-        alignItems: "center",
         gap: "12px",
+        alignItems: "center",
       }}
     >
       <div
         style={{
-          width: "42px",
-          height: "42px",
+          width: "44px",
+          height: "44px",
           borderRadius: "50%",
           background: dark
             ? colors.champagne
             : colors.forest,
-          color: dark
-            ? colors.ink
-            : colors.paper,
+          color: dark ? colors.ink : "white",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
           fontWeight: "800",
-          fontSize: "15px",
+          fontSize: "14px",
           boxShadow: dark
             ? "none"
-            : "0 10px 26px rgba(12,51,43,0.14)",
+            : "0 12px 28px rgba(8,47,39,.16)",
         }}
       >
         N
@@ -1500,11 +1597,11 @@ function BrandMark({ dark = false }) {
       <div>
         <div
           style={{
-            fontWeight: "800",
             fontSize: "16px",
-            letterSpacing: "0.4px",
+            fontWeight: "850",
+            letterSpacing: "1px",
             color: dark
-              ? colors.paper
+              ? "white"
               : colors.ink,
           }}
         >
@@ -1513,13 +1610,13 @@ function BrandMark({ dark = false }) {
 
         <div
           style={{
-            fontSize: "9px",
-            color: dark
-              ? "rgba(255,255,255,0.48)"
-              : "#7A817C",
-            letterSpacing: "1.55px",
-            textTransform: "uppercase",
             marginTop: "2px",
+            color: dark
+              ? "rgba(255,255,255,.44)"
+              : "#757D78",
+            fontSize: "8px",
+            letterSpacing: "1.8px",
+            textTransform: "uppercase",
           }}
         >
           Property Intelligence
@@ -1538,9 +1635,9 @@ function Metric({ value, label }) {
     >
       <div
         style={{
-          fontSize: "17px",
-          fontWeight: "800",
           color: colors.forest,
+          fontSize: "17px",
+          fontWeight: "850",
         }}
       >
         {value}
@@ -1548,11 +1645,11 @@ function Metric({ value, label }) {
 
       <div
         style={{
+          color: "#7F8882",
           marginTop: "4px",
-          color: "#858C87",
-          fontSize: "11px",
+          fontSize: "9px",
           textTransform: "uppercase",
-          letterSpacing: "0.85px",
+          letterSpacing: "1px",
         }}
       >
         {label}
@@ -1577,21 +1674,19 @@ function PreviewBubblePremium({
     >
       <div
         style={{
-          maxWidth: "78%",
-          padding: "10px 13px",
+          maxWidth: "80%",
+          padding: "11px 13px",
           borderRadius: left
             ? "14px 14px 14px 4px"
             : "14px 14px 4px 14px",
           background: left
             ? colors.paper
-            : "#E8E4D8",
-          color: "#2E3833",
+            : "#E9E4D8",
+          color: "#303A35",
           fontSize: "11px",
           lineHeight: "1.55",
-          border:
-            "1px solid rgba(17,25,21,0.04)",
           boxShadow:
-            "0 3px 8px rgba(17,25,21,0.04)",
+            "0 3px 9px rgba(16,24,20,.045)",
         }}
       >
         {children}
@@ -1603,29 +1698,33 @@ function PreviewBubblePremium({
 function FloatingTag({
   eyebrow,
   text,
+  className = "",
   style = {},
 }) {
   return (
     <div
+      className={className}
       style={{
+        minWidth: "122px",
         padding: "12px 14px",
-        minWidth: "118px",
-        borderRadius: "12px",
-        background: "rgba(255,253,248,0.90)",
-        border: `1px solid rgba(17,25,21,0.07)`,
-        boxShadow:
-          "0 14px 34px rgba(17,25,21,0.10)",
+        background:
+          "rgba(255,253,248,.92)",
         backdropFilter: "blur(14px)",
+        borderRadius: "12px",
+        border:
+          "1px solid rgba(16,24,20,.07)",
+        boxShadow:
+          "0 15px 35px rgba(16,24,20,.12)",
         ...style,
       }}
     >
       <div
         style={{
+          color: colors.champagne,
           fontSize: "8px",
           textTransform: "uppercase",
-          letterSpacing: "1.1px",
-          color: colors.champagne,
-          fontWeight: "800",
+          letterSpacing: "1.2px",
+          fontWeight: "850",
         }}
       >
         {eyebrow}
@@ -1634,9 +1733,9 @@ function FloatingTag({
       <div
         style={{
           marginTop: "5px",
-          fontSize: "11px",
           color: colors.forest,
-          fontWeight: "700",
+          fontSize: "11px",
+          fontWeight: "750",
         }}
       >
         {text}
@@ -1653,9 +1752,9 @@ function EditorialFeature({
   return (
     <div
       style={{
-        padding: "32px 26px 16px 0",
+        padding: "34px 28px 16px 0",
         borderRight:
-          "1px solid rgba(255,255,255,0.08)",
+          "1px solid rgba(255,255,255,.08)",
       }}
     >
       <div
@@ -1664,7 +1763,7 @@ function EditorialFeature({
           fontSize: "9px",
           letterSpacing: "1.4px",
           fontWeight: "800",
-          marginBottom: "28px",
+          marginBottom: "30px",
         }}
       >
         {number}
@@ -1672,9 +1771,8 @@ function EditorialFeature({
 
       <div
         style={{
-          fontSize: "16px",
+          fontSize: "17px",
           fontWeight: "700",
-          marginBottom: "10px",
         }}
       >
         {title}
@@ -1682,10 +1780,11 @@ function EditorialFeature({
 
       <div
         style={{
+          maxWidth: "285px",
+          marginTop: "11px",
           fontSize: "12px",
-          lineHeight: "1.7",
-          color: "rgba(255,255,255,0.54)",
-          maxWidth: "280px",
+          lineHeight: "1.75",
+          color: "rgba(255,255,255,.52)",
         }}
       >
         {text}
@@ -1703,15 +1802,15 @@ function ProcessStep({
     <div
       style={{
         background: colors.paper,
-        padding: "26px 24px 28px",
-        minHeight: "190px",
+        padding: "28px 25px 30px",
+        minHeight: "195px",
       }}
     >
       <div
         style={{
-          fontSize: "9px",
           color: colors.champagne,
-          fontWeight: "800",
+          fontSize: "9px",
+          fontWeight: "850",
           letterSpacing: "1.3px",
         }}
       >
@@ -1720,10 +1819,10 @@ function ProcessStep({
 
       <div
         style={{
-          marginTop: "34px",
-          fontSize: "17px",
-          fontWeight: "750",
+          marginTop: "35px",
           color: colors.forest,
+          fontSize: "17px",
+          fontWeight: "780",
         }}
       >
         {title}
@@ -1732,9 +1831,9 @@ function ProcessStep({
       <div
         style={{
           marginTop: "10px",
+          color: "#77817B",
           fontSize: "12px",
-          lineHeight: "1.65",
-          color: "#78817B",
+          lineHeight: "1.68",
         }}
       >
         {text}
