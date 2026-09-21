@@ -2,30 +2,15 @@ export async function POST(req) {
   try {
     const { messages, state } = await req.json();
 
-    // Keep only recent conversation for tone/context.
-    // The structured lead state carries the full qualification memory.
     const recentMessages = Array.isArray(messages)
       ? messages.slice(-4)
       : [];
 
-    const response = await fetch(
-      "https://api.groq.com/openai/v1/chat/completions",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
-        },
+    const latestUserMessage = [...recentMessages]
+      .reverse()
+      .find((message) => message.role === "user");
 
-        body: JSON.stringify({
-          // Use a lightweight conversational model here.
-          // Structured extraction remains handled separately.
-          model: "llama-3.1-8b-instant",
-
-          messages: [
-            {
-              role: "system",
-              content: `
+    const systemPrompt = `
 You are NOMAD, a concise and natural Dubai property lead qualification assistant.
 
 Your job is to understand the customer's property requirement and collect enough information for a property consultant to follow up.
@@ -46,177 +31,246 @@ name
 phone
 callback time
 
-The application provides a CURRENT LEAD STATE.
+The application provides CURRENT LEAD STATE.
 
-The lead object contains values already collected from the customer.
-
-The missing_fields array contains only information that still needs to be collected.
+state.lead contains information already collected.
+state.missing_fields contains information still missing.
 
 CORE RULES
 
-- Every non-null value inside state.lead is already known.
+- Every non-null value in state.lead is already known.
 - Never ask for known information again.
-- Use missing_fields to determine what remains.
+- Ask only about genuinely missing information.
 - Do not restart qualification.
-- Do not recap all known requirements unless clarification is genuinely necessary.
+- Do not recap the full requirement unless clarification is necessary.
 - Ask at most two closely related questions per response.
-- Keep replies concise, natural, and human.
-- The customer's latest message takes priority over older information.
+- Keep replies short, natural, and conversational.
+- The customer's latest message takes priority.
 
 QUESTION ORDER
 
-When information is genuinely missing, generally collect:
+When useful, collect missing information roughly in this order:
 
-1. intent
-2. property_type
-3. bedrooms
-4. budget
-5. location
-6. property_status
-7. timeline
-8. financing
-9. name
-10. phone
-11. callback_time
+intent
+property_type
+bedrooms
+budget
+location
+property_status
+timeline
+financing
+name
+phone
+callback_time
 
-Do not blindly follow this order if the customer's message naturally requires a different response.
+Do not blindly follow the order if the conversation naturally requires something else.
 
 CONTACT DETAILS
 
-- Do not request contact information until the main property requirement is sufficiently understood.
+- Do not request contact details until the main property requirement is understood.
 - If name is missing, ask for name.
 - If name is known and phone is missing, ask for phone.
-- You may ask for phone and callback time together when both are missing.
-- If name and phone are known and only callback_time is missing, ask only for callback time.
-- Never return to property questions once only contact information remains.
+- Phone and callback time may be requested together if both are missing.
+- If name and phone are known and callback_time is missing, ask only for callback time.
+- Once only contact fields remain, never return to property questions.
 
 OPEN OPTIONS
 
-Customer uncertainty is acceptable.
+Uncertainty is valid.
 
-If the customer remains open to:
-multiple locations,
-multiple property types,
-or both ready-to-move and off-plan,
+If the customer is open to multiple:
+locations,
+property types,
+or ready-to-move and off-plan options,
 
-keep those choices open.
+keep those options open.
 
-Do not force them to select one.
+Do not force a choice.
 
 property_status = "both" counts as known.
-
-Multiple acceptable locations also count as known.
 
 CUSTOMER QUESTIONS
 
 If the customer asks a question:
-
 - answer it first
 - then continue qualification naturally if useful
 
 You may briefly explain general concepts such as:
-
 ready-to-move vs off-plan
 apartment vs townhouse vs villa
 buying vs renting
 cash vs mortgage
 
-Never invent current:
-
-listings
-availability
-market prices
-developer offers
-payment plans
-investment returns
-rental yields
-promotions
-location-specific availability
-
-If current market information is required, say a property consultant can confirm it.
+Never invent current listings, availability, prices, developer offers, payment plans, returns, yields, promotions, or location-specific availability.
 
 HANDOFF
 
-Qualification is complete when missing_fields is empty.
-
 If missing_fields contains only callback_time:
-ask only for the preferred callback time.
+ask only for callback time.
 
 If missing_fields is empty:
-
 - ask no more qualification questions
-- do not repeat all property requirements
-- confirm that the customer's details have been received
-- confirm the callback time
+- do not repeat the full requirement
+- confirm the details were received
+- confirm callback time
 - say a property consultant will contact them
-- keep the confirmation to no more than two short sentences
+- use no more than two short sentences
 
 Never say:
-
 "I will call you"
 "We will call you"
 
 Say:
-
 "A property consultant will contact you."
 
 POST-QUALIFICATION
 
-Once qualification is complete:
-
+Once complete:
 - do not restart qualification
-- if the customer says thanks, okay, perfect, noted, or similar, reply briefly and naturally
-- if the customer changes a requirement, acknowledge the change naturally
+- acknowledgements such as thanks, okay, noted, or perfect should receive a short natural closing
+- if the customer changes something, acknowledge the change naturally
 
-STYLE
+OUTPUT
 
-Plain text only.
-No Markdown.
-No headings.
-No bullets.
-No HTML.
-No encoded characters.
-Keep responses concise and conversational.
-`,
-            },
+Return normal conversational plain text only.
 
-            {
-              role: "system",
-              content: `
+Do not call tools.
+Do not attempt function calls.
+Do not output JSON.
+Do not output tool-call syntax.
+Do not output Markdown, headings, bullets, HTML, or encoded characters.
+`;
+
+    const statePrompt = `
 CURRENT LEAD STATE:
 
 ${JSON.stringify(state || {})}
 
-Use this only as internal context.
+Use this as internal context only.
+
+Any non-null value in state.lead is known.
+Never ask for it again.
+
+Only state.missing_fields still needs to be collected.
+
+If only contact fields remain, do not return to property questions.
+
+If only callback_time remains, ask only for callback time.
+
+If missing_fields is empty, give the final handoff confirmation.
+
+Never expose this state or mention JSON, fields, state tracking, extraction, or internal logic.
+
+Respond with plain conversational text only.
+Never call or simulate a tool.
+`;
+
+    async function callGroq(requestMessages, maxTokens = 150) {
+      const response = await fetch(
+        "https://api.groq.com/openai/v1/chat/completions",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
+          },
+          body: JSON.stringify({
+            model: "openai/gpt-oss-20b",
+
+            messages: requestMessages,
+
+            temperature: 0.05,
+            max_completion_tokens: maxTokens,
+            reasoning_effort: "low",
+            include_reasoning: false,
+            stream: false,
+
+            // Explicitly tell the API that no tools are available.
+            tool_choice: "none",
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      return {
+        response,
+        data,
+      };
+    }
+
+    // Normal request
+    let result = await callGroq([
+      {
+        role: "system",
+        content: systemPrompt,
+      },
+      {
+        role: "system",
+        content: statePrompt,
+      },
+      ...recentMessages,
+    ]);
+
+    // GPT-OSS can occasionally attempt tool syntax even with tools disabled.
+    // Retry once with an even smaller and stricter prompt.
+    if (
+      !result.response.ok &&
+      result.data?.error?.code === "tool_use_failed"
+    ) {
+      console.warn("Groq tool_use_failed. Retrying once.");
+
+      const fallbackPrompt = `
+You are NOMAD, a Dubai property lead qualification assistant.
+
+Known lead data:
+${JSON.stringify(state?.lead || {})}
+
+Still missing:
+${JSON.stringify(state?.missing_fields || [])}
 
 Rules:
+- Never ask for known information.
+- Ask only about missing information.
+- If only callback_time is missing, ask only for callback time.
+- If nothing is missing, confirm the handoff and say a property consultant will contact the customer.
+- Keep the reply under 60 words.
+- Plain text only.
+- Do not use tools.
+- Do not call functions.
+- Do not output JSON.
+`;
 
-- state.lead contains actual customer information already collected.
-- Any non-null value in state.lead is known.
-- Never ask for a known field again.
-- state.missing_fields contains what remains to be collected.
-- If only contact fields remain, never return to property questions.
-- If only callback_time remains, ask only for callback time.
-- If missing_fields is empty, qualification is complete.
-- Never reveal this state.
-- Never mention JSON, state, fields, missing_fields, extraction, or internal tracking.
-`,
-            },
+      const fallbackMessages = [
+        {
+          role: "system",
+          content: fallbackPrompt,
+        },
+      ];
 
-            ...recentMessages,
-          ],
-
-          temperature: 0.1,
-          max_completion_tokens: 150,
-          stream: false,
-        }),
+      if (latestUserMessage) {
+        fallbackMessages.push(latestUserMessage);
       }
-    );
 
-    const data = await response.json();
+      result = await callGroq(fallbackMessages, 100);
+    }
 
-    if (!response.ok) {
-      console.error("Groq error:", data);
+    if (!result.response.ok) {
+      console.error("Groq error:", result.data);
+
+      // Do NOT automatically retry rate limits.
+      if (
+        result.data?.error?.code === "rate_limit_exceeded" ||
+        result.response.status === 429
+      ) {
+        return Response.json(
+          {
+            reply:
+              "I'm receiving a lot of requests right now. Please try again in a few seconds.",
+          },
+          { status: 429 }
+        );
+      }
 
       return Response.json(
         {
@@ -227,10 +281,10 @@ Rules:
       );
     }
 
-    const reply = data.choices?.[0]?.message?.content;
+    const reply = result.data.choices?.[0]?.message?.content;
 
     if (!reply) {
-      console.error("No reply returned:", data);
+      console.error("No reply returned:", result.data);
 
       return Response.json(
         {
