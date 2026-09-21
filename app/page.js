@@ -1,6 +1,16 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+
+/* =========================================================
+   NOMAD
+   Premium interactive proptech experience
+   ========================================================= */
 
 const initialMessages = [
   {
@@ -25,35 +35,199 @@ const colors = {
   ivorySoft: "#FBF9F4",
   paper: "#FFFDF8",
   ink: "#101814",
+
   forest: "#082F27",
   forest2: "#0D4539",
+  forest3: "#164F42",
+
   emerald: "#0B7663",
+  emerald2: "#15A087",
+
   champagne: "#B99862",
   champagneSoft: "#D8C6A6",
+  champagneLight: "#E9DDC8",
+
   sage: "#82918A",
+
   line: "rgba(16,24,20,0.10)",
+  lineLight: "rgba(255,255,255,0.10)",
 };
 
 const dubaiHero =
-  "https://images.unsplash.com/photo-1634007626524-f47fa37810a7?auto=format&fit=crop&fm=jpg&q=88&w=2600";
+  "https://images.unsplash.com/photo-1634007626524-f47fa37810a7?auto=format&fit=crop&fm=jpg&q=90&w=2800";
+
+/* =========================================================
+   DEMO DATA
+   ========================================================= */
+
+const intelligenceStages = [
+  {
+    eyebrow: "Incoming enquiry",
+    title: "Natural language",
+    value:
+      "Looking for a 3-bedroom villa in Dubai Hills around AED 4M. Mortgage. Ready or off-plan is fine.",
+    accent: "Conversation",
+  },
+  {
+    eyebrow: "Intent detected",
+    title: "Purchase",
+    value: "BUY",
+    accent: "Intent",
+  },
+  {
+    eyebrow: "Requirement understood",
+    title: "Villa",
+    value: "3 Bedrooms",
+    accent: "Property",
+  },
+  {
+    eyebrow: "Financial context",
+    title: "AED 4M",
+    value: "Mortgage",
+    accent: "Budget",
+  },
+  {
+    eyebrow: "Location context",
+    title: "Dubai Hills",
+    value: "Ready + Off-plan",
+    accent: "Preference",
+  },
+  {
+    eyebrow: "Qualification state",
+    title: "Ready for handoff",
+    value: "QUALIFIED",
+    accent: "Sales",
+  },
+];
+
+const channelData = [
+  {
+    id: "whatsapp",
+    number: "01",
+    title: "WhatsApp",
+    description:
+      "Meet buyers and tenants where conversations already happen.",
+    short: "WA",
+  },
+  {
+    id: "website",
+    number: "02",
+    title: "Website",
+    description:
+      "Turn anonymous website enquiries into structured opportunities.",
+    short: "WEB",
+  },
+  {
+    id: "campaign",
+    number: "03",
+    title: "Campaign Leads",
+    description:
+      "Qualify inbound campaign demand before it reaches the sales floor.",
+    short: "ADS",
+  },
+  {
+    id: "portal",
+    number: "04",
+    title: "Property Portals",
+    description:
+      "Bring fragmented property enquiries into one qualification layer.",
+    short: "PORTAL",
+  },
+];
+
+const commandCenterLeads = [
+  {
+    initials: "TM",
+    name: "Taher M.",
+    request: "3BR Villa · Dubai Hills",
+    budget: "AED 4M",
+    status: "Qualified",
+    source: "WhatsApp",
+    age: "Now",
+  },
+  {
+    initials: "SA",
+    name: "Sara A.",
+    request: "2BR Apartment · Marina",
+    budget: "AED 180K / year",
+    status: "Qualified",
+    source: "Website",
+    age: "2m",
+  },
+  {
+    initials: "MK",
+    name: "Mohammed K.",
+    request: "Townhouse · Open location",
+    budget: "AED 2.8M",
+    status: "In progress",
+    source: "Campaign",
+    age: "5m",
+  },
+  {
+    initials: "RN",
+    name: "Rania N.",
+    request: "1BR Apartment · Downtown",
+    budget: "AED 1.7M",
+    status: "Callback due",
+    source: "Portal",
+    age: "12m",
+  },
+];
+
+/* =========================================================
+   MAIN
+   ========================================================= */
 
 export default function Home() {
+  /* ---------------------------------------------------------
+     LIVE PRODUCT STATE
+     --------------------------------------------------------- */
+
   const [showDemo, setShowDemo] = useState(false);
 
   const [messages, setMessages] = useState(initialMessages);
+
   const [input, setInput] = useState("");
+
   const [loading, setLoading] = useState(false);
+
   const [leadSaved, setLeadSaved] = useState(false);
 
-  const [leadMemory, setLeadMemory] = useState(initialLeadMemory);
+  const [leadMemory, setLeadMemory] =
+    useState(initialLeadMemory);
 
-  const [showLeadSummary, setShowLeadSummary] = useState(false);
+  /* ---------------------------------------------------------
+     EXPERIENCE STATE
+     --------------------------------------------------------- */
+
+  const [pointer, setPointer] = useState({
+    x: 0,
+    y: 0,
+  });
+
+  const [intelligenceStage, setIntelligenceStage] =
+    useState(0);
+
+  const [perspective, setPerspective] =
+    useState("customer");
+
+  const [activeChannel, setActiveChannel] =
+    useState("whatsapp");
+
+  const [dashboardHover, setDashboardHover] =
+    useState(null);
+
+  /* ---------------------------------------------------------
+     REFS
+     --------------------------------------------------------- */
 
   const chatEndRef = useRef(null);
 
-  // FIX:
-  // Keeps a direct reference to the message input.
   const inputRef = useRef(null);
+
+  /* ---------------------------------------------------------
+     CHAT AUTO SCROLL
+     --------------------------------------------------------- */
 
   useEffect(() => {
     if (!showDemo) return;
@@ -62,32 +236,90 @@ export default function Home() {
       behavior: "smooth",
       block: "end",
     });
-  }, [messages, loading, showDemo, leadSaved]);
+  }, [
+    messages,
+    loading,
+    showDemo,
+    leadSaved,
+  ]);
 
-  // FIX:
-  // Automatically return the typing cursor to the input
-  // after NOMAD finishes replying.
+  /* ---------------------------------------------------------
+     CURSOR / INPUT AUTO FOCUS
+     --------------------------------------------------------- */
+
   useEffect(() => {
     if (!showDemo) return;
     if (loading) return;
     if (leadSaved) return;
-    if (showLeadSummary) return;
 
-    const focusInput = () => {
+    const frame = requestAnimationFrame(() => {
       inputRef.current?.focus({
         preventScroll: true,
       });
-    };
+    });
 
-    const frame = requestAnimationFrame(focusInput);
-
-    return () => cancelAnimationFrame(frame);
+    return () =>
+      cancelAnimationFrame(frame);
   }, [
     loading,
     showDemo,
     leadSaved,
-    showLeadSummary,
   ]);
+
+  /* ---------------------------------------------------------
+     LANDING INTELLIGENCE LOOP
+     --------------------------------------------------------- */
+
+  useEffect(() => {
+    if (showDemo) return;
+
+    const interval =
+      window.setInterval(() => {
+        setIntelligenceStage(
+          (current) =>
+            (current + 1) %
+            intelligenceStages.length
+        );
+      }, 2200);
+
+    return () =>
+      window.clearInterval(interval);
+  }, [showDemo]);
+
+  /* ---------------------------------------------------------
+     HERO PARALLAX
+     --------------------------------------------------------- */
+
+  function handleHeroPointer(event) {
+    const rect =
+      event.currentTarget.getBoundingClientRect();
+
+    const x =
+      (event.clientX - rect.left) /
+        rect.width -
+      0.5;
+
+    const y =
+      (event.clientY - rect.top) /
+        rect.height -
+      0.5;
+
+    setPointer({
+      x,
+      y,
+    });
+  }
+
+  function resetHeroPointer() {
+    setPointer({
+      x: 0,
+      y: 0,
+    });
+  }
+
+  /* ---------------------------------------------------------
+     DEMO CONTROLS
+     --------------------------------------------------------- */
 
   function openDemo() {
     setShowDemo(true);
@@ -96,7 +328,6 @@ export default function Home() {
   function backToLanding() {
     if (loading) return;
 
-    setShowLeadSummary(false);
     setShowDemo(false);
   }
 
@@ -104,52 +335,97 @@ export default function Home() {
     if (loading) return;
 
     setMessages(initialMessages);
+
     setInput("");
+
     setLoading(false);
+
     setLeadSaved(false);
-    setLeadMemory(initialLeadMemory);
-    setShowLeadSummary(false);
+
+    setLeadMemory(
+      initialLeadMemory
+    );
   }
 
+  /* =========================================================
+     WORKING NOMAD ENGINE
+     Existing API architecture remains intact.
+     ========================================================= */
+
   async function sendMessage() {
-    if (!input.trim() || loading) return;
+    if (
+      !input.trim() ||
+      loading ||
+      leadSaved
+    ) {
+      return;
+    }
 
     const userMessage = {
       role: "user",
       text: input.trim(),
     };
 
-    const updatedMessages = [...messages, userMessage];
+    const updatedMessages = [
+      ...messages,
+      userMessage,
+    ];
 
-    setMessages(updatedMessages);
+    setMessages(
+      updatedMessages
+    );
+
     setInput("");
+
     setLoading(true);
 
     try {
-      const formattedMessages = updatedMessages.map((message) => ({
-        role: message.role,
-        content: message.text,
-      }));
+      /* -----------------------------------------------------
+         STEP 1
+         Extract structured lead memory
+         ----------------------------------------------------- */
 
-      const extractionResponse = await fetch("/api/extract-lead", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          messages: formattedMessages,
-          previous: leadMemory,
-        }),
-      });
+      const formattedMessages =
+        updatedMessages.map(
+          (message) => ({
+            role: message.role,
+            content: message.text,
+          })
+        );
+
+      const extractionResponse =
+        await fetch(
+          "/api/extract-lead",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type":
+                "application/json",
+            },
+            body: JSON.stringify({
+              messages:
+                formattedMessages,
+
+              previous:
+                leadMemory,
+            }),
+          }
+        );
 
       let extractionData = {
         success: false,
-        lead: leadMemory.lead || {},
-        state: leadMemory.state || initialLeadMemory.state,
+
+        lead:
+          leadMemory.lead || {},
+
+        state:
+          leadMemory.state ||
+          initialLeadMemory.state,
       };
 
       try {
-        extractionData = await extractionResponse.json();
+        extractionData =
+          await extractionResponse.json();
       } catch (error) {
         console.error(
           "Could not read extraction response:",
@@ -167,59 +443,123 @@ export default function Home() {
         );
       }
 
+      /* -----------------------------------------------------
+         STEP 2
+         Build authoritative state
+         ----------------------------------------------------- */
+
       const currentState =
         extractionData.success
           ? {
-              lead: extractionData.lead || {},
+              lead:
+                extractionData.lead ||
+                {},
+
               location_options:
-                extractionData.state?.location_options || [],
+                extractionData.state
+                  ?.location_options ||
+                [],
+
               property_type_options:
-                extractionData.state?.property_type_options || [],
+                extractionData.state
+                  ?.property_type_options ||
+                [],
+
               property_status_options:
-                extractionData.state?.property_status_options || [],
+                extractionData.state
+                  ?.property_status_options ||
+                [],
+
               uncertainties:
-                extractionData.state?.uncertainties || [],
+                extractionData.state
+                  ?.uncertainties ||
+                [],
+
               missing_fields:
-                extractionData.state?.missing_fields || [],
+                extractionData.state
+                  ?.missing_fields ||
+                [],
             }
           : {
-              lead: leadMemory.lead || {},
+              lead:
+                leadMemory.lead ||
+                {},
+
               location_options:
-                leadMemory.state?.location_options || [],
+                leadMemory.state
+                  ?.location_options ||
+                [],
+
               property_type_options:
-                leadMemory.state?.property_type_options || [],
+                leadMemory.state
+                  ?.property_type_options ||
+                [],
+
               property_status_options:
-                leadMemory.state?.property_status_options || [],
+                leadMemory.state
+                  ?.property_status_options ||
+                [],
+
               uncertainties:
-                leadMemory.state?.uncertainties || [],
+                leadMemory.state
+                  ?.uncertainties ||
+                [],
+
               missing_fields:
-                leadMemory.state?.missing_fields || [],
+                leadMemory.state
+                  ?.missing_fields ||
+                [],
             };
 
-      if (extractionData.success) {
+      if (
+        extractionData.success
+      ) {
         setLeadMemory({
-          lead: extractionData.lead || {},
+          lead:
+            extractionData.lead ||
+            {},
+
           state:
             extractionData.state ||
             initialLeadMemory.state,
         });
       }
 
-      const response = await fetch("/api/chat", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          messages: formattedMessages,
-          state: currentState,
-        }),
-      });
+      /* -----------------------------------------------------
+         STEP 3
+         Generate NOMAD response
+         ----------------------------------------------------- */
 
-      const data = await response.json();
+      const response =
+        await fetch(
+          "/api/chat",
+          {
+            method: "POST",
+
+            headers: {
+              "Content-Type":
+                "application/json",
+            },
+
+            body: JSON.stringify({
+              messages:
+                formattedMessages,
+
+              state:
+                currentState,
+            }),
+          }
+        );
+
+      const data =
+        await response.json();
 
       if (!response.ok) {
-        console.error("Chat API failed:", data);
+        console.error(
+          "Chat API failed:",
+          data
+        );
+
         throw new Error(
           "Chat API request failed"
         );
@@ -227,40 +567,57 @@ export default function Home() {
 
       const assistantMessage = {
         role: "assistant",
+
         text:
           data.reply ||
           "Sorry, I couldn't respond. Please try again.",
       };
 
-      const conversationWithReply = [
-        ...updatedMessages,
-        assistantMessage,
-      ];
+      const conversationWithReply =
+        [
+          ...updatedMessages,
+          assistantMessage,
+        ];
 
-      setMessages(conversationWithReply);
+      setMessages(
+        conversationWithReply
+      );
+
+      /* -----------------------------------------------------
+         STEP 4
+         Qualified lead save
+         ----------------------------------------------------- */
 
       if (
         extractionData.success &&
-        extractionData.lead?.lead_status ===
+        extractionData.lead
+          ?.lead_status ===
           "Qualified" &&
         !leadSaved
       ) {
         const leadToSave = {
           ...extractionData.lead,
-          conversation: conversationWithReply,
+
+          conversation:
+            conversationWithReply,
         };
 
-        const saveResponse = await fetch(
-          "/api/save-lead",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type":
-                "application/json",
-            },
-            body: JSON.stringify(leadToSave),
-          }
-        );
+        const saveResponse =
+          await fetch(
+            "/api/save-lead",
+            {
+              method: "POST",
+
+              headers: {
+                "Content-Type":
+                  "application/json",
+              },
+
+              body: JSON.stringify(
+                leadToSave
+              ),
+            }
+          );
 
         const saveData =
           await saveResponse.json();
@@ -272,26 +629,37 @@ export default function Home() {
             "Lead saved successfully"
           );
 
+          /* -------------------------------------------------
+             STEP 5
+             Notification
+             ------------------------------------------------- */
+
           try {
             const notifyResponse =
               await fetch(
                 "/api/notify-lead",
                 {
-                  method: "POST",
+                  method:
+                    "POST",
+
                   headers: {
                     "Content-Type":
                       "application/json",
                   },
-                  body: JSON.stringify(
-                    extractionData.lead
-                  ),
+
+                  body:
+                    JSON.stringify(
+                      extractionData.lead
+                    ),
                 }
               );
 
             const notifyData =
               await notifyResponse.json();
 
-            if (notifyData.success) {
+            if (
+              notifyData.success
+            ) {
               console.log(
                 "Lead notification sent"
               );
@@ -301,7 +669,9 @@ export default function Home() {
                 notifyData
               );
             }
-          } catch (notifyError) {
+          } catch (
+            notifyError
+          ) {
             console.error(
               "Notification request failed:",
               notifyError
@@ -315,483 +685,325 @@ export default function Home() {
         }
       }
     } catch (error) {
-      console.error("Chat error:", error);
+      console.error(
+        "Chat error:",
+        error
+      );
 
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "assistant",
-          text: "Sorry, something went wrong. Please try again.",
-        },
-      ]);
+      setMessages(
+        (previous) => [
+          ...previous,
+
+          {
+            role:
+              "assistant",
+
+            text:
+              "Sorry, something went wrong. Please try again.",
+          },
+        ]
+      );
     } finally {
       setLoading(false);
     }
   }
 
+  /* =========================================================
+     LANDING EXPERIENCE
+     ========================================================= */
+
   if (!showDemo) {
     return (
       <main
         style={{
-          minHeight: "100vh",
-          background: colors.ivorySoft,
-          color: colors.ink,
+          minHeight:
+            "100vh",
+
+          background:
+            colors.ivorySoft,
+
+          color:
+            colors.ink,
+
           fontFamily:
             'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif',
+
+          overflow:
+            "hidden",
         }}
       >
-        <style>{`
-          * {
-            box-sizing: border-box;
-          }
+        <GlobalStyles />
 
-          html {
-            scroll-behavior: smooth;
-          }
-
-          body {
-            margin: 0;
-          }
-
-          button,
-          a {
-            font-family: inherit;
-          }
-
-          .nomadButton {
-            transition:
-              transform .22s ease,
-              box-shadow .22s ease,
-              background .22s ease;
-          }
-
-          .nomadButton:hover {
-            transform: translateY(-2px);
-          }
-
-          .nomadGlass {
-            transition:
-              transform .35s ease,
-              box-shadow .35s ease;
-          }
-
-          .nomadGlass:hover {
-            transform: translateY(-5px);
-            box-shadow:
-              0 45px 110px rgba(0,0,0,.22),
-              0 12px 40px rgba(5,45,35,.16);
-          }
-
-          .navLink {
-            color: #2E3934;
-            text-decoration: none;
-            font-size: 10px;
-            letter-spacing: 1.5px;
-            text-transform: uppercase;
-            font-weight: 700;
-            position: relative;
-            padding: 8px 0;
-            transition: color .2s ease;
-          }
-
-          .navLink::after {
-            content: "";
-            position: absolute;
-            left: 0;
-            bottom: 2px;
-            width: 0;
-            height: 1px;
-            background: #A9844D;
-            transition: width .25s ease;
-          }
-
-          .navLink:hover {
-            color: #082F27;
-          }
-
-          .navLink:hover::after {
-            width: 100%;
-          }
-
-          @keyframes floatNomad {
-            0% {
-              transform: translateY(0px);
-            }
-
-            50% {
-              transform: translateY(-9px);
-            }
-
-            100% {
-              transform: translateY(0px);
-            }
-          }
-
-          @keyframes glowPulse {
-            0%, 100% {
-              opacity: .45;
-              transform: scale(1);
-            }
-
-            50% {
-              opacity: .72;
-              transform: scale(1.05);
-            }
-          }
-
-          @keyframes successIn {
-            0% {
-              opacity: 0;
-              transform: translateY(14px) scale(.985);
-            }
-
-            100% {
-              opacity: 1;
-              transform: translateY(0) scale(1);
-            }
-          }
-
-          @keyframes successCheck {
-            0% {
-              transform: scale(.6);
-              opacity: 0;
-            }
-
-            60% {
-              transform: scale(1.1);
-            }
-
-            100% {
-              transform: scale(1);
-              opacity: 1;
-            }
-          }
-
-          @media (max-width: 960px) {
-            .heroGrid {
-              grid-template-columns: 1fr !important;
-            }
-
-            .heroContent {
-              padding-top: 30px !important;
-            }
-
-            .heroPreview {
-              min-height: 570px !important;
-            }
-
-            .desktopNavLinks {
-              display: none !important;
-            }
-          }
-
-          @media (max-width: 600px) {
-            .heroSection {
-              padding-left: 18px !important;
-              padding-right: 18px !important;
-            }
-
-            .heroTitle {
-              font-size: 48px !important;
-              letter-spacing: -2.5px !important;
-            }
-
-            .heroStats {
-              grid-template-columns: 1fr 1fr !important;
-            }
-
-            .floatingIntent,
-            .floatingStatus {
-              display: none !important;
-            }
-
-            .previewCard {
-              max-width: 100% !important;
-            }
-          }
-        `}</style>
+        {/* ===================================================
+            HERO
+            =================================================== */}
 
         <section
+          onMouseMove={
+            handleHeroPointer
+          }
+          onMouseLeave={
+            resetHeroPointer
+          }
           style={{
-            minHeight: "100vh",
-            position: "relative",
-            overflow: "hidden",
+            minHeight:
+              "100vh",
+
+            position:
+              "relative",
+
+            overflow:
+              "hidden",
+
             backgroundImage: `url("${dubaiHero}")`,
-            backgroundSize: "cover",
-            backgroundPosition: "center 48%",
+
+            backgroundSize:
+              "cover",
+
+            backgroundPosition:
+              "center 48%",
           }}
         >
-          <div
-            style={{
-              position: "absolute",
-              inset: 0,
-              background:
-                "linear-gradient(90deg, rgba(248,244,235,.98) 0%, rgba(248,244,235,.94) 28%, rgba(248,244,235,.72) 49%, rgba(248,244,235,.28) 72%, rgba(8,40,33,.10) 100%)",
-            }}
-          />
+          {/* -------------------------------------------------
+              SKYLINE DEPTH
+              ------------------------------------------------- */}
 
           <div
             style={{
-              position: "absolute",
-              inset: 0,
-              background:
-                "linear-gradient(180deg, rgba(255,252,245,.25), transparent 45%, rgba(8,32,27,.22))",
+              position:
+                "absolute",
+
+              inset:
+                "-3%",
+
+              backgroundImage: `url("${dubaiHero}")`,
+
+              backgroundSize:
+                "cover",
+
+              backgroundPosition:
+                "center 48%",
+
+              transform: `translate(${pointer.x * -10}px, ${pointer.y * -6}px) scale(1.02)`,
+
+              transition:
+                "transform .16s linear",
+
+              opacity:
+                0.98,
             }}
           />
 
+          {/* -------------------------------------------------
+              LEFT READABILITY TREATMENT
+              ------------------------------------------------- */}
+
           <div
             style={{
-              position: "absolute",
-              width: "600px",
-              height: "600px",
-              borderRadius: "50%",
-              right: "13%",
-              top: "13%",
+              position:
+                "absolute",
+
+              inset: 0,
+
               background:
-                "radial-gradient(circle, rgba(195,159,99,.22), rgba(195,159,99,.05) 46%, transparent 72%)",
-              filter: "blur(12px)",
-              animation:
-                "glowPulse 8s ease-in-out infinite",
+                "linear-gradient(90deg, rgba(248,244,235,.99) 0%, rgba(248,244,235,.96) 25%, rgba(248,244,235,.80) 46%, rgba(248,244,235,.38) 68%, rgba(8,40,33,.12) 100%)",
             }}
           />
+
+          {/* -------------------------------------------------
+              VERTICAL FILM TREATMENT
+              ------------------------------------------------- */}
+
+          <div
+            style={{
+              position:
+                "absolute",
+
+              inset: 0,
+
+              background:
+                "linear-gradient(180deg, rgba(255,252,245,.20), transparent 42%, rgba(8,32,27,.28))",
+            }}
+          />
+
+          {/* -------------------------------------------------
+              POINTER LIGHT
+              ------------------------------------------------- */}
+
+          <div
+            style={{
+              position:
+                "absolute",
+
+              width:
+                "620px",
+
+              height:
+                "620px",
+
+              borderRadius:
+                "50%",
+
+              right:
+                "7%",
+
+              top:
+                "11%",
+
+              background:
+                "radial-gradient(circle, rgba(212,179,119,.22), rgba(212,179,119,.07) 38%, transparent 70%)",
+
+              filter:
+                "blur(16px)",
+
+              transform: `translate(${pointer.x * 32}px, ${pointer.y * 26}px)`,
+
+              transition:
+                "transform .12s linear",
+
+              pointerEvents:
+                "none",
+            }}
+          />
+
+          {/* -------------------------------------------------
+              HERO GRID
+              ------------------------------------------------- */}
+
+          <HeroGridOverlay />
+
+          {/* =================================================
+              NAV
+              ================================================= */}
 
           <nav
-            style={{
-              maxWidth: "1360px",
-              margin: "0 auto",
-              padding: "28px 38px",
-              position: "relative",
-              zIndex: 10,
-              display: "flex",
-              justifyContent:
-                "space-between",
-              alignItems: "center",
-            }}
+            className="siteNav"
           >
             <BrandMark />
 
             <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "34px",
-              }}
+              className="navRight"
             >
               <div
                 className="desktopNavLinks"
-                style={{
-                  display: "flex",
-                  gap: "30px",
-                  alignItems: "center",
-                }}
               >
                 <a
-                  href="#solutions"
+                  href="#intelligence"
                   className="navLink"
                 >
-                  Solutions
+                  Intelligence
                 </a>
 
                 <a
-                  href="#for-teams"
+                  href="#channels"
                   className="navLink"
                 >
-                  For Teams
+                  Channels
                 </a>
 
                 <a
-                  href="#how-it-works"
+                  href="#perspective"
                   className="navLink"
                 >
-                  How It Works
+                  Experience
+                </a>
+
+                <a
+                  href="#vision"
+                  className="navLink"
+                >
+                  Platform
                 </a>
               </div>
 
               <button
-                className="nomadButton"
-                onClick={openDemo}
-                style={{
-                  border:
-                    "1px solid rgba(211,181,126,.68)",
-                  background:
-                    "linear-gradient(135deg, #082F27, #0D483B)",
-                  color: "white",
-                  padding: "13px 21px",
-                  borderRadius: "999px",
-                  cursor: "pointer",
-                  fontWeight: "800",
-                  fontSize: "12px",
-                  boxShadow:
-                    "0 14px 38px rgba(8,47,39,.20)",
-                }}
+                className="primaryPill"
+                onClick={
+                  openDemo
+                }
               >
                 Enter Live Experience
-                <span
-                  style={{
-                    marginLeft: "12px",
-                  }}
-                >
+
+                <span>
                   ↗
                 </span>
               </button>
             </div>
           </nav>
 
+          {/* =================================================
+              HERO CONTENT
+              ================================================= */}
+
           <div
-            className="heroSection"
-            style={{
-              width: "100%",
-              maxWidth: "1360px",
-              margin: "0 auto",
-              padding:
-                "66px 38px 72px",
-              position: "relative",
-              zIndex: 5,
-            }}
+            className="heroOuter"
           >
             <div
               className="heroGrid"
-              style={{
-                display: "grid",
-                gridTemplateColumns:
-                  "1.02fr .98fr",
-                gap: "76px",
-                alignItems: "center",
-              }}
             >
-              <div className="heroContent">
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "12px",
-                    color: "#A57F43",
-                    textTransform:
-                      "uppercase",
-                    letterSpacing:
-                      "1.8px",
-                    fontSize: "10px",
-                    fontWeight: "800",
-                    marginBottom:
-                      "28px",
-                  }}
-                >
-                  <span
-                    style={{
-                      width: "34px",
-                      height: "1px",
-                      background:
-                        "#A57F43",
-                    }}
-                  />
+              {/* ---------------------------------------------
+                  LEFT
+                  --------------------------------------------- */}
 
-                  Intelligent Property
-                  Qualification
-                </div>
+              <div
+                className="heroCopy"
+                style={{
+                  transform: `translate(${pointer.x * 3}px, ${pointer.y * 2}px)`,
+
+                  transition:
+                    "transform .16s linear",
+                }}
+              >
+                <Eyebrow>
+                  Intelligent Property Qualification
+                </Eyebrow>
 
                 <h1
                   className="heroTitle"
-                  style={{
-                    margin: 0,
-                    maxWidth: "680px",
-                    fontSize:
-                      "clamp(62px, 6vw, 94px)",
-                    lineHeight: ".94",
-                    letterSpacing:
-                      "-5px",
-                    fontWeight: "710",
-                  }}
                 >
                   Every enquiry
                   <br />
+
                   deserves a
                   <br />
 
-                  <span
-                    style={{
-                      display:
-                        "inline-block",
-                      marginTop: "7px",
-                      fontFamily:
-                        'Georgia, "Times New Roman", serif',
-                      fontWeight: "400",
-                      fontStyle:
-                        "italic",
-                      color:
-                        colors.emerald,
-                      letterSpacing:
-                        "-3px",
-                    }}
-                  >
+                  <span>
                     better conversation.
                   </span>
                 </h1>
 
                 <p
-                  style={{
-                    maxWidth: "610px",
-                    margin:
-                      "32px 0 0",
-                    color: "#5D6862",
-                    fontSize: "16px",
-                    lineHeight: "1.75",
-                  }}
+                  className="heroDescription"
                 >
-                  NOMAD qualifies buyers
-                  and tenants naturally,
-                  understands intent in
-                  real time, structures
-                  every requirement, and
-                  hands your sales team an
-                  opportunity ready for
-                  action.
+                  NOMAD understands property
+                  intent, qualifies buyers and
+                  tenants naturally, structures
+                  every requirement and hands
+                  your sales team an opportunity
+                  ready for action.
                 </p>
 
                 <div
-                  style={{
-                    marginTop: "36px",
-                    display: "flex",
-                    flexWrap: "wrap",
-                    alignItems: "center",
-                    gap: "16px",
-                  }}
+                  className="heroActions"
                 >
                   <button
-                    className="nomadButton"
-                    onClick={openDemo}
-                    style={{
-                      border: "none",
-                      background:
-                        colors.forest,
-                      color: "white",
-                      borderRadius:
-                        "999px",
-                      padding:
-                        "16px 25px",
-                      fontSize: "13px",
-                      fontWeight: "800",
-                      cursor: "pointer",
-                      boxShadow:
-                        "0 17px 38px rgba(8,47,39,.22)",
-                    }}
+                    className="heroPrimaryButton"
+                    onClick={
+                      openDemo
+                    }
                   >
                     Experience NOMAD
-                    <span
-                      style={{
-                        marginLeft:
-                          "13px",
-                      }}
-                    >
+
+                    <span>
                       →
                     </span>
                   </button>
 
                   <div
-                    style={{
-                      fontSize: "12px",
-                      color: "#696F6B",
-                    }}
+                    className="heroMicroCopy"
                   >
+                    <span className="tinyPulse" />
+
                     No forms. No scripts.
                     Just conversation.
                   </div>
@@ -799,15 +1011,6 @@ export default function Home() {
 
                 <div
                   className="heroStats"
-                  style={{
-                    marginTop: "56px",
-                    display: "grid",
-                    gridTemplateColumns:
-                      "repeat(3, minmax(100px,1fr))",
-                    maxWidth: "570px",
-                    borderTop:
-                      "1px solid rgba(17,25,21,.13)",
-                  }}
                 >
                   <Metric
                     value="24/7"
@@ -816,7 +1019,7 @@ export default function Home() {
 
                   <Metric
                     value="Live"
-                    label="Lead capture"
+                    label="Lead intelligence"
                   />
 
                   <Metric
@@ -824,252 +1027,111 @@ export default function Home() {
                     label="Sales handoff"
                   />
                 </div>
+
+                <div
+                  className="heroLocation"
+                >
+                  <span />
+
+                  Built for Dubai&apos;s
+                  real estate teams
+                </div>
               </div>
 
+              {/* ---------------------------------------------
+                  RIGHT INTERACTIVE PRODUCT
+                  --------------------------------------------- */}
+
               <div
-                className="heroPreview"
-                style={{
-                  minHeight: "620px",
-                  position: "relative",
-                  display: "flex",
-                  justifyContent:
-                    "center",
-                  alignItems: "center",
-                }}
+                className="heroProductStage"
               >
+                <HeroOrbit
+                  pointer={
+                    pointer
+                  }
+                />
+
                 <div
+                  className="heroArchitectureArc"
                   style={{
-                    position:
-                      "absolute",
-                    width: "78%",
-                    height: "82%",
-                    right: "-2%",
-                    top: "4%",
-                    border:
-                      "1px solid rgba(201,166,106,.35)",
-                    borderRadius:
-                      "240px 240px 24px 24px",
+                    transform: `translate(${pointer.x * -12}px, ${pointer.y * -8}px)`,
                   }}
                 />
 
                 <div
-                  className="previewCard nomadGlass"
+                  className="heroArchitectureArc heroArchitectureArc2"
                   style={{
-                    width: "100%",
-                    maxWidth: "465px",
-                    borderRadius:
-                      "26px",
-                    overflow: "hidden",
-                    background:
-                      "rgba(255,253,248,.91)",
-                    backdropFilter:
-                      "blur(20px)",
-                    border:
-                      "1px solid rgba(255,255,255,.72)",
-                    boxShadow:
-                      "0 38px 95px rgba(11,31,26,.24), 0 10px 30px rgba(7,55,44,.10)",
-                    position: "relative",
-                    zIndex: 3,
-                    animation:
-                      "floatNomad 8s ease-in-out infinite",
+                    transform: `translate(${pointer.x * 9}px, ${pointer.y * 5}px)`,
+                  }}
+                />
+
+                <div
+                  className="heroFloatingCard"
+                  style={{
+                    transform: `
+                      perspective(1200px)
+                      rotateY(${pointer.x * 4}deg)
+                      rotateX(${pointer.y * -3}deg)
+                      translate(${pointer.x * 10}px, ${pointer.y * 8}px)
+                    `,
+
+                    transition:
+                      "transform .12s linear",
                   }}
                 >
-                  <div
-                    style={{
-                      background:
-                        "linear-gradient(135deg,#062F27,#0A473A)",
-                      color: "white",
-                      padding:
-                        "19px 20px",
-                      display: "flex",
-                      justifyContent:
-                        "space-between",
-                      alignItems:
-                        "center",
-                    }}
-                  >
-                    <div
-                      style={{
-                        display:
-                          "flex",
-                        alignItems:
-                          "center",
-                        gap: "12px",
-                      }}
-                    >
-                      <div
-                        style={{
-                          width: "40px",
-                          height: "40px",
-                          borderRadius:
-                            "50%",
-                          display:
-                            "flex",
-                          alignItems:
-                            "center",
-                          justifyContent:
-                            "center",
-                          background:
-                            "linear-gradient(135deg,#226654,#0F4035)",
-                          border:
-                            "1px solid rgba(255,255,255,.14)",
-                          fontWeight:
-                            "800",
-                          fontSize:
-                            "13px",
-                        }}
-                      >
-                        N
-                      </div>
-
-                      <div>
-                        <div
-                          style={{
-                            fontSize:
-                              "13px",
-                            fontWeight:
-                              "750",
-                          }}
-                        >
-                          NOMAD Property
-                          Assistant
-                        </div>
-
-                        <div
-                          style={{
-                            marginTop:
-                              "4px",
-                            fontSize:
-                              "10px",
-                            color:
-                              "rgba(255,255,255,.64)",
-                          }}
-                        >
-                          <span
-                            style={{
-                              color:
-                                "#69C19B",
-                            }}
-                          >
-                            ●
-                          </span>{" "}
-                          Available now
-                        </div>
-                      </div>
-                    </div>
-
-                    <div
-                      style={{
-                        color:
-                          "#D6BC8E",
-                        fontSize: "9px",
-                        fontWeight:
-                          "800",
-                        letterSpacing:
-                          "1.4px",
-                      }}
-                    >
-                      LIVE
-                    </div>
-                  </div>
+                  <DemoCardHeader />
 
                   <div
-                    style={{
-                      padding:
-                        "28px 24px",
-                      background:
-                        "rgba(253,250,244,.94)",
-                    }}
+                    className="previewConversation"
                   >
-                    <PreviewBubblePremium
-                      left
+                    <PreviewBubble
+                      assistant
                     >
                       Hi 👋 Are you looking
                       to buy or rent a
                       property in Dubai?
-                    </PreviewBubblePremium>
+                    </PreviewBubble>
 
-                    <PreviewBubblePremium>
-                      I’m looking to buy a
-                      3-bedroom villa in
+                    <PreviewBubble>
+                      I&apos;m looking to buy
+                      a 3-bedroom villa in
                       Dubai Hills around
                       AED 4 million.
-                    </PreviewBubblePremium>
+                    </PreviewBubble>
 
-                    <PreviewBubblePremium
-                      left
+                    <PreviewBubble
+                      assistant
                     >
                       Are you considering
                       ready-to-move,
                       off-plan, or both?
-                    </PreviewBubblePremium>
+                    </PreviewBubble>
 
-                    <PreviewBubblePremium>
-                      Both are fine. I’ll be
-                      using a mortgage.
-                    </PreviewBubblePremium>
+                    <PreviewBubble>
+                      Both are fine. I&apos;ll
+                      be using a mortgage.
+                    </PreviewBubble>
 
                     <div
-                      style={{
-                        marginTop:
-                          "27px",
-                        paddingTop:
-                          "18px",
-                        borderTop:
-                          "1px solid rgba(16,24,20,.08)",
-                        display:
-                          "flex",
-                        justifyContent:
-                          "space-between",
-                        alignItems:
-                          "center",
-                        gap: "20px",
-                      }}
+                      className="previewInsight"
                     >
                       <div>
                         <div
-                          style={{
-                            color:
-                              "#A9844D",
-                            fontSize:
-                              "9px",
-                            letterSpacing:
-                              "1.35px",
-                            textTransform:
-                              "uppercase",
-                            fontWeight:
-                              "800",
-                          }}
+                          className="previewInsightLabel"
                         >
-                          Qualification
+                          Intelligence
                           engine
                         </div>
 
                         <div
-                          style={{
-                            marginTop:
-                              "6px",
-                            fontSize:
-                              "13px",
-                            fontWeight:
-                              "750",
-                            color:
-                              colors.forest,
-                          }}
+                          className="previewInsightTitle"
                         >
                           Requirement
-                          captured
+                          understood
                         </div>
 
                         <div
-                          style={{
-                            marginTop:
-                              "3px",
-                            color:
-                              "#7C847F",
-                            fontSize:
-                              "10px",
-                          }}
+                          className="previewInsightText"
                         >
                           Structured
                           automatically in
@@ -1078,23 +1140,7 @@ export default function Home() {
                       </div>
 
                       <div
-                        style={{
-                          width: "38px",
-                          height: "38px",
-                          borderRadius:
-                            "50%",
-                          background:
-                            colors.forest,
-                          color: "white",
-                          display:
-                            "flex",
-                          alignItems:
-                            "center",
-                          justifyContent:
-                            "center",
-                          fontWeight:
-                            "800",
-                        }}
+                        className="previewCheck"
                       >
                         ✓
                       </div>
@@ -1102,1072 +1148,4874 @@ export default function Home() {
                   </div>
                 </div>
 
-                <FloatingTag
-                  className="floatingIntent"
-                  style={{
-                    position:
-                      "absolute",
-                    top: "100px",
-                    left: "-8px",
-                    zIndex: 4,
-                  }}
-                  eyebrow="LIVE INTENT"
-                  text="Buy · Villa"
+                <FloatingIntelligenceTag
+                  className="heroIntentTag"
+                  label="LIVE INTENT"
+                  value="Buy · Villa"
+                  detail="Dubai Hills"
                 />
 
-                <FloatingTag
-                  className="floatingStatus"
-                  style={{
-                    position:
-                      "absolute",
-                    right: "-5px",
-                    bottom: "90px",
-                    zIndex: 4,
-                  }}
-                  eyebrow="LEAD STATUS"
-                  text="Qualified"
+                <FloatingIntelligenceTag
+                  className="heroStatusTag"
+                  label="QUALIFICATION"
+                  value="Ready"
+                  detail="Mortgage"
+                />
+
+                <FloatingIntelligenceTag
+                  className="heroBudgetTag"
+                  label="BUDGET"
+                  value="AED 4M"
+                  detail="Customer stated"
                 />
               </div>
             </div>
-
-            <div
-              style={{
-                marginTop: "16px",
-                display: "flex",
-                alignItems: "center",
-                gap: "14px",
-                color: "#9A7844",
-                fontSize: "9px",
-                fontWeight: "800",
-                textTransform:
-                  "uppercase",
-                letterSpacing:
-                  "1.7px",
-              }}
-            >
-              <span
-                style={{
-                  width: "38px",
-                  height: "1px",
-                  background:
-                    "#A9844D",
-                }}
-              />
-
-              Built for Dubai&apos;s real
-              estate teams
-            </div>
           </div>
+
+          <HeroBottomFade />
         </section>
 
+        {/* ===================================================
+            INTELLIGENCE LAB
+            =================================================== */}
+
         <section
-          id="solutions"
-          style={{
-            background: colors.forest,
-            color: "white",
-            position: "relative",
-            overflow: "hidden",
-            padding:
-              "82px 34px 76px",
-            scrollMarginTop:
-              "20px",
-          }}
+          id="intelligence"
+          className="intelligenceSection"
         >
-          <div
-            style={{
-              position: "absolute",
-              width: "540px",
-              height: "540px",
-              right: "-180px",
-              top: "-200px",
-              borderRadius: "50%",
-              border:
-                "1px solid rgba(211,185,137,.14)",
-            }}
+          <SectionOrb
+            position="left"
           />
 
           <div
-            style={{
-              maxWidth: "1180px",
-              margin: "0 auto",
-              position: "relative",
-            }}
+            className="sectionInner"
           >
             <div
-              style={{
-                color:
-                  colors.champagneSoft,
-                fontSize: "10px",
-                fontWeight: "800",
-                letterSpacing:
-                  "1.7px",
-                textTransform:
-                  "uppercase",
-                marginBottom:
-                  "18px",
-              }}
-            >
-              Designed for the modern
-              brokerage
-            </div>
-
-            <h2
-              style={{
-                maxWidth: "980px",
-                margin: 0,
-                fontSize:
-                  "clamp(40px,4.3vw,60px)",
-                lineHeight: "1.03",
-                letterSpacing:
-                  "-2.6px",
-                fontWeight: "620",
-              }}
-            >
-              Not another chatbot.
-              <br />
-
-              <span
-                style={{
-                  fontFamily:
-                    'Georgia, "Times New Roman", serif',
-                  fontWeight: "400",
-                  fontStyle: "italic",
-                  color:
-                    colors.champagneSoft,
-                }}
-              >
-                The intelligence layer
-              </span>{" "}
-              between your enquiry and
-              your sales team.
-            </h2>
-
-            <div
-              id="for-teams"
-              style={{
-                display: "grid",
-                gridTemplateColumns:
-                  "repeat(auto-fit,minmax(230px,1fr))",
-                marginTop: "52px",
-                borderTop:
-                  "1px solid rgba(255,255,255,.10)",
-                scrollMarginTop:
-                  "28px",
-              }}
-            >
-              <EditorialFeature
-                number="01"
-                title="Understands naturally"
-                text="NOMAD adapts to the customer instead of forcing them through a rigid form or scripted decision tree."
-              />
-
-              <EditorialFeature
-                number="02"
-                title="Structures automatically"
-                text="Property type, budget, location, timing, financing and contact details become usable sales intelligence."
-              />
-
-              <EditorialFeature
-                number="03"
-                title="Hands off intelligently"
-                text="Your consultant receives a qualified opportunity with context before the first human call."
-              />
-            </div>
-          </div>
-        </section>
-
-        <section
-          id="how-it-works"
-          style={{
-            background:
-              colors.ivorySoft,
-            padding:
-              "92px 34px 96px",
-            scrollMarginTop:
-              "20px",
-          }}
-        >
-          <div
-            style={{
-              maxWidth: "1180px",
-              margin: "0 auto",
-            }}
-          >
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns:
-                  "repeat(auto-fit,minmax(300px,1fr))",
-                gap: "70px",
-                alignItems: "end",
-              }}
+              className="sectionHeaderSplit"
             >
               <div>
-                <div
-                  style={{
-                    color:
-                      colors.champagne,
-                    fontSize: "10px",
-                    textTransform:
-                      "uppercase",
-                    letterSpacing:
-                      "1.7px",
-                    fontWeight:
-                      "800",
-                    marginBottom:
-                      "18px",
-                  }}
+                <Eyebrow
+                  light
                 >
-                  The NOMAD journey
-                </div>
+                  Watch intelligence happen
+                </Eyebrow>
 
                 <h2
-                  style={{
-                    fontSize:
-                      "clamp(40px,4vw,56px)",
-                    lineHeight:
-                      "1.04",
-                    letterSpacing:
-                      "-2.2px",
-                    margin: 0,
-                    fontWeight:
-                      "640",
-                  }}
+                  className="sectionTitleLight"
                 >
-                  From hello to
+                  Conversation
                   <br />
-                  sales-ready.
+
+                  becomes
+                  <span>
+                    {" "}
+                    intelligence.
+                  </span>
                 </h2>
               </div>
 
               <p
-                style={{
-                  margin: 0,
-                  maxWidth: "490px",
-                  fontSize: "15px",
-                  lineHeight: "1.8",
-                  color: "#66716B",
-                }}
+                className="sectionLeadLight"
               >
-                Every conversation becomes
-                useful before a consultant
-                ever needs to step in.
-                NOMAD captures intent,
-                qualifies the opportunity,
-                structures the data and
-                creates the handoff.
+                NOMAD does not simply answer
+                questions. It continuously
+                understands what the customer
+                means, preserves context and
+                turns natural language into
+                usable sales information.
               </p>
             </div>
 
             <div
-              style={{
-                marginTop: "54px",
-                display: "grid",
-                gridTemplateColumns:
-                  "repeat(auto-fit,minmax(220px,1fr))",
-                background:
-                  colors.line,
-                gap: "1px",
-                border: `1px solid ${colors.line}`,
-              }}
+              className="intelligenceWorkspace"
             >
-              <ProcessStep
-                number="01"
-                title="Enquiry"
-                text="A buyer or tenant begins a natural conversation."
-              />
+              {/* ---------------------------------------------
+                  LEFT INPUT
+                  --------------------------------------------- */}
 
-              <ProcessStep
-                number="02"
-                title="Qualification"
-                text="NOMAD understands property requirements and intent."
-              />
+              <div
+                className="intelligenceInputPanel"
+              >
+                <PanelLabel>
+                  Customer conversation
+                </PanelLabel>
 
-              <ProcessStep
-                number="03"
-                title="Intelligence"
-                text="Conversation becomes structured lead data automatically."
-              />
+                <div
+                  className="intelligenceMessage"
+                >
+                  <div
+                    className="miniAvatar"
+                  >
+                    TM
+                  </div>
 
-              <ProcessStep
-                number="04"
-                title="Handoff"
-                text="Your sales team receives a qualified opportunity ready to act."
-              />
+                  <div>
+                    <div
+                      className="miniPersonName"
+                    >
+                      Incoming enquiry
+                    </div>
+
+                    <p>
+                      Looking for a
+                      3-bedroom villa in
+                      Dubai Hills around
+                      AED 4M. I&apos;ll need a
+                      mortgage and I&apos;m
+                      open to ready or
+                      off-plan.
+                    </p>
+                  </div>
+                </div>
+
+                <div
+                  className="signalDivider"
+                >
+                  <span />
+
+                  NOMAD is understanding
+                  the conversation
+
+                  <span />
+                </div>
+
+                <div
+                  className="thinkingRows"
+                >
+                  <ThinkingRow
+                    active={
+                      intelligenceStage >=
+                      1
+                    }
+                    label="Intent"
+                    value="Buy"
+                  />
+
+                  <ThinkingRow
+                    active={
+                      intelligenceStage >=
+                      2
+                    }
+                    label="Property"
+                    value="3BR Villa"
+                  />
+
+                  <ThinkingRow
+                    active={
+                      intelligenceStage >=
+                      3
+                    }
+                    label="Budget"
+                    value="AED 4M"
+                  />
+
+                  <ThinkingRow
+                    active={
+                      intelligenceStage >=
+                      4
+                    }
+                    label="Location"
+                    value="Dubai Hills"
+                  />
+
+                  <ThinkingRow
+                    active={
+                      intelligenceStage >=
+                      4
+                    }
+                    label="Status"
+                    value="Ready + Off-plan"
+                  />
+
+                  <ThinkingRow
+                    active={
+                      intelligenceStage >=
+                      3
+                    }
+                    label="Financing"
+                    value="Mortgage"
+                  />
+                </div>
+              </div>
+
+              {/* ---------------------------------------------
+                  CENTER NEURAL PIPE
+                  --------------------------------------------- */}
+
+              <div
+                className="intelligenceCore"
+              >
+                <div
+                  className="coreRing ringOne"
+                />
+
+                <div
+                  className="coreRing ringTwo"
+                />
+
+                <div
+                  className="coreRing ringThree"
+                />
+
+                <div
+                  className="coreGlow"
+                />
+
+                <div
+                  className="coreNode"
+                >
+                  <div
+                    className="coreN"
+                  >
+                    N
+                  </div>
+
+                  <span>
+                    NOMAD
+                  </span>
+                </div>
+
+                <div
+                  className="coreSignal signalOne"
+                />
+
+                <div
+                  className="coreSignal signalTwo"
+                />
+
+                <div
+                  className="coreSignal signalThree"
+                />
+              </div>
+
+              {/* ---------------------------------------------
+                  RIGHT STRUCTURED OUTPUT
+                  --------------------------------------------- */}
+
+              <div
+                className="structuredLeadPanel"
+              >
+                <div
+                  className="structuredLeadTop"
+                >
+                  <div>
+                    <PanelLabel>
+                      Sales intelligence
+                    </PanelLabel>
+
+                    <h3>
+                      Qualified opportunity
+                    </h3>
+                  </div>
+
+                  <div
+                    className="qualifiedBadge"
+                  >
+                    <span />
+
+                    READY
+                  </div>
+                </div>
+
+                <StructuredDataRow
+                  label="Intent"
+                  value="Purchase"
+                  active={
+                    intelligenceStage >=
+                    1
+                  }
+                />
+
+                <StructuredDataRow
+                  label="Property"
+                  value="3BR Villa"
+                  active={
+                    intelligenceStage >=
+                    2
+                  }
+                />
+
+                <StructuredDataRow
+                  label="Budget"
+                  value="AED 4M"
+                  active={
+                    intelligenceStage >=
+                    3
+                  }
+                />
+
+                <StructuredDataRow
+                  label="Location"
+                  value="Dubai Hills"
+                  active={
+                    intelligenceStage >=
+                    4
+                  }
+                />
+
+                <StructuredDataRow
+                  label="Financing"
+                  value="Mortgage"
+                  active={
+                    intelligenceStage >=
+                    3
+                  }
+                />
+
+                <StructuredDataRow
+                  label="Availability"
+                  value="Ready + Off-plan"
+                  active={
+                    intelligenceStage >=
+                    4
+                  }
+                />
+
+                <div
+                  className={`handoffIndicator ${
+                    intelligenceStage ===
+                    intelligenceStages.length -
+                      1
+                      ? "handoffActive"
+                      : ""
+                  }`}
+                >
+                  <div
+                    className="handoffIcon"
+                  >
+                    ✓
+                  </div>
+
+                  <div>
+                    <strong>
+                      Consultant handoff
+                    </strong>
+
+                    <span>
+                      Context ready before
+                      the first call
+                    </span>
+                  </div>
+                </div>
+              </div>
             </div>
 
             <div
-              style={{
-                marginTop: "56px",
-                textAlign: "center",
-              }}
+              className="intelligenceStageRail"
             >
-              <button
-                className="nomadButton"
-                onClick={openDemo}
-                style={{
-                  border: "none",
-                  background:
-                    colors.forest,
-                  color: "white",
-                  borderRadius:
-                    "999px",
-                  padding:
-                    "16px 28px",
-                  fontSize: "13px",
-                  fontWeight: "800",
-                  cursor: "pointer",
-                  boxShadow:
-                    "0 18px 38px rgba(8,47,39,.18)",
-                }}
-              >
-                Start a live conversation
-                <span
-                  style={{
-                    marginLeft: "12px",
-                  }}
-                >
-                  ↗
-                </span>
-              </button>
+              {intelligenceStages.map(
+                (
+                  stage,
+                  index
+                ) => (
+                  <button
+                    key={
+                      stage.accent
+                    }
+                    onClick={() =>
+                      setIntelligenceStage(
+                        index
+                      )
+                    }
+                    className={
+                      index ===
+                      intelligenceStage
+                        ? "stageRailItem stageRailItemActive"
+                        : "stageRailItem"
+                    }
+                  >
+                    <span>
+                      {String(
+                        index + 1
+                      ).padStart(
+                        2,
+                        "0"
+                      )}
+                    </span>
+
+                    {
+                      stage.accent
+                    }
+                  </button>
+                )
+              )}
             </div>
           </div>
         </section>
 
-        <footer
-          style={{
-            background: colors.ink,
-            padding: "31px 34px",
-          }}
+        {/* ===================================================
+            PERSPECTIVE SWITCH
+            =================================================== */}
+
+        <section
+          id="perspective"
+          className="perspectiveSection"
         >
           <div
-            style={{
-              maxWidth: "1180px",
-              margin: "0 auto",
-              display: "flex",
-              flexWrap: "wrap",
-              justifyContent:
-                "space-between",
-              gap: "20px",
-              alignItems: "center",
-            }}
+            className="sectionInner"
           >
-            <BrandMark dark />
+            <div
+              className="perspectiveHeading"
+            >
+              <Eyebrow>
+                One conversation.
+                Two realities.
+              </Eyebrow>
+
+              <h2
+                className="sectionTitleDark"
+              >
+                Simple for the
+                customer.
+                <br />
+
+                <span>
+                  Powerful for the
+                  business.
+                </span>
+              </h2>
+
+              <p>
+                The customer experiences a
+                natural conversation.
+                Behind the scenes, the
+                brokerage receives
+                structured context it can
+                actually use.
+              </p>
+            </div>
+
+            <PerspectiveSwitcher
+              perspective={
+                perspective
+              }
+              setPerspective={
+                setPerspective
+              }
+            />
 
             <div
-              style={{
-                color:
-                  "rgba(255,255,255,.46)",
-                fontSize: "10px",
-                letterSpacing: ".35px",
-              }}
+              className="perspectiveStage"
             >
-              Intelligent property
-              qualification for modern real
-              estate teams.
+              <div
+                className={
+                  perspective ===
+                  "customer"
+                    ? "perspectiveScene perspectiveSceneVisible"
+                    : "perspectiveScene perspectiveSceneHidden"
+                }
+              >
+                <CustomerPerspective />
+              </div>
+
+              <div
+                className={
+                  perspective ===
+                  "sales"
+                    ? "perspectiveScene perspectiveSceneVisible"
+                    : "perspectiveScene perspectiveSceneHidden"
+                }
+              >
+                <SalesPerspective />
+              </div>
             </div>
+          </div>
+        </section>
+
+        {/* ===================================================
+            CHANNEL NETWORK
+            =================================================== */}
+
+        <section
+          id="channels"
+          className="channelSection"
+        >
+          <ChannelBackground />
+
+          <div
+            className="sectionInner"
+          >
+            <div
+              className="channelHeader"
+            >
+              <div>
+                <Eyebrow
+                  light
+                >
+                  One intelligence layer
+                </Eyebrow>
+
+                <h2
+                  className="sectionTitleLight"
+                >
+                  Meet the customer
+                  <br />
+
+                  <span>
+                    wherever they start.
+                  </span>
+                </h2>
+              </div>
+
+              <p
+                className="sectionLeadLight"
+              >
+                Website, campaigns,
+                portals or messaging. The
+                source can change. The
+                qualification experience
+                stays consistent.
+              </p>
+            </div>
+
+            <div
+              className="channelExperience"
+            >
+              <div
+                className="channelList"
+              >
+                {channelData.map(
+                  (channel) => (
+                    <button
+                      key={
+                        channel.id
+                      }
+                      onClick={() =>
+                        setActiveChannel(
+                          channel.id
+                        )
+                      }
+                      className={
+                        activeChannel ===
+                        channel.id
+                          ? "channelButton channelButtonActive"
+                          : "channelButton"
+                      }
+                    >
+                      <span
+                        className="channelNumber"
+                      >
+                        {
+                          channel.number
+                        }
+                      </span>
+
+                      <div>
+                        <strong>
+                          {
+                            channel.title
+                          }
+                        </strong>
+
+                        <p>
+                          {
+                            channel.description
+                          }
+                        </p>
+                      </div>
+
+                      <span
+                        className="channelArrow"
+                      >
+                        →
+                      </span>
+                    </button>
+                  )
+                )}
+              </div>
+
+              <div
+                className="channelMap"
+              >
+                <ChannelUniverse
+                  activeChannel={
+                    activeChannel
+                  }
+                />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ===================================================
+            PRODUCT VISION
+            =================================================== */}
+
+        <section
+          id="vision"
+          className="visionSection"
+        >
+          <div
+            className="sectionInner"
+          >
+            <div
+              className="visionTop"
+            >
+              <div>
+                <Eyebrow>
+                  Product vision
+                </Eyebrow>
+
+                <h2
+                  className="sectionTitleDark"
+                >
+                  From conversation
+                  <br />
+
+                  to
+                  <span>
+                    {" "}
+                    command center.
+                  </span>
+                </h2>
+              </div>
+
+              <div
+                className="visionSideCopy"
+              >
+                <p>
+                  Imagine every enquiry
+                  arriving with context
+                  already understood,
+                  prioritised and ready for
+                  a human sales team.
+                </p>
+
+                <div
+                  className="visionDisclaimer"
+                >
+                  Conceptual platform
+                  visualization
+                </div>
+              </div>
+            </div>
+
+            <div
+              className="commandCenter"
+            >
+              <CommandCenterSidebar />
+
+              <div
+                className="commandCenterMain"
+              >
+                <CommandCenterHeader />
+
+                <CommandStats />
+
+                <div
+                  className="commandMainGrid"
+                >
+                  <div
+                    className="commandLeadTable"
+                  >
+                    <div
+                      className="tableTitleRow"
+                    >
+                      <div>
+                        <span>
+                          Live opportunity
+                          feed
+                        </span>
+
+                        <strong>
+                          Qualified leads
+                        </strong>
+                      </div>
+
+                      <div
+                        className="liveChip"
+                      >
+                        <span />
+
+                        Live
+                      </div>
+                    </div>
+
+                    <div
+                      className="leadRows"
+                    >
+                      {commandCenterLeads.map(
+                        (
+                          lead,
+                          index
+                        ) => (
+                          <CommandLeadRow
+                            key={
+                              lead.name
+                            }
+                            lead={
+                              lead
+                            }
+                            index={
+                              index
+                            }
+                            active={
+                              dashboardHover ===
+                              index
+                            }
+                            onEnter={() =>
+                              setDashboardHover(
+                                index
+                              )
+                            }
+                            onLeave={() =>
+                              setDashboardHover(
+                                null
+                              )
+                            }
+                          />
+                        )
+                      )}
+                    </div>
+                  </div>
+
+                  <div
+                    className="commandIntelligencePanel"
+                  >
+                    <div
+                      className="commandPanelLabel"
+                    >
+                      NOMAD intelligence
+                    </div>
+
+                    <h3>
+                      Opportunity quality
+                    </h3>
+
+                    <QualityRing />
+
+                    <div
+                      className="qualityDetails"
+                    >
+                      <QualityLine
+                        label="Property intent"
+                        value="Strong"
+                      />
+
+                      <QualityLine
+                        label="Budget clarity"
+                        value="Known"
+                      />
+
+                      <QualityLine
+                        label="Timeline"
+                        value="Known"
+                      />
+
+                      <QualityLine
+                        label="Callback"
+                        value="Scheduled"
+                      />
+                    </div>
+
+                    <div
+                      className="qualityRecommendation"
+                    >
+                      <span>
+                        NOMAD
+                      </span>
+
+                      Ready for consultant
+                      follow-up.
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ===================================================
+            OPERATIONAL STORY
+            =================================================== */}
+
+        <section
+          className="storySection"
+        >
+          <div
+            className="storyTrack"
+          >
+            <StoryPoint
+              number="01"
+              title="Enquiry"
+              description="A buyer or tenant starts naturally."
+            />
+
+            <StoryConnector />
+
+            <StoryPoint
+              number="02"
+              title="Understanding"
+              description="NOMAD preserves context and intent."
+            />
+
+            <StoryConnector />
+
+            <StoryPoint
+              number="03"
+              title="Qualification"
+              description="Missing information is collected intelligently."
+            />
+
+            <StoryConnector />
+
+            <StoryPoint
+              number="04"
+              title="Handoff"
+              description="The consultant receives a sales-ready opportunity."
+            />
+          </div>
+        </section>
+
+        {/* ===================================================
+            CTA
+            =================================================== */}
+
+        <section
+          className="finalCTASection"
+        >
+          <FinalCTAVisual />
+
+          <div
+            className="finalCTAContent"
+          >
+            <Eyebrow
+              light
+            >
+              Experience NOMAD
+            </Eyebrow>
+
+            <h2>
+              Don&apos;t imagine the
+              conversation.
+              <br />
+
+              <span>
+                Have one.
+              </span>
+            </h2>
+
+            <p>
+              Enter the live experience
+              and qualify a property
+              enquiry yourself.
+            </p>
+
+            <button
+              onClick={
+                openDemo
+              }
+              className="finalCTAButton"
+            >
+              Launch Live NOMAD
+
+              <span>
+                ↗
+              </span>
+            </button>
+          </div>
+        </section>
+
+        {/* ===================================================
+            FOOTER
+            =================================================== */}
+
+        <footer
+          className="siteFooter"
+        >
+          <BrandMark
+            dark
+          />
+
+          <div
+            className="footerMiddle"
+          >
+            Intelligent property
+            qualification for modern real
+            estate teams.
+          </div>
+
+          <div
+            className="footerRight"
+          >
+            Dubai · UAE
           </div>
         </footer>
       </main>
     );
   }
 
-  const qualifiedLead =
-    leadMemory?.lead || {};
+  /* =========================================================
+     LIVE EXPERIENCE
+     ========================================================= */
 
   return (
     <main
-      style={{
-        minHeight: "100vh",
-        background:
-          "radial-gradient(circle at 78% 18%, rgba(184,154,103,.15), transparent 30%), linear-gradient(135deg,#F5F0E7,#FBF9F4)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        fontFamily:
-          'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif',
-        padding: "20px",
-        position: "relative",
-      }}
+      className="liveDemoPage"
     >
-      <style>{`
-        @keyframes successIn {
-          0% {
-            opacity: 0;
-            transform: translateY(12px);
-          }
+      <GlobalStyles />
 
-          100% {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
+      <div
+        className="demoAmbientOne"
+      />
 
-        @keyframes checkPop {
-          0% {
-            transform: scale(.55);
-            opacity: 0;
-          }
-
-          65% {
-            transform: scale(1.1);
-          }
-
-          100% {
-            transform: scale(1);
-            opacity: 1;
-          }
-        }
-      `}</style>
+      <div
+        className="demoAmbientTwo"
+      />
 
       <button
-        onClick={backToLanding}
-        disabled={loading}
-        style={{
-          position: "fixed",
-          top: "22px",
-          left: "22px",
-          zIndex: 10,
-          border: `1px solid ${colors.line}`,
-          background:
-            "rgba(255,253,248,.88)",
-          color: colors.forest,
-          padding: "10px 15px",
-          borderRadius: "999px",
-          cursor: loading
-            ? "not-allowed"
-            : "pointer",
-          fontWeight: "800",
-          fontSize: "11px",
-          boxShadow:
-            "0 8px 22px rgba(16,24,20,.05)",
-          backdropFilter:
-            "blur(12px)",
-        }}
+        className="backToNomadButton"
+        onClick={
+          backToLanding
+        }
+        disabled={
+          loading
+        }
       >
         ← Back to NOMAD
       </button>
 
       <div
-        style={{
-          width: "100%",
-          maxWidth: "470px",
-          height:
-            "min(730px, calc(100vh - 40px))",
-          minHeight: "580px",
-          background: colors.paper,
-          borderRadius: "28px",
-          boxShadow:
-            "0 35px 90px rgba(16,24,20,.17)",
-          overflow: "hidden",
-          display: "flex",
-          flexDirection: "column",
-          border:
-            "1px solid rgba(16,24,20,.08)",
-        }}
+        className="demoExperienceFrame"
       >
+        {/* ===================================================
+            PRODUCT DEMO SIDE PANEL
+            =================================================== */}
+
         <div
-          style={{
-            background:
-              colors.forest,
-            color: "white",
-            padding: "18px",
-            display: "flex",
-            justifyContent:
-              "space-between",
-            alignItems: "center",
-          }}
+          className="demoStoryPanel"
         >
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-            }}
-          >
+          <div>
+            <BrandMark
+              dark
+            />
+
             <div
-              style={{
-                width: "44px",
-                height: "44px",
-                borderRadius: "50%",
-                background:
-                  "linear-gradient(135deg,#206250,#0F4035)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent:
-                  "center",
-                fontWeight: "800",
-                marginRight: "12px",
-              }}
+              className="demoStoryEyebrow"
             >
-              N
+              LIVE PRODUCT EXPERIENCE
             </div>
 
-            <div>
-              <div
-                style={{
-                  fontSize: "14px",
-                  fontWeight: "750",
-                }}
-              >
-                NOMAD Property Assistant
-              </div>
+            <h1>
+              Experience the
+              <br />
 
-              <div
-                style={{
-                  marginTop: "4px",
-                  color:
-                    "rgba(255,255,255,.62)",
-                  fontSize: "10px",
-                }}
-              >
-                <span
-                  style={{
-                    color: loading
-                      ? "#D4C2A1"
-                      : "#71C3A3",
-                  }}
-                >
-                  ●
-                </span>{" "}
-                {loading
-                  ? "Typing..."
-                  : "Available now"}
-              </div>
-            </div>
+              <span>
+                customer side
+              </span>
+
+              <br />
+
+              of NOMAD.
+            </h1>
+
+            <p>
+              Talk naturally. NOMAD will
+              understand what you need,
+              qualify the enquiry and
+              prepare the handoff.
+            </p>
           </div>
 
-          <button
-            onClick={
-              startNewConversation
-            }
-            disabled={loading}
-            title="Start a new conversation"
-            style={{
-              width: "38px",
-              height: "38px",
-              borderRadius: "50%",
-              border:
-                "1px solid rgba(255,255,255,.14)",
-              background:
-                "rgba(255,255,255,.06)",
-              color: "white",
-              cursor: loading
-                ? "not-allowed"
-                : "pointer",
-              fontSize: "18px",
-            }}
+          <div
+            className="demoStoryRail"
           >
-            ↻
-          </button>
+            <DemoRailItem
+              number="01"
+              label="Conversation"
+              active={
+                !leadSaved
+              }
+            />
+
+            <DemoRailItem
+              number="02"
+              label="Qualification"
+              active={
+                loading
+              }
+            />
+
+            <DemoRailItem
+              number="03"
+              label="Handoff"
+              active={
+                leadSaved
+              }
+            />
+          </div>
+
+          <div
+            className="demoStoryFooter"
+          >
+            The customer sees a natural
+            conversation.
+
+            <br />
+
+            Structured sales intelligence
+            remains behind the scenes.
+          </div>
         </div>
 
+        {/* ===================================================
+            CHAT
+            =================================================== */}
+
         <div
-          style={{
-            flex: 1,
-            overflowY: "auto",
-            padding:
-              "24px 18px 28px",
-            background:
-              colors.ivorySoft,
-          }}
+          className="chatShell"
         >
+          {/* -------------------------------------------------
+              CHAT HEADER
+              ------------------------------------------------- */}
+
           <div
-            style={{
-              textAlign: "center",
-              marginBottom: "24px",
-              color:
-                colors.champagne,
-              fontSize: "9px",
-              fontWeight: "800",
-              letterSpacing:
-                "1.3px",
-              textTransform:
-                "uppercase",
-            }}
+            className="chatHeader"
           >
-            Private Property Concierge
-          </div>
-
-          {messages.map(
-            (message, index) => {
-              const isUser =
-                message.role ===
-                "user";
-
-              return (
-                <div
-                  key={index}
-                  style={{
-                    display: "flex",
-                    justifyContent:
-                      isUser
-                        ? "flex-end"
-                        : "flex-start",
-                    marginBottom:
-                      "14px",
-                  }}
-                >
-                  {!isUser && (
-                    <div
-                      style={{
-                        width: "28px",
-                        height: "28px",
-                        borderRadius:
-                          "50%",
-                        background:
-                          colors.forest,
-                        color: "white",
-                        display:
-                          "flex",
-                        alignItems:
-                          "center",
-                        justifyContent:
-                          "center",
-                        fontSize:
-                          "9px",
-                        fontWeight:
-                          "800",
-                        marginRight:
-                          "8px",
-                        marginTop:
-                          "2px",
-                        flexShrink: 0,
-                      }}
-                    >
-                      N
-                    </div>
-                  )}
-
-                  <div
-                    style={{
-                      background:
-                        isUser
-                          ? "#E8E3D7"
-                          : colors.paper,
-                      color:
-                        colors.ink,
-                      padding:
-                        "11px 14px",
-                      borderRadius:
-                        isUser
-                          ? "16px 16px 4px 16px"
-                          : "16px 16px 16px 4px",
-                      maxWidth:
-                        "78%",
-                      fontSize:
-                        "13px",
-                      lineHeight:
-                        "1.55",
-                      whiteSpace:
-                        "pre-line",
-                      boxShadow:
-                        "0 2px 8px rgba(16,24,20,.05)",
-                    }}
-                  >
-                    {message.text}
-                  </div>
-                </div>
-              );
-            }
-          )}
-
-          {loading && (
             <div
-              style={{
-                display: "flex",
-              }}
+              className="chatIdentity"
             >
               <div
-                style={{
-                  width: "28px",
-                  height: "28px",
-                  borderRadius:
-                    "50%",
-                  background:
-                    colors.forest,
-                  color: "white",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent:
-                    "center",
-                  fontSize: "9px",
-                  fontWeight: "800",
-                  marginRight: "8px",
-                }}
+                className="chatAvatar"
               >
                 N
               </div>
 
-              <div
-                style={{
-                  padding:
-                    "11px 14px",
-                  borderRadius:
-                    "16px",
-                  background:
-                    colors.paper,
-                  color: "#8B8579",
-                  letterSpacing:
-                    "2px",
-                }}
-              >
-                •••
-              </div>
-            </div>
-          )}
-
-          {leadSaved && (
-            <div
-              style={{
-                marginTop: "22px",
-                animation:
-                  "successIn .45s ease-out both",
-              }}
-            >
-              <div
-                style={{
-                  background:
-                    "linear-gradient(135deg,#0A392F,#0B4B3D)",
-                  color: "white",
-                  borderRadius:
-                    "20px",
-                  padding: "20px",
-                  boxShadow:
-                    "0 18px 38px rgba(8,47,39,.15)",
-                  position:
-                    "relative",
-                  overflow: "hidden",
-                }}
-              >
+              <div>
                 <div
-                  style={{
-                    position:
-                      "absolute",
-                    right: "-40px",
-                    top: "-60px",
-                    width: "150px",
-                    height: "150px",
-                    borderRadius:
-                      "50%",
-                    border:
-                      "1px solid rgba(216,198,166,.18)",
-                  }}
-                />
-
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems:
-                      "flex-start",
-                    gap: "13px",
-                    position:
-                      "relative",
-                  }}
+                  className="chatTitle"
                 >
-                  <div
-                    style={{
-                      width: "38px",
-                      height: "38px",
-                      borderRadius:
-                        "50%",
-                      flexShrink: 0,
-                      background:
-                        "rgba(255,255,255,.10)",
-                      border:
-                        "1px solid rgba(255,255,255,.14)",
-                      display:
-                        "flex",
-                      alignItems:
-                        "center",
-                      justifyContent:
-                        "center",
-                      fontSize:
-                        "15px",
-                      animation:
-                        "checkPop .5s ease-out both",
-                    }}
-                  >
-                    ✓
-                  </div>
-
-                  <div>
-                    <div
-                      style={{
-                        color:
-                          colors.champagneSoft,
-                        textTransform:
-                          "uppercase",
-                        letterSpacing:
-                          "1.25px",
-                        fontSize:
-                          "8px",
-                        fontWeight:
-                          "800",
-                      }}
-                    >
-                      Qualification
-                      complete
-                    </div>
-
-                    <div
-                      style={{
-                        marginTop:
-                          "6px",
-                        fontSize:
-                          "16px",
-                        fontWeight:
-                          "750",
-                      }}
-                    >
-                      Lead qualified
-                    </div>
-
-                    <div
-                      style={{
-                        marginTop:
-                          "7px",
-                        color:
-                          "rgba(255,255,255,.64)",
-                        fontSize:
-                          "11px",
-                        lineHeight:
-                          "1.6",
-                      }}
-                    >
-                      Requirement captured ·
-                      Callback scheduled ·
-                      Consultant handoff ready
-                    </div>
-                  </div>
+                  NOMAD Property
+                  Assistant
                 </div>
 
-                <button
-                  onClick={() =>
-                    setShowLeadSummary(
-                      true
-                    )
-                  }
-                  style={{
-                    width: "100%",
-                    marginTop:
-                      "17px",
-                    border:
-                      "1px solid rgba(255,255,255,.14)",
-                    background:
-                      "rgba(255,255,255,.08)",
-                    color: "white",
-                    borderRadius:
-                      "12px",
-                    padding:
-                      "11px 14px",
-                    cursor:
-                      "pointer",
-                    fontSize:
-                      "10px",
-                    fontWeight:
-                      "800",
-                    letterSpacing:
-                      ".35px",
-                  }}
+                <div
+                  className="chatStatus"
                 >
-                  View Lead Summary →
-                </button>
+                  <span
+                    className={
+                      loading
+                        ? "statusDot statusDotBusy"
+                        : "statusDot"
+                    }
+                  />
+
+                  {loading
+                    ? "Understanding..."
+                    : leadSaved
+                    ? "Request received"
+                    : "Available now"}
+                </div>
               </div>
             </div>
-          )}
-
-          <div ref={chatEndRef} />
-        </div>
-
-        <div
-          style={{
-            padding:
-              "13px 14px 16px",
-            background: colors.paper,
-            borderTop: `1px solid ${colors.line}`,
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "10px",
-              padding:
-                "5px 5px 5px 16px",
-              background: "#F3EFE7",
-              borderRadius:
-                "999px",
-              border:
-                "1px solid rgba(16,24,20,.07)",
-            }}
-          >
-            <input
-              ref={inputRef}
-              value={input}
-              onChange={(e) =>
-                setInput(
-                  e.target.value
-                )
-              }
-              onKeyDown={(e) => {
-                if (
-                  e.key === "Enter"
-                ) {
-                  sendMessage();
-                }
-              }}
-              placeholder={
-                leadSaved
-                  ? "Lead qualified"
-                  : "Ask NOMAD..."
-              }
-              disabled={
-                loading || leadSaved
-              }
-              style={{
-                flex: 1,
-                border: "none",
-                outline: "none",
-                background:
-                  "transparent",
-                padding: "10px 0",
-                fontSize: "13px",
-                color: colors.ink,
-                opacity: leadSaved
-                  ? 0.5
-                  : 1,
-              }}
-            />
 
             <button
-              onClick={sendMessage}
-              disabled={
-                loading ||
-                !input.trim() ||
-                leadSaved
+              className="newConversationButton"
+              onClick={
+                startNewConversation
               }
-              style={{
-                width: "40px",
-                height: "40px",
-                border: "none",
-                borderRadius: "50%",
-                background:
-                  colors.forest,
-                color: "white",
-                fontSize: "15px",
-                cursor:
-                  loading ||
-                  !input.trim() ||
-                  leadSaved
-                    ? "not-allowed"
-                    : "pointer",
-                opacity:
-                  loading ||
-                  !input.trim() ||
-                  leadSaved
-                    ? 0.3
-                    : 1,
-              }}
+              disabled={
+                loading
+              }
+              title="Start a new conversation"
             >
-              ↑
+              ↻
             </button>
           </div>
 
+          {/* -------------------------------------------------
+              CHAT STREAM
+              ------------------------------------------------- */}
+
           <div
-            style={{
-              textAlign: "center",
-              marginTop: "9px",
-              color: "#999186",
-              fontSize: "9px",
-              letterSpacing: ".4px",
-            }}
+            className="chatBody"
           >
-            Intelligent qualification ·
-            Real-time lead capture
+            <div
+              className="chatSessionLabel"
+            >
+              Private Property Concierge
+            </div>
+
+            {messages.map(
+              (
+                message,
+                index
+              ) => (
+                <ChatMessage
+                  key={
+                    index
+                  }
+                  message={
+                    message
+                  }
+                />
+              )
+            )}
+
+            {loading && (
+              <TypingMessage />
+            )}
+
+            {/* -----------------------------------------------
+                CUSTOMER-FACING SUCCESS
+                ----------------------------------------------- */}
+
+            {leadSaved && (
+              <CustomerRequestReceived />
+            )}
+
+            <div
+              ref={
+                chatEndRef
+              }
+            />
+          </div>
+
+          {/* -------------------------------------------------
+              COMPOSER
+              ------------------------------------------------- */}
+
+          <div
+            className="chatComposerArea"
+          >
+            <div
+              className={
+                leadSaved
+                  ? "composer composerComplete"
+                  : "composer"
+              }
+            >
+              <input
+                ref={
+                  inputRef
+                }
+                value={
+                  input
+                }
+                onChange={(
+                  event
+                ) =>
+                  setInput(
+                    event
+                      .target
+                      .value
+                  )
+                }
+                onKeyDown={(
+                  event
+                ) => {
+                  if (
+                    event.key ===
+                      "Enter" &&
+                    !event.shiftKey
+                  ) {
+                    event.preventDefault();
+
+                    sendMessage();
+                  }
+                }}
+                placeholder={
+                  leadSaved
+                    ? "Request received"
+                    : "Ask NOMAD..."
+                }
+                disabled={
+                  loading ||
+                  leadSaved
+                }
+              />
+
+              <button
+                onClick={
+                  sendMessage
+                }
+                disabled={
+                  loading ||
+                  leadSaved ||
+                  !input.trim()
+                }
+              >
+                {loading
+                  ? "•••"
+                  : "↑"}
+              </button>
+            </div>
+
+            <div
+              className="composerFooter"
+            >
+              {leadSaved
+                ? "Your property request has been shared with the team."
+                : "Intelligent qualification · Real-time lead capture"}
+            </div>
           </div>
         </div>
       </div>
-
-      {showLeadSummary && (
-        <LeadSummaryModal
-          lead={qualifiedLead}
-          onClose={() =>
-            setShowLeadSummary(false)
-          }
-          onNewConversation={() => {
-            setShowLeadSummary(false);
-            startNewConversation();
-          }}
-        />
-      )}
     </main>
   );
 }
 
-function BrandMark({
-  dark = false,
+/* =========================================================
+   GLOBAL CSS
+   ========================================================= */
+
+function GlobalStyles() {
+  return (
+    <style>{`
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        margin: 0;
+        background: #FBF9F4;
+      }
+
+      button,
+      input,
+      textarea,
+      a {
+        font-family: inherit;
+      }
+
+      button {
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      ::selection {
+        background: rgba(185, 152, 98, .25);
+      }
+
+      ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+
+      ::-webkit-scrollbar-thumb {
+        background: rgba(8, 47, 39, .16);
+        border-radius: 20px;
+      }
+
+      /* =====================================================
+         NAV
+         ===================================================== */
+
+      .siteNav {
+        width: 100%;
+        max-width: 1380px;
+        margin: 0 auto;
+        padding: 28px 38px;
+        position: relative;
+        z-index: 30;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .navRight {
+        display: flex;
+        align-items: center;
+        gap: 34px;
+      }
+
+      .desktopNavLinks {
+        display: flex;
+        align-items: center;
+        gap: 30px;
+      }
+
+      .navLink {
+        position: relative;
+        color: #2E3934;
+        text-decoration: none;
+        font-size: 9px;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        font-weight: 800;
+        padding: 9px 0;
+        transition:
+          color .25s ease,
+          opacity .25s ease;
+      }
+
+      .navLink::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        bottom: 2px;
+        width: 0;
+        height: 1px;
+        background: #A9844D;
+        transition: width .25s ease;
+      }
+
+      .navLink:hover {
+        color: #082F27;
+      }
+
+      .navLink:hover::after {
+        width: 100%;
+      }
+
+      .primaryPill {
+        border: 1px solid rgba(211,181,126,.68);
+        background:
+          linear-gradient(135deg, #082F27, #0D483B);
+        color: white;
+        padding: 13px 21px;
+        border-radius: 999px;
+        cursor: pointer;
+        font-weight: 800;
+        font-size: 11px;
+        box-shadow:
+          0 14px 38px rgba(8,47,39,.20);
+        transition:
+          transform .25s ease,
+          box-shadow .25s ease;
+      }
+
+      .primaryPill span {
+        margin-left: 12px;
+      }
+
+      .primaryPill:hover {
+        transform: translateY(-2px);
+        box-shadow:
+          0 18px 48px rgba(8,47,39,.27);
+      }
+
+      /* =====================================================
+         HERO
+         ===================================================== */
+
+      .heroOuter {
+        width: 100%;
+        max-width: 1380px;
+        margin: 0 auto;
+        padding: 56px 38px 85px;
+        position: relative;
+        z-index: 10;
+      }
+
+      .heroGrid {
+        display: grid;
+        grid-template-columns:
+          minmax(0, 1.02fr)
+          minmax(0, .98fr);
+        gap: 78px;
+        align-items: center;
+      }
+
+      .heroCopy {
+        padding-bottom: 20px;
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        color: #9C7740;
+        text-transform: uppercase;
+        letter-spacing: 1.9px;
+        font-size: 9px;
+        font-weight: 850;
+      }
+
+      .eyebrowLight {
+        color: #D8C6A6;
+      }
+
+      .eyebrowLine {
+        width: 34px;
+        height: 1px;
+        background: currentColor;
+        opacity: .8;
+      }
+
+      .heroTitle {
+        margin: 28px 0 0;
+        max-width: 720px;
+        font-size: clamp(62px, 6.15vw, 96px);
+        line-height: .94;
+        letter-spacing: -5px;
+        font-weight: 710;
+      }
+
+      .heroTitle span {
+        display: inline-block;
+        margin-top: 8px;
+        font-family:
+          Georgia,
+          "Times New Roman",
+          serif;
+        font-weight: 400;
+        font-style: italic;
+        color: #0B7663;
+        letter-spacing: -3px;
+      }
+
+      .heroDescription {
+        margin: 34px 0 0;
+        max-width: 610px;
+        color: #5D6862;
+        font-size: 15px;
+        line-height: 1.8;
+      }
+
+      .heroActions {
+        margin-top: 37px;
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 18px;
+      }
+
+      .heroPrimaryButton {
+        border: none;
+        background: #082F27;
+        color: white;
+        border-radius: 999px;
+        padding: 16px 25px;
+        font-size: 12px;
+        font-weight: 850;
+        cursor: pointer;
+        box-shadow:
+          0 17px 38px rgba(8,47,39,.22);
+        transition:
+          transform .25s ease,
+          box-shadow .25s ease;
+      }
+
+      .heroPrimaryButton span {
+        margin-left: 13px;
+      }
+
+      .heroPrimaryButton:hover {
+        transform: translateY(-2px);
+        box-shadow:
+          0 22px 48px rgba(8,47,39,.28);
+      }
+
+      .heroMicroCopy {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: #696F6B;
+        font-size: 11px;
+      }
+
+      .tinyPulse {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #0B7663;
+        box-shadow:
+          0 0 0 5px rgba(11,118,99,.08);
+        animation:
+          tinyPulse 2s ease-in-out infinite;
+      }
+
+      @keyframes tinyPulse {
+        0%,
+        100% {
+          transform: scale(1);
+          opacity: .8;
+        }
+
+        50% {
+          transform: scale(1.2);
+          opacity: 1;
+        }
+      }
+
+      .heroStats {
+        margin-top: 58px;
+        display: grid;
+        grid-template-columns:
+          repeat(3, minmax(100px, 1fr));
+        max-width: 580px;
+        border-top:
+          1px solid rgba(17,25,21,.13);
+      }
+
+      .heroLocation {
+        margin-top: 42px;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        color: #9A7844;
+        font-size: 8px;
+        font-weight: 850;
+        text-transform: uppercase;
+        letter-spacing: 1.7px;
+      }
+
+      .heroLocation span {
+        width: 38px;
+        height: 1px;
+        background: #A9844D;
+      }
+
+      /* =====================================================
+         HERO PRODUCT
+         ===================================================== */
+
+      .heroProductStage {
+        position: relative;
+        min-height: 660px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .heroArchitectureArc {
+        position: absolute;
+        width: 79%;
+        height: 83%;
+        right: -1%;
+        top: 3%;
+        border:
+          1px solid rgba(201,166,106,.38);
+        border-radius:
+          260px 260px 28px 28px;
+        transition: transform .15s linear;
+      }
+
+      .heroArchitectureArc2 {
+        width: 61%;
+        height: 65%;
+        right: 8%;
+        top: 13%;
+        opacity: .55;
+      }
+
+      .heroFloatingCard {
+        width: 100%;
+        max-width: 470px;
+        border-radius: 27px;
+        overflow: hidden;
+        background:
+          rgba(255,253,248,.92);
+        backdrop-filter:
+          blur(20px);
+        border:
+          1px solid rgba(255,255,255,.76);
+        box-shadow:
+          0 45px 110px rgba(11,31,26,.23),
+          0 12px 34px rgba(7,55,44,.10);
+        position: relative;
+        z-index: 6;
+        transform-style:
+          preserve-3d;
+      }
+
+      .demoCardHeader {
+        background:
+          linear-gradient(
+            135deg,
+            #062F27,
+            #0A473A
+          );
+        color: white;
+        padding: 19px 20px;
+        display: flex;
+        justify-content:
+          space-between;
+        align-items: center;
+      }
+
+      .demoCardIdentity {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .demoMiniAvatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background:
+          linear-gradient(
+            135deg,
+            #226654,
+            #0F4035
+          );
+        border:
+          1px solid rgba(255,255,255,.14);
+        font-weight: 850;
+        font-size: 12px;
+      }
+
+      .demoCardTitle {
+        font-size: 12px;
+        font-weight: 750;
+      }
+
+      .demoCardStatus {
+        margin-top: 4px;
+        font-size: 9px;
+        color: rgba(255,255,255,.62);
+      }
+
+      .demoCardStatus span {
+        color: #69C19B;
+      }
+
+      .demoLiveLabel {
+        color: #D6BC8E;
+        font-size: 8px;
+        font-weight: 850;
+        letter-spacing: 1.4px;
+      }
+
+      .previewConversation {
+        padding: 28px 24px;
+        background:
+          rgba(253,250,244,.95);
+      }
+
+      .previewBubbleRow {
+        display: flex;
+        margin-bottom: 13px;
+      }
+
+      .previewBubbleAssistant {
+        justify-content: flex-start;
+      }
+
+      .previewBubbleUser {
+        justify-content: flex-end;
+      }
+
+      .previewBubble {
+        max-width: 80%;
+        padding: 11px 13px;
+        color: #303A35;
+        font-size: 10.5px;
+        line-height: 1.55;
+        box-shadow:
+          0 3px 9px rgba(16,24,20,.045);
+      }
+
+      .previewBubbleAssistant .previewBubble {
+        border-radius:
+          14px 14px 14px 4px;
+        background: #FFFDF8;
+      }
+
+      .previewBubbleUser .previewBubble {
+        border-radius:
+          14px 14px 4px 14px;
+        background: #E9E4D8;
+      }
+
+      .previewInsight {
+        margin-top: 28px;
+        padding-top: 18px;
+        border-top:
+          1px solid rgba(16,24,20,.08);
+        display: flex;
+        justify-content:
+          space-between;
+        align-items: center;
+        gap: 20px;
+      }
+
+      .previewInsightLabel {
+        color: #A9844D;
+        font-size: 8px;
+        letter-spacing: 1.35px;
+        text-transform: uppercase;
+        font-weight: 850;
+      }
+
+      .previewInsightTitle {
+        margin-top: 6px;
+        font-size: 12px;
+        font-weight: 780;
+        color: #082F27;
+      }
+
+      .previewInsightText {
+        margin-top: 3px;
+        color: #7C847F;
+        font-size: 9px;
+      }
+
+      .previewCheck {
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        background: #082F27;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 850;
+      }
+
+      /* =====================================================
+         HERO INTELLIGENCE TAGS
+         ===================================================== */
+
+      .floatingIntelligenceTag {
+        position: absolute;
+        z-index: 10;
+        min-width: 128px;
+        padding: 12px 14px;
+        background:
+          rgba(255,253,248,.88);
+        backdrop-filter:
+          blur(18px);
+        border-radius: 12px;
+        border:
+          1px solid rgba(16,24,20,.07);
+        box-shadow:
+          0 16px 40px rgba(16,24,20,.13);
+        animation:
+          tagFloat 5s ease-in-out infinite;
+      }
+
+      .floatingIntelligenceTagLabel {
+        color: #B99862;
+        font-size: 7px;
+        text-transform: uppercase;
+        letter-spacing: 1.2px;
+        font-weight: 850;
+      }
+
+      .floatingIntelligenceTagValue {
+        margin-top: 5px;
+        color: #082F27;
+        font-size: 11px;
+        font-weight: 780;
+      }
+
+      .floatingIntelligenceTagDetail {
+        margin-top: 2px;
+        color: #8B918D;
+        font-size: 8px;
+      }
+
+      .heroIntentTag {
+        top: 105px;
+        left: -9px;
+      }
+
+      .heroStatusTag {
+        right: -6px;
+        bottom: 105px;
+        animation-delay: -1.8s;
+      }
+
+      .heroBudgetTag {
+        left: 30px;
+        bottom: 45px;
+        animation-delay: -3.2s;
+      }
+
+      @keyframes tagFloat {
+        0%,
+        100% {
+          transform: translateY(0);
+        }
+
+        50% {
+          transform: translateY(-7px);
+        }
+      }
+
+      /* =====================================================
+         HERO ORBIT
+         ===================================================== */
+
+      .heroOrbit {
+        position: absolute;
+        width: 540px;
+        height: 540px;
+        border-radius: 50%;
+        pointer-events: none;
+      }
+
+      .heroOrbitRing {
+        position: absolute;
+        inset: 0;
+        border:
+          1px solid rgba(185,152,98,.12);
+        border-radius: 50%;
+        animation:
+          rotateOrbit 28s linear infinite;
+      }
+
+      .heroOrbitRing::before,
+      .heroOrbitRing::after {
+        content: "";
+        position: absolute;
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: #B99862;
+        box-shadow:
+          0 0 20px rgba(185,152,98,.45);
+      }
+
+      .heroOrbitRing::before {
+        left: 49%;
+        top: -4px;
+      }
+
+      .heroOrbitRing::after {
+        right: -4px;
+        top: 49%;
+      }
+
+      @keyframes rotateOrbit {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      /* =====================================================
+         HERO GRID OVERLAY
+         ===================================================== */
+
+      .heroGridOverlay {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        opacity: .22;
+        background-image:
+          linear-gradient(
+            rgba(8,47,39,.06) 1px,
+            transparent 1px
+          ),
+          linear-gradient(
+            90deg,
+            rgba(8,47,39,.06) 1px,
+            transparent 1px
+          );
+        background-size:
+          84px 84px;
+        mask-image:
+          linear-gradient(
+            to right,
+            transparent,
+            black 48%,
+            black
+          );
+      }
+
+      .heroBottomFade {
+        position: absolute;
+        z-index: 9;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 130px;
+        background:
+          linear-gradient(
+            transparent,
+            rgba(8,47,39,.10)
+          );
+        pointer-events: none;
+      }
+
+      /* =====================================================
+         SHARED SECTIONS
+         ===================================================== */
+
+      .sectionInner {
+        width: 100%;
+        max-width: 1220px;
+        margin: 0 auto;
+        position: relative;
+        z-index: 3;
+      }
+
+      .sectionHeaderSplit {
+        display: grid;
+        grid-template-columns:
+          minmax(0, 1.15fr)
+          minmax(0, .85fr);
+        gap: 90px;
+        align-items: end;
+      }
+
+      .sectionTitleLight,
+      .sectionTitleDark {
+        margin: 24px 0 0;
+        font-size:
+          clamp(42px, 5vw, 70px);
+        line-height: 1.02;
+        letter-spacing: -3px;
+        font-weight: 650;
+      }
+
+      .sectionTitleLight {
+        color: white;
+      }
+
+      .sectionTitleDark {
+        color: #101814;
+      }
+
+      .sectionTitleLight span {
+        font-family:
+          Georgia,
+          "Times New Roman",
+          serif;
+        font-weight: 400;
+        font-style: italic;
+        color: #D8C6A6;
+      }
+
+      .sectionTitleDark span {
+        font-family:
+          Georgia,
+          "Times New Roman",
+          serif;
+        font-weight: 400;
+        font-style: italic;
+        color: #0B7663;
+      }
+
+      .sectionLeadLight {
+        margin: 0;
+        color:
+          rgba(255,255,255,.54);
+        font-size: 14px;
+        line-height: 1.85;
+        max-width: 470px;
+      }
+
+      /* =====================================================
+         INTELLIGENCE SECTION
+         ===================================================== */
+
+      .intelligenceSection {
+        position: relative;
+        background: #082F27;
+        padding: 112px 34px 100px;
+        color: white;
+        overflow: hidden;
+      }
+
+      .sectionOrb {
+        position: absolute;
+        width: 620px;
+        height: 620px;
+        border-radius: 50%;
+        border:
+          1px solid rgba(216,198,166,.12);
+        pointer-events: none;
+      }
+
+      .sectionOrbLeft {
+        left: -280px;
+        top: 80px;
+      }
+
+      .sectionOrbRight {
+        right: -280px;
+        top: 80px;
+      }
+
+      .intelligenceWorkspace {
+        margin-top: 72px;
+        min-height: 590px;
+        display: grid;
+        grid-template-columns:
+          minmax(0, 1fr)
+          240px
+          minmax(0, 1fr);
+        gap: 34px;
+        align-items: center;
+      }
+
+      .intelligenceInputPanel,
+      .structuredLeadPanel {
+        min-height: 500px;
+        border-radius: 22px;
+        background:
+          rgba(255,255,255,.055);
+        border:
+          1px solid rgba(255,255,255,.09);
+        backdrop-filter:
+          blur(20px);
+        padding: 24px;
+        box-shadow:
+          inset 0 1px 0 rgba(255,255,255,.04);
+      }
+
+      .panelLabel {
+        color: #D8C6A6;
+        font-size: 8px;
+        font-weight: 850;
+        letter-spacing: 1.35px;
+        text-transform: uppercase;
+      }
+
+      .intelligenceMessage {
+        margin-top: 26px;
+        padding: 18px;
+        border-radius: 16px;
+        background:
+          rgba(255,255,255,.07);
+        display: flex;
+        gap: 13px;
+      }
+
+      .miniAvatar {
+        width: 36px;
+        height: 36px;
+        flex-shrink: 0;
+        border-radius: 50%;
+        background: #D8C6A6;
+        color: #082F27;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 9px;
+        font-weight: 850;
+      }
+
+      .miniPersonName {
+        font-size: 9px;
+        color: rgba(255,255,255,.45);
+        text-transform: uppercase;
+        letter-spacing: .8px;
+      }
+
+      .intelligenceMessage p {
+        margin: 7px 0 0;
+        color: rgba(255,255,255,.82);
+        font-size: 12px;
+        line-height: 1.7;
+      }
+
+      .signalDivider {
+        margin: 28px 0 22px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: rgba(255,255,255,.32);
+        font-size: 7px;
+        text-transform: uppercase;
+        letter-spacing: 1.1px;
+        white-space: nowrap;
+      }
+
+      .signalDivider span {
+        height: 1px;
+        flex: 1;
+        background:
+          rgba(255,255,255,.10);
+      }
+
+      .thinkingRows {
+        display: grid;
+        gap: 9px;
+      }
+
+      .thinkingRow {
+        display: grid;
+        grid-template-columns:
+          28px 1fr auto;
+        gap: 12px;
+        align-items: center;
+        padding: 11px 12px;
+        border-radius: 12px;
+        background:
+          rgba(255,255,255,.025);
+        border:
+          1px solid rgba(255,255,255,.05);
+        opacity: .34;
+        transform:
+          translateX(-4px);
+        transition:
+          opacity .45s ease,
+          transform .45s ease,
+          background .45s ease;
+      }
+
+      .thinkingRowActive {
+        opacity: 1;
+        transform:
+          translateX(0);
+        background:
+          rgba(255,255,255,.055);
+      }
+
+      .thinkingCheck {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 8px;
+        background:
+          rgba(255,255,255,.05);
+        color:
+          rgba(255,255,255,.25);
+      }
+
+      .thinkingRowActive .thinkingCheck {
+        background:
+          rgba(216,198,166,.15);
+        color: #D8C6A6;
+      }
+
+      .thinkingLabel {
+        font-size: 9px;
+        color:
+          rgba(255,255,255,.45);
+      }
+
+      .thinkingValue {
+        font-size: 9px;
+        color: white;
+        font-weight: 750;
+      }
+
+      /* =====================================================
+         INTELLIGENCE CORE
+         ===================================================== */
+
+      .intelligenceCore {
+        position: relative;
+        height: 360px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .coreGlow {
+        position: absolute;
+        width: 190px;
+        height: 190px;
+        border-radius: 50%;
+        background:
+          radial-gradient(
+            circle,
+            rgba(216,198,166,.22),
+            rgba(11,118,99,.07) 48%,
+            transparent 68%
+          );
+        animation:
+          coreGlowPulse 3s ease-in-out infinite;
+      }
+
+      @keyframes coreGlowPulse {
+        0%,
+        100% {
+          transform: scale(.96);
+          opacity: .65;
+        }
+
+        50% {
+          transform: scale(1.08);
+          opacity: 1;
+        }
+      }
+
+      .coreRing {
+        position: absolute;
+        border-radius: 50%;
+        border:
+          1px solid rgba(216,198,166,.16);
+      }
+
+      .ringOne {
+        width: 150px;
+        height: 150px;
+        animation:
+          rotateCore 16s linear infinite;
+      }
+
+      .ringTwo {
+        width: 220px;
+        height: 220px;
+        opacity: .72;
+        border-style: dashed;
+        animation:
+          rotateCoreReverse 25s linear infinite;
+      }
+
+      .ringThree {
+        width: 300px;
+        height: 300px;
+        opacity: .33;
+        animation:
+          rotateCore 36s linear infinite;
+      }
+
+      @keyframes rotateCore {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      @keyframes rotateCoreReverse {
+        to {
+          transform: rotate(-360deg);
+        }
+      }
+
+      .coreNode {
+        position: relative;
+        z-index: 4;
+        width: 104px;
+        height: 104px;
+        border-radius: 50%;
+        background:
+          linear-gradient(
+            135deg,
+            #154E41,
+            #082F27
+          );
+        border:
+          1px solid rgba(216,198,166,.35);
+        box-shadow:
+          0 0 45px rgba(216,198,166,.10);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .coreN {
+        font-size: 28px;
+        font-weight: 760;
+      }
+
+      .coreNode span {
+        margin-top: 2px;
+        color: #D8C6A6;
+        font-size: 7px;
+        letter-spacing: 1.5px;
+      }
+
+      .coreSignal {
+        position: absolute;
+        z-index: 6;
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: #D8C6A6;
+        box-shadow:
+          0 0 16px rgba(216,198,166,.50);
+      }
+
+      .signalOne {
+        animation:
+          orbitSignalOne 5s linear infinite;
+      }
+
+      .signalTwo {
+        animation:
+          orbitSignalTwo 7s linear infinite;
+      }
+
+      .signalThree {
+        animation:
+          orbitSignalThree 10s linear infinite;
+      }
+
+      @keyframes orbitSignalOne {
+        from {
+          transform:
+            rotate(0deg)
+            translateX(74px);
+        }
+
+        to {
+          transform:
+            rotate(360deg)
+            translateX(74px);
+        }
+      }
+
+      @keyframes orbitSignalTwo {
+        from {
+          transform:
+            rotate(120deg)
+            translateX(108px);
+        }
+
+        to {
+          transform:
+            rotate(480deg)
+            translateX(108px);
+        }
+      }
+
+      @keyframes orbitSignalThree {
+        from {
+          transform:
+            rotate(240deg)
+            translateX(148px);
+        }
+
+        to {
+          transform:
+            rotate(600deg)
+            translateX(148px);
+        }
+      }
+
+      /* =====================================================
+         STRUCTURED OUTPUT
+         ===================================================== */
+
+      .structuredLeadTop {
+        display: flex;
+        justify-content: space-between;
+        gap: 18px;
+        align-items: flex-start;
+        margin-bottom: 22px;
+      }
+
+      .structuredLeadTop h3 {
+        margin: 7px 0 0;
+        font-size: 19px;
+        font-weight: 650;
+      }
+
+      .qualifiedBadge {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 7px 10px;
+        border-radius: 999px;
+        background:
+          rgba(111,205,166,.09);
+        color: #81D4B3;
+        font-size: 7px;
+        font-weight: 850;
+        letter-spacing: 1px;
+      }
+
+      .qualifiedBadge span {
+        width: 5px;
+        height: 5px;
+        background: #81D4B3;
+        border-radius: 50%;
+        box-shadow:
+          0 0 0 4px rgba(129,212,179,.08);
+      }
+
+      .structuredDataRow {
+        min-height: 48px;
+        border-top:
+          1px solid rgba(255,255,255,.07);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        opacity: .26;
+        transform:
+          translateY(4px);
+        transition:
+          opacity .45s ease,
+          transform .45s ease;
+      }
+
+      .structuredDataRowActive {
+        opacity: 1;
+        transform:
+          translateY(0);
+      }
+
+      .structuredDataLabel {
+        color:
+          rgba(255,255,255,.40);
+        font-size: 9px;
+      }
+
+      .structuredDataValue {
+        color: white;
+        font-size: 10px;
+        font-weight: 720;
+      }
+
+      .handoffIndicator {
+        margin-top: 20px;
+        padding: 14px;
+        border-radius: 13px;
+        background:
+          rgba(255,255,255,.04);
+        border:
+          1px solid rgba(255,255,255,.06);
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        opacity: .28;
+        transition:
+          opacity .45s ease,
+          background .45s ease;
+      }
+
+      .handoffActive {
+        opacity: 1;
+        background:
+          rgba(216,198,166,.08);
+      }
+
+      .handoffIcon {
+        width: 30px;
+        height: 30px;
+        flex-shrink: 0;
+        border-radius: 50%;
+        background:
+          rgba(216,198,166,.12);
+        color: #D8C6A6;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 10px;
+      }
+
+      .handoffIndicator strong {
+        display: block;
+        font-size: 10px;
+      }
+
+      .handoffIndicator span {
+        display: block;
+        margin-top: 2px;
+        color:
+          rgba(255,255,255,.42);
+        font-size: 8px;
+      }
+
+      .intelligenceStageRail {
+        margin-top: 42px;
+        display: grid;
+        grid-template-columns:
+          repeat(6, 1fr);
+        border-top:
+          1px solid rgba(255,255,255,.10);
+      }
+
+      .stageRailItem {
+        position: relative;
+        border: none;
+        background: transparent;
+        color:
+          rgba(255,255,255,.34);
+        padding: 17px 8px;
+        text-align: left;
+        font-size: 8px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        cursor: pointer;
+        transition:
+          color .25s ease;
+      }
+
+      .stageRailItem span {
+        margin-right: 8px;
+        color: #D8C6A6;
+      }
+
+      .stageRailItem::before {
+        content: "";
+        position: absolute;
+        top: -1px;
+        left: 0;
+        width: 0;
+        height: 1px;
+        background: #D8C6A6;
+        transition:
+          width .35s ease;
+      }
+
+      .stageRailItemActive {
+        color: white;
+      }
+
+      .stageRailItemActive::before {
+        width: 100%;
+      }
+
+      /* =====================================================
+         PERSPECTIVE SECTION
+         ===================================================== */
+
+      .perspectiveSection {
+        position: relative;
+        background: #F7F3EB;
+        padding: 110px 34px;
+        overflow: hidden;
+      }
+
+      .perspectiveHeading {
+        max-width: 850px;
+      }
+
+      .perspectiveHeading p {
+        margin: 28px 0 0;
+        max-width: 560px;
+        color: #67716B;
+        font-size: 14px;
+        line-height: 1.8;
+      }
+
+      .perspectiveSwitcher {
+        margin-top: 50px;
+        display: inline-flex;
+        padding: 4px;
+        border-radius: 999px;
+        background: #ECE6DB;
+        border:
+          1px solid rgba(16,24,20,.06);
+      }
+
+      .perspectiveSwitcher button {
+        border: none;
+        background: transparent;
+        padding: 11px 20px;
+        border-radius: 999px;
+        color: #748078;
+        font-size: 9px;
+        font-weight: 850;
+        letter-spacing: .8px;
+        cursor: pointer;
+        transition:
+          background .25s ease,
+          color .25s ease,
+          box-shadow .25s ease;
+      }
+
+      .perspectiveSwitcher .perspectiveSwitcherActive {
+        background: #082F27;
+        color: white;
+        box-shadow:
+          0 8px 24px rgba(8,47,39,.14);
+      }
+
+      .perspectiveStage {
+        position: relative;
+        margin-top: 36px;
+        min-height: 620px;
+      }
+
+      .perspectiveScene {
+        position: absolute;
+        inset: 0;
+        transition:
+          opacity .45s ease,
+          transform .45s ease;
+      }
+
+      .perspectiveSceneVisible {
+        opacity: 1;
+        transform:
+          translateY(0);
+        pointer-events: auto;
+      }
+
+      .perspectiveSceneHidden {
+        opacity: 0;
+        transform:
+          translateY(15px);
+        pointer-events: none;
+      }
+
+      /* =====================================================
+         CUSTOMER PERSPECTIVE
+         ===================================================== */
+
+      .customerPerspective {
+        min-height: 590px;
+        border-radius: 28px;
+        background:
+          linear-gradient(
+            135deg,
+            #EFE9DE,
+            #FBF8F2
+          );
+        border:
+          1px solid rgba(16,24,20,.07);
+        display: grid;
+        grid-template-columns:
+          1.05fr .95fr;
+        overflow: hidden;
+        box-shadow:
+          0 30px 80px rgba(16,24,20,.08);
+      }
+
+      .customerPerspectiveCopy {
+        padding: 64px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+
+      .perspectiveMiniLabel {
+        color: #A9844D;
+        font-size: 8px;
+        font-weight: 850;
+        letter-spacing: 1.4px;
+        text-transform: uppercase;
+      }
+
+      .customerPerspectiveCopy h3 {
+        margin: 19px 0 0;
+        max-width: 490px;
+        font-size: 42px;
+        line-height: 1.08;
+        letter-spacing: -2px;
+        font-weight: 620;
+      }
+
+      .customerPerspectiveCopy h3 span {
+        font-family:
+          Georgia,
+          "Times New Roman",
+          serif;
+        font-style: italic;
+        font-weight: 400;
+        color: #0B7663;
+      }
+
+      .customerPerspectiveCopy p {
+        margin: 23px 0 0;
+        max-width: 480px;
+        color: #68736D;
+        font-size: 13px;
+        line-height: 1.8;
+      }
+
+      .customerPerspectiveList {
+        margin-top: 30px;
+        display: grid;
+        gap: 13px;
+      }
+
+      .customerPerspectivePoint {
+        display: flex;
+        gap: 11px;
+        align-items: center;
+        color: #47544E;
+        font-size: 11px;
+      }
+
+      .customerPerspectivePoint span {
+        width: 23px;
+        height: 23px;
+        border-radius: 50%;
+        background: #E4DED1;
+        color: #082F27;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 8px;
+        font-weight: 850;
+      }
+
+      .customerPhoneStage {
+        position: relative;
+        background:
+          linear-gradient(
+            145deg,
+            #0B3A30,
+            #06251F
+          );
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 45px;
+        overflow: hidden;
+      }
+
+      .customerPhoneStage::before {
+        content: "";
+        position: absolute;
+        width: 460px;
+        height: 460px;
+        border-radius: 50%;
+        border:
+          1px solid rgba(216,198,166,.10);
+      }
+
+      .customerPhone {
+        width: 300px;
+        border-radius: 30px;
+        background: #FAF8F3;
+        overflow: hidden;
+        box-shadow:
+          0 32px 80px rgba(0,0,0,.30);
+        position: relative;
+        z-index: 2;
+        border:
+          1px solid rgba(255,255,255,.14);
+      }
+
+      .customerPhoneHeader {
+        background: #082F27;
+        padding: 16px;
+        color: white;
+        display: flex;
+        gap: 10px;
+        align-items: center;
+      }
+
+      .customerPhoneAvatar {
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        background: #175143;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 10px;
+        font-weight: 850;
+      }
+
+      .customerPhoneHeader strong {
+        font-size: 10px;
+      }
+
+      .customerPhoneHeader span {
+        display: block;
+        margin-top: 2px;
+        color:
+          rgba(255,255,255,.48);
+        font-size: 7px;
+      }
+
+      .customerPhoneBody {
+        padding: 18px;
+        min-height: 410px;
+        background: #F7F4ED;
+      }
+
+      .customerPhoneBubble {
+        max-width: 84%;
+        margin-bottom: 11px;
+        padding: 9px 11px;
+        border-radius: 12px;
+        font-size: 8px;
+        line-height: 1.5;
+      }
+
+      .customerPhoneBubbleBot {
+        background: white;
+        border-radius:
+          12px 12px 12px 3px;
+      }
+
+      .customerPhoneBubbleUser {
+        margin-left: auto;
+        background: #E7E0D4;
+        border-radius:
+          12px 12px 3px 12px;
+      }
+
+      .customerSuccessBubble {
+        margin-top: 17px;
+        padding: 13px;
+        border-radius: 13px;
+        background: #E9F2EE;
+        border:
+          1px solid #D7E8E1;
+      }
+
+      .customerSuccessBubble strong {
+        display: block;
+        color: #082F27;
+        font-size: 9px;
+      }
+
+      .customerSuccessBubble span {
+        display: block;
+        margin-top: 3px;
+        color: #6E7A74;
+        font-size: 7.5px;
+        line-height: 1.55;
+      }
+
+      /* =====================================================
+         SALES PERSPECTIVE
+         ===================================================== */
+
+      .salesPerspective {
+        min-height: 590px;
+        border-radius: 28px;
+        background: #0A3129;
+        overflow: hidden;
+        border:
+          1px solid rgba(255,255,255,.06);
+        box-shadow:
+          0 30px 80px rgba(16,24,20,.16);
+        display: grid;
+        grid-template-columns:
+          300px 1fr;
+      }
+
+      .salesPerspectiveSidebar {
+        padding: 36px 30px;
+        border-right:
+          1px solid rgba(255,255,255,.08);
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+      }
+
+      .salesPerspectiveSidebar h3 {
+        margin: 22px 0 0;
+        color: white;
+        font-size: 27px;
+        line-height: 1.12;
+        letter-spacing: -1px;
+        font-weight: 620;
+      }
+
+      .salesPerspectiveSidebar p {
+        margin: 18px 0 0;
+        color:
+          rgba(255,255,255,.45);
+        font-size: 11px;
+        line-height: 1.75;
+      }
+
+      .salesDataTags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 7px;
+      }
+
+      .salesDataTag {
+        padding: 7px 9px;
+        border-radius: 999px;
+        background:
+          rgba(255,255,255,.06);
+        color:
+          rgba(255,255,255,.55);
+        border:
+          1px solid rgba(255,255,255,.06);
+        font-size: 7px;
+      }
+
+      .salesPerspectiveMain {
+        padding: 36px;
+      }
+
+      .salesOpportunityTop {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 25px;
+      }
+
+      .salesOpportunityTop h3 {
+        margin: 7px 0 0;
+        color: white;
+        font-size: 28px;
+        font-weight: 620;
+      }
+
+      .salesQualifiedBadge {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        padding: 7px 10px;
+        border-radius: 999px;
+        background:
+          rgba(92,199,156,.10);
+        color: #7DD5B2;
+        font-size: 7px;
+        font-weight: 850;
+        letter-spacing: 1px;
+      }
+
+      .salesQualifiedBadge span {
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        background: #7DD5B2;
+      }
+
+      .salesLeadSummary {
+        margin-top: 28px;
+        padding: 18px;
+        background:
+          rgba(255,255,255,.05);
+        border:
+          1px solid rgba(255,255,255,.06);
+        border-radius: 15px;
+      }
+
+      .salesLeadSummary p {
+        margin: 0;
+        color:
+          rgba(255,255,255,.65);
+        font-size: 11px;
+        line-height: 1.7;
+      }
+
+      .salesStructuredGrid {
+        margin-top: 22px;
+        display: grid;
+        grid-template-columns:
+          repeat(2, 1fr);
+        gap: 10px;
+      }
+
+      .salesStructuredItem {
+        padding: 14px;
+        border-radius: 13px;
+        border:
+          1px solid rgba(255,255,255,.06);
+        background:
+          rgba(255,255,255,.035);
+      }
+
+      .salesStructuredItem span {
+        display: block;
+        color:
+          rgba(255,255,255,.34);
+        font-size: 7px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+
+      .salesStructuredItem strong {
+        display: block;
+        margin-top: 6px;
+        color: white;
+        font-size: 11px;
+      }
+
+      .salesHandoffStrip {
+        margin-top: 20px;
+        padding: 15px;
+        border-radius: 14px;
+        background:
+          rgba(216,198,166,.08);
+        border:
+          1px solid rgba(216,198,166,.13);
+        display: flex;
+        align-items: center;
+        gap: 11px;
+      }
+
+      .salesHandoffIcon {
+        width: 31px;
+        height: 31px;
+        border-radius: 50%;
+        background:
+          rgba(216,198,166,.13);
+        color: #D8C6A6;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 9px;
+      }
+
+      .salesHandoffStrip strong {
+        display: block;
+        color: white;
+        font-size: 9px;
+      }
+
+      .salesHandoffStrip span {
+        display: block;
+        margin-top: 2px;
+        color:
+          rgba(255,255,255,.40);
+        font-size: 7px;
+      }
+
+      /* =====================================================
+         CHANNEL SECTION
+         ===================================================== */
+
+      .channelSection {
+        position: relative;
+        padding: 110px 34px;
+        background: #061F1A;
+        overflow: hidden;
+      }
+
+      .channelBackground {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+      }
+
+      .channelBackgroundGrid {
+        position: absolute;
+        inset: 0;
+        opacity: .22;
+        background-image:
+          linear-gradient(
+            rgba(216,198,166,.05) 1px,
+            transparent 1px
+          ),
+          linear-gradient(
+            90deg,
+            rgba(216,198,166,.05) 1px,
+            transparent 1px
+          );
+        background-size:
+          70px 70px;
+      }
+
+      .channelBackgroundGlow {
+        position: absolute;
+        width: 620px;
+        height: 620px;
+        border-radius: 50%;
+        right: 8%;
+        top: 8%;
+        background:
+          radial-gradient(
+            circle,
+            rgba(11,118,99,.12),
+            transparent 66%
+          );
+      }
+
+      .channelHeader {
+        display: grid;
+        grid-template-columns:
+          1.1fr .9fr;
+        gap: 90px;
+        align-items: end;
+      }
+
+      .channelExperience {
+        margin-top: 72px;
+        min-height: 560px;
+        display: grid;
+        grid-template-columns:
+          410px 1fr;
+        gap: 50px;
+      }
+
+      .channelList {
+        display: grid;
+        align-content: center;
+      }
+
+      .channelButton {
+        width: 100%;
+        border: none;
+        background: transparent;
+        border-top:
+          1px solid rgba(255,255,255,.08);
+        padding: 20px 5px;
+        text-align: left;
+        display: grid;
+        grid-template-columns:
+          34px 1fr 25px;
+        gap: 15px;
+        align-items: center;
+        cursor: pointer;
+        color: white;
+        opacity: .38;
+        transition:
+          opacity .3s ease,
+          padding .3s ease,
+          background .3s ease;
+      }
+
+      .channelButton:last-child {
+        border-bottom:
+          1px solid rgba(255,255,255,.08);
+      }
+
+      .channelButtonActive {
+        opacity: 1;
+        padding-left: 13px;
+        background:
+          linear-gradient(
+            90deg,
+            rgba(216,198,166,.06),
+            transparent
+          );
+      }
+
+      .channelNumber {
+        color: #D8C6A6;
+        font-size: 8px;
+        font-weight: 850;
+      }
+
+      .channelButton strong {
+        display: block;
+        font-size: 12px;
+      }
+
+      .channelButton p {
+        margin: 4px 0 0;
+        color:
+          rgba(255,255,255,.42);
+        font-size: 9px;
+        line-height: 1.5;
+      }
+
+      .channelArrow {
+        text-align: right;
+        color: #D8C6A6;
+      }
+
+      .channelMap {
+        position: relative;
+        min-height: 520px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      /* =====================================================
+         CHANNEL UNIVERSE
+         ===================================================== */
+
+      .channelUniverse {
+        position: relative;
+        width: 540px;
+        height: 540px;
+      }
+
+      .universeRing {
+        position: absolute;
+        border-radius: 50%;
+        border:
+          1px solid rgba(216,198,166,.10);
+        left: 50%;
+        top: 50%;
+        transform:
+          translate(-50%, -50%);
+      }
+
+      .universeRingOne {
+        width: 250px;
+        height: 250px;
+      }
+
+      .universeRingTwo {
+        width: 390px;
+        height: 390px;
+      }
+
+      .universeRingThree {
+        width: 520px;
+        height: 520px;
+      }
+
+      .universeCore {
+        position: absolute;
+        z-index: 10;
+        left: 50%;
+        top: 50%;
+        transform:
+          translate(-50%, -50%);
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        background:
+          linear-gradient(
+            145deg,
+            #164F42,
+            #082F27
+          );
+        border:
+          1px solid rgba(216,198,166,.25);
+        box-shadow:
+          0 0 80px rgba(11,118,99,.20);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .universeCore strong {
+        font-size: 27px;
+        color: white;
+      }
+
+      .universeCore span {
+        margin-top: 3px;
+        color: #D8C6A6;
+        font-size: 7px;
+        letter-spacing: 1.5px;
+      }
+
+      .channelNode {
+        position: absolute;
+        z-index: 15;
+        width: 112px;
+        height: 72px;
+        border-radius: 15px;
+        background:
+          rgba(255,255,255,.055);
+        border:
+          1px solid rgba(255,255,255,.08);
+        backdrop-filter:
+          blur(14px);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color:
+          rgba(255,255,255,.45);
+        transition:
+          transform .35s ease,
+          color .35s ease,
+          background .35s ease,
+          border .35s ease;
+      }
+
+      .channelNode strong {
+        font-size: 10px;
+      }
+
+      .channelNode span {
+        margin-top: 3px;
+        font-size: 7px;
+      }
+
+      .channelNodeActive {
+        transform: scale(1.08);
+        color: white;
+        background:
+          rgba(216,198,166,.09);
+        border:
+          1px solid rgba(216,198,166,.22);
+        box-shadow:
+          0 14px 35px rgba(0,0,0,.18);
+      }
+
+      .nodeWhatsapp {
+        left: 0;
+        top: 84px;
+      }
+
+      .nodeWebsite {
+        right: 0;
+        top: 84px;
+      }
+
+      .nodeCampaign {
+        left: 0;
+        bottom: 84px;
+      }
+
+      .nodePortal {
+        right: 0;
+        bottom: 84px;
+      }
+
+      .channelLine {
+        position: absolute;
+        z-index: 1;
+        left: 50%;
+        top: 50%;
+        width: 190px;
+        height: 1px;
+        background:
+          linear-gradient(
+            90deg,
+            rgba(216,198,166,.36),
+            transparent
+          );
+        transform-origin: left;
+        opacity: .20;
+        transition:
+          opacity .35s ease;
+      }
+
+      .channelLineActive {
+        opacity: .90;
+      }
+
+      .lineWhatsapp {
+        transform:
+          rotate(210deg);
+      }
+
+      .lineWebsite {
+        transform:
+          rotate(-30deg);
+      }
+
+      .lineCampaign {
+        transform:
+          rotate(150deg);
+      }
+
+      .linePortal {
+        transform:
+          rotate(30deg);
+      }
+
+      .flowParticle {
+        position: absolute;
+        z-index: 20;
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #D8C6A6;
+        box-shadow:
+          0 0 16px rgba(216,198,166,.45);
+        animation:
+          flowParticle 2.4s ease-in-out infinite;
+      }
+
+      @keyframes flowParticle {
+        0% {
+          opacity: 0;
+          transform: scale(.6);
+        }
+
+        35% {
+          opacity: 1;
+        }
+
+        100% {
+          opacity: 0;
+          transform: scale(1.3);
+        }
+      }
+
+      /* =====================================================
+         VISION SECTION
+         ===================================================== */
+
+      .visionSection {
+        padding: 112px 34px;
+        background: #F7F3EB;
+      }
+
+      .visionTop {
+        display: grid;
+        grid-template-columns:
+          1.1fr .9fr;
+        gap: 90px;
+        align-items: end;
+      }
+
+      .visionSideCopy p {
+        margin: 0;
+        max-width: 480px;
+        color: #68736D;
+        font-size: 13px;
+        line-height: 1.8;
+      }
+
+      .visionDisclaimer {
+        margin-top: 18px;
+        display: inline-block;
+        padding: 7px 10px;
+        border-radius: 999px;
+        background: #ECE5D9;
+        color: #938267;
+        font-size: 7px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        font-weight: 850;
+      }
+
+      .commandCenter {
+        margin-top: 65px;
+        min-height: 690px;
+        border-radius: 28px;
+        overflow: hidden;
+        background: #0A2E27;
+        display: grid;
+        grid-template-columns:
+          220px 1fr;
+        box-shadow:
+          0 40px 100px rgba(8,47,39,.17);
+        border:
+          1px solid rgba(16,24,20,.08);
+      }
+
+      .commandSidebar {
+        padding: 26px 20px;
+        border-right:
+          1px solid rgba(255,255,255,.07);
+        display: flex;
+        flex-direction: column;
+      }
+
+      .commandSidebarBrand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: white;
+      }
+
+      .commandSidebarBrandIcon {
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        background: #164F42;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 10px;
+        font-weight: 850;
+      }
+
+      .commandSidebarBrand strong {
+        font-size: 11px;
+      }
+
+      .commandSidebarBrand span {
+        display: block;
+        margin-top: 2px;
+        color:
+          rgba(255,255,255,.35);
+        font-size: 7px;
+      }
+
+      .commandMenu {
+        margin-top: 40px;
+        display: grid;
+        gap: 5px;
+      }
+
+      .commandMenuItem {
+        padding: 10px 11px;
+        border-radius: 10px;
+        color:
+          rgba(255,255,255,.38);
+        font-size: 8px;
+        display: flex;
+        align-items: center;
+        gap: 9px;
+      }
+
+      .commandMenuItemActive {
+        color: white;
+        background:
+          rgba(255,255,255,.06);
+      }
+
+      .commandMenuIcon {
+        width: 17px;
+        text-align: center;
+        color: #D8C6A6;
+      }
+
+      .commandSidebarBottom {
+        margin-top: auto;
+        padding: 13px;
+        border-radius: 12px;
+        background:
+          rgba(255,255,255,.04);
+        border:
+          1px solid rgba(255,255,255,.05);
+      }
+
+      .commandSidebarBottom strong {
+        display: block;
+        color: white;
+        font-size: 8px;
+      }
+
+      .commandSidebarBottom span {
+        display: block;
+        margin-top: 3px;
+        color:
+          rgba(255,255,255,.35);
+        font-size: 7px;
+      }
+
+      .commandCenterMain {
+        padding: 30px;
+        min-width: 0;
+      }
+
+      .commandHeader {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 25px;
+      }
+
+      .commandHeader span {
+        color:
+          rgba(255,255,255,.34);
+        font-size: 8px;
+        text-transform: uppercase;
+        letter-spacing: 1.2px;
+      }
+
+      .commandHeader h3 {
+        margin: 6px 0 0;
+        color: white;
+        font-size: 23px;
+        font-weight: 620;
+      }
+
+      .commandHeaderActions {
+        display: flex;
+        gap: 8px;
+      }
+
+      .commandHeaderButton {
+        padding: 8px 11px;
+        border-radius: 9px;
+        border:
+          1px solid rgba(255,255,255,.06);
+        background:
+          rgba(255,255,255,.035);
+        color:
+          rgba(255,255,255,.48);
+        font-size: 7px;
+      }
+
+      .commandStats {
+        margin-top: 26px;
+        display: grid;
+        grid-template-columns:
+          repeat(4, 1fr);
+        gap: 10px;
+      }
+
+      .commandStat {
+        padding: 16px;
+        border-radius: 13px;
+        background:
+          rgba(255,255,255,.04);
+        border:
+          1px solid rgba(255,255,255,.055);
+      }
+
+      .commandStat span {
+        color:
+          rgba(255,255,255,.34);
+        font-size: 7px;
+        text-transform: uppercase;
+        letter-spacing: .8px;
+      }
+
+      .commandStat strong {
+        display: block;
+        margin-top: 8px;
+        color: white;
+        font-size: 22px;
+        font-weight: 620;
+      }
+
+      .commandStat small {
+        display: block;
+        margin-top: 3px;
+        color: #78C6A6;
+        font-size: 7px;
+      }
+
+      .commandMainGrid {
+        margin-top: 18px;
+        display: grid;
+        grid-template-columns:
+          minmax(0, 1.6fr)
+          minmax(230px, .65fr);
+        gap: 14px;
+      }
+
+      .commandLeadTable,
+      .commandIntelligencePanel {
+        border-radius: 15px;
+        border:
+          1px solid rgba(255,255,255,.055);
+        background:
+          rgba(255,255,255,.035);
+      }
+
+      .commandLeadTable {
+        padding: 18px;
+      }
+
+      .tableTitleRow {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 18px;
+      }
+
+      .tableTitleRow span {
+        display: block;
+        color:
+          rgba(255,255,255,.32);
+        font-size: 7px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+
+      .tableTitleRow strong {
+        display: block;
+        margin-top: 5px;
+        color: white;
+        font-size: 12px;
+      }
+
+      .liveChip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 8px;
+        border-radius: 999px;
+        color: #78C6A6;
+        background:
+          rgba(120,198,166,.08);
+        font-size: 7px;
+      }
+
+      .liveChip span {
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        background: #78C6A6;
+      }
+
+      .leadRows {
+        margin-top: 17px;
+      }
+
+      .commandLeadRow {
+        display: grid;
+        grid-template-columns:
+          34px 1fr 90px 82px 40px;
+        gap: 10px;
+        align-items: center;
+        padding: 12px 8px;
+        border-top:
+          1px solid rgba(255,255,255,.055);
+        transition:
+          background .25s ease,
+          transform .25s ease;
+      }
+
+      .commandLeadRowActive {
+        background:
+          rgba(255,255,255,.045);
+        transform:
+          translateX(3px);
+      }
+
+      .commandLeadAvatar {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background:
+          rgba(216,198,166,.10);
+        color: #D8C6A6;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 7px;
+        font-weight: 850;
+      }
+
+      .commandLeadIdentity strong {
+        display: block;
+        color: white;
+        font-size: 8px;
+      }
+
+      .commandLeadIdentity span {
+        display: block;
+        margin-top: 3px;
+        color:
+          rgba(255,255,255,.34);
+        font-size: 7px;
+      }
+
+      .commandLeadBudget {
+        color:
+          rgba(255,255,255,.65);
+        font-size: 7px;
+      }
+
+      .commandLeadStatus {
+        font-size: 7px;
+        font-weight: 750;
+      }
+
+      .statusQualified {
+        color: #75D0AC;
+      }
+
+      .statusProgress {
+        color: #D8C6A6;
+      }
+
+      .statusDue {
+        color: #E5A785;
+      }
+
+      .commandLeadAge {
+        text-align: right;
+        color:
+          rgba(255,255,255,.25);
+        font-size: 7px;
+      }
+
+      .commandIntelligencePanel {
+        padding: 20px;
+      }
+
+      .commandPanelLabel {
+        color: #D8C6A6;
+        font-size: 7px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        font-weight: 850;
+      }
+
+      .commandIntelligencePanel h3 {
+        margin: 6px 0 0;
+        color: white;
+        font-size: 15px;
+        font-weight: 620;
+      }
+
+      .qualityRing {
+        margin: 25px auto 20px;
+        width: 145px;
+        height: 145px;
+        border-radius: 50%;
+        background:
+          conic-gradient(
+            #D8C6A6 0deg 308deg,
+            rgba(255,255,255,.07)
+            308deg 360deg
+          );
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .qualityRingInner {
+        width: 116px;
+        height: 116px;
+        border-radius: 50%;
+        background: #0D352D;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .qualityRingInner strong {
+        color: white;
+        font-size: 26px;
+        font-weight: 620;
+      }
+
+      .qualityRingInner span {
+        margin-top: 2px;
+        color:
+          rgba(255,255,255,.32);
+        font-size: 7px;
+      }
+
+      .qualityDetails {
+        display: grid;
+      }
+
+      .qualityLine {
+        min-height: 35px;
+        border-top:
+          1px solid rgba(255,255,255,.05);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .qualityLine span {
+        color:
+          rgba(255,255,255,.34);
+        font-size: 7px;
+      }
+
+      .qualityLine strong {
+        color:
+          rgba(255,255,255,.72);
+        font-size: 7px;
+      }
+
+      .qualityRecommendation {
+        margin-top: 16px;
+        padding: 12px;
+        border-radius: 11px;
+        background:
+          rgba(216,198,166,.07);
+        color:
+          rgba(255,255,255,.48);
+        font-size: 7px;
+        line-height: 1.5;
+      }
+
+      .qualityRecommendation span {
+        display: block;
+        margin-bottom: 4px;
+        color: #D8C6A6;
+        font-weight: 850;
+        letter-spacing: .8px;
+      }
+
+      /* =====================================================
+         STORY
+         ===================================================== */
+
+      .storySection {
+        padding: 74px 34px;
+        background: #FFFDF8;
+        border-top:
+          1px solid rgba(16,24,20,.06);
+        border-bottom:
+          1px solid rgba(16,24,20,.06);
+      }
+
+      .storyTrack {
+        max-width: 1160px;
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns:
+          1fr 65px 1fr 65px 1fr 65px 1fr;
+        align-items: center;
+      }
+
+      .storyPoint {
+        text-align: center;
+      }
+
+      .storyPointNumber {
+        color: #B99862;
+        font-size: 8px;
+        letter-spacing: 1px;
+        font-weight: 850;
+      }
+
+      .storyPoint h3 {
+        margin: 11px 0 0;
+        color: #082F27;
+        font-size: 15px;
+      }
+
+      .storyPoint p {
+        margin: 6px auto 0;
+        max-width: 180px;
+        color: #7A847E;
+        font-size: 9px;
+        line-height: 1.55;
+      }
+
+      .storyConnector {
+        height: 1px;
+        background:
+          linear-gradient(
+            90deg,
+            rgba(185,152,98,.10),
+            rgba(185,152,98,.70),
+            rgba(185,152,98,.10)
+          );
+      }
+
+      /* =====================================================
+         FINAL CTA
+         ===================================================== */
+
+      .finalCTASection {
+        position: relative;
+        min-height: 690px;
+        background: #082F27;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        text-align: center;
+        padding: 85px 30px;
+      }
+
+      .finalCTAVisual {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+      }
+
+      .finalCTARing {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        border-radius: 50%;
+        border:
+          1px solid rgba(216,198,166,.11);
+        transform:
+          translate(-50%, -50%);
+      }
+
+      .finalCTARing1 {
+        width: 360px;
+        height: 360px;
+        animation:
+          rotateCore 28s linear infinite;
+      }
+
+      .finalCTARing2 {
+        width: 560px;
+        height: 560px;
+        animation:
+          rotateCoreReverse 38s linear infinite;
+      }
+
+      .finalCTARing3 {
+        width: 780px;
+        height: 780px;
+        opacity: .55;
+      }
+
+      .finalCTAContent {
+        position: relative;
+        z-index: 5;
+      }
+
+      .finalCTAContent h2 {
+        margin: 24px 0 0;
+        font-size:
+          clamp(48px, 6vw, 84px);
+        line-height: .98;
+        letter-spacing: -4px;
+        font-weight: 620;
+      }
+
+      .finalCTAContent h2 span {
+        font-family:
+          Georgia,
+          "Times New Roman",
+          serif;
+        font-style: italic;
+        font-weight: 400;
+        color: #D8C6A6;
+      }
+
+      .finalCTAContent p {
+        margin: 26px auto 0;
+        max-width: 520px;
+        color:
+          rgba(255,255,255,.48);
+        font-size: 13px;
+        line-height: 1.8;
+      }
+
+      .finalCTAButton {
+        margin-top: 34px;
+        border: none;
+        border-radius: 999px;
+        padding: 16px 26px;
+        background: #FFFDF8;
+        color: #082F27;
+        font-size: 11px;
+        font-weight: 850;
+        cursor: pointer;
+        box-shadow:
+          0 16px 40px rgba(0,0,0,.18);
+        transition:
+          transform .25s ease,
+          box-shadow .25s ease;
+      }
+
+      .finalCTAButton span {
+        margin-left: 12px;
+      }
+
+      .finalCTAButton:hover {
+        transform: translateY(-2px);
+        box-shadow:
+          0 23px 55px rgba(0,0,0,.25);
+      }
+
+      /* =====================================================
+         FOOTER
+         ===================================================== */
+
+      .siteFooter {
+        padding: 30px 38px;
+        background: #101814;
+        display: grid;
+        grid-template-columns:
+          1fr auto 1fr;
+        align-items: center;
+        gap: 20px;
+      }
+
+      .footerMiddle {
+        text-align: center;
+        color:
+          rgba(255,255,255,.36);
+        font-size: 8px;
+      }
+
+      .footerRight {
+        text-align: right;
+        color:
+          rgba(255,255,255,.34);
+        font-size: 8px;
+        letter-spacing: .8px;
+      }
+
+      /* =====================================================
+         LIVE EXPERIENCE PAGE
+         ===================================================== */
+
+      .liveDemoPage {
+        min-height: 100vh;
+        background:
+          linear-gradient(
+            135deg,
+            #F0E9DE,
+            #FBF9F4
+          );
+        color: #101814;
+        font-family:
+          Inter,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          Arial,
+          sans-serif;
+        position: relative;
+        overflow: hidden;
+        padding: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .demoAmbientOne,
+      .demoAmbientTwo {
+        position: fixed;
+        border-radius: 50%;
+        pointer-events: none;
+      }
+
+      .demoAmbientOne {
+        width: 650px;
+        height: 650px;
+        right: -160px;
+        top: -160px;
+        background:
+          radial-gradient(
+            circle,
+            rgba(185,152,98,.22),
+            transparent 68%
+          );
+      }
+
+      .demoAmbientTwo {
+        width: 560px;
+        height: 560px;
+        left: -180px;
+        bottom: -200px;
+        background:
+          radial-gradient(
+            circle,
+            rgba(11,118,99,.10),
+            transparent 68%
+          );
+      }
+
+      .backToNomadButton {
+        position: fixed;
+        top: 22px;
+        left: 22px;
+        z-index: 30;
+        border:
+          1px solid rgba(16,24,20,.08);
+        background:
+          rgba(255,253,248,.88);
+        color: #082F27;
+        padding: 10px 15px;
+        border-radius: 999px;
+        cursor: pointer;
+        font-size: 9px;
+        font-weight: 850;
+        box-shadow:
+          0 8px 22px rgba(16,24,20,.05);
+        backdrop-filter:
+          blur(12px);
+      }
+
+      .demoExperienceFrame {
+        width: min(1180px, 100%);
+        min-height: 760px;
+        display: grid;
+        grid-template-columns:
+          1fr 470px;
+        border-radius: 30px;
+        overflow: hidden;
+        box-shadow:
+          0 45px 110px rgba(16,24,20,.16);
+        border:
+          1px solid rgba(16,24,20,.07);
+        position: relative;
+        z-index: 5;
+      }
+
+      .demoStoryPanel {
+        padding: 54px;
+        background:
+          linear-gradient(
+            145deg,
+            #082F27,
+            #0D4035
+          );
+        color: white;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+      }
+
+      .demoStoryEyebrow {
+        margin-top: 80px;
+        color: #D8C6A6;
+        font-size: 8px;
+        letter-spacing: 1.6px;
+        font-weight: 850;
+      }
+
+      .demoStoryPanel h1 {
+        margin: 22px 0 0;
+        max-width: 550px;
+        font-size: 58px;
+        line-height: 1;
+        letter-spacing: -3px;
+        font-weight: 620;
+      }
+
+      .demoStoryPanel h1 span {
+        font-family:
+          Georgia,
+          "Times New Roman",
+          serif;
+        font-style: italic;
+        font-weight: 400;
+        color: #D8C6A6;
+      }
+
+      .demoStoryPanel p {
+        margin: 27px 0 0;
+        max-width: 510px;
+        color:
+          rgba(255,255,255,.47);
+        font-size: 13px;
+        line-height: 1.8;
+      }
+
+      .demoStoryRail {
+        display: grid;
+        grid-template-columns:
+          repeat(3, 1fr);
+        border-top:
+          1px solid rgba(255,255,255,.10);
+      }
+
+      .demoRailItem {
+        position: relative;
+        padding: 16px 7px 0;
+        color:
+          rgba(255,255,255,.30);
+        transition:
+          color .3s ease;
+      }
+
+      .demoRailItem::before {
+        content: "";
+        position: absolute;
+        top: -1px;
+        left: 0;
+        width: 0;
+        height: 1px;
+        background: #D8C6A6;
+        transition:
+          width .35s ease;
+      }
+
+      .demoRailItemActive {
+        color: white;
+      }
+
+      .demoRailItemActive::before {
+        width: 100%;
+      }
+
+      .demoRailItem span {
+        display: block;
+        color: #D8C6A6;
+        font-size: 7px;
+      }
+
+      .demoRailItem strong {
+        display: block;
+        margin-top: 5px;
+        font-size: 8px;
+      }
+
+      .demoStoryFooter {
+        color:
+          rgba(255,255,255,.29);
+        font-size: 8px;
+        line-height: 1.6;
+      }
+
+      /* =====================================================
+         CHAT SHELL
+         ===================================================== */
+
+      .chatShell {
+        min-width: 0;
+        min-height: 760px;
+        background: #FFFDF8;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .chatHeader {
+        flex-shrink: 0;
+        background: #082F27;
+        color: white;
+        padding: 18px;
+        display: flex;
+        align-items: center;
+        justify-content:
+          space-between;
+        gap: 15px;
+      }
+
+      .chatIdentity {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .chatAvatar {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        background:
+          linear-gradient(
+            135deg,
+            #206250,
+            #0F4035
+          );
+        border:
+          1px solid rgba(255,255,255,.12);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 850;
+        font-size: 13px;
+      }
+
+      .chatTitle {
+        font-size: 12px;
+        font-weight: 760;
+      }
+
+      .chatStatus {
+        margin-top: 4px;
+        color:
+          rgba(255,255,255,.58);
+        font-size: 8px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .statusDot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #71C3A3;
+      }
+
+      .statusDotBusy {
+        background: #D8C6A6;
+      }
+
+      .newConversationButton {
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        border:
+          1px solid rgba(255,255,255,.13);
+        background:
+          rgba(255,255,255,.05);
+        color: white;
+        cursor: pointer;
+        font-size: 16px;
+      }
+
+      .chatBody {
+        flex: 1;
+        min-height: 0;
+        overflow-y: auto;
+        background: #F9F6EF;
+        padding: 24px 18px 30px;
+      }
+
+      .chatSessionLabel {
+        text-align: center;
+        margin-bottom: 24px;
+        color: #B99862;
+        font-size: 7px;
+        font-weight: 850;
+        letter-spacing: 1.4px;
+        text-transform: uppercase;
+      }
+
+      .chatMessageRow {
+        display: flex;
+        margin-bottom: 14px;
+      }
+
+      .chatMessageAssistant {
+        justify-content: flex-start;
+      }
+
+      .chatMessageUser {
+        justify-content: flex-end;
+      }
+
+      .chatMiniAvatar {
+        width: 27px;
+        height: 27px;
+        margin-right: 8px;
+        margin-top: 2px;
+        flex-shrink: 0;
+        border-radius: 50%;
+        background: #082F27;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 8px;
+        font-weight: 850;
+      }
+
+      .chatMessageBubble {
+        max-width: 79%;
+        padding: 11px 14px;
+        color: #101814;
+        font-size: 12px;
+        line-height: 1.58;
+        white-space: pre-line;
+        box-shadow:
+          0 2px 8px rgba(16,24,20,.05);
+      }
+
+      .chatMessageAssistant .chatMessageBubble {
+        background: #FFFDF8;
+        border-radius:
+          16px 16px 16px 4px;
+      }
+
+      .chatMessageUser .chatMessageBubble {
+        background: #E8E3D7;
+        border-radius:
+          16px 16px 4px 16px;
+      }
+
+      .typingBubble {
+        background: #FFFDF8;
+        padding: 11px 14px;
+        border-radius:
+          16px 16px 16px 4px;
+        color: #948C80;
+        letter-spacing: 2px;
+      }
+
+      /* =====================================================
+         CUSTOMER SUCCESS
+         ===================================================== */
+
+      .requestReceived {
+        margin-top: 22px;
+        padding: 20px;
+        border-radius: 18px;
+        background:
+          linear-gradient(
+            145deg,
+            #EDF4F0,
+            #F5F7F3
+          );
+        border:
+          1px solid #DDEAE4;
+        animation:
+          requestReceivedIn .45s ease both;
+      }
+
+      @keyframes requestReceivedIn {
+        from {
+          opacity: 0;
+          transform:
+            translateY(12px);
+        }
+
+        to {
+          opacity: 1;
+          transform:
+            translateY(0);
+        }
+      }
+
+      .requestReceivedTop {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .requestReceivedIcon {
+        width: 36px;
+        height: 36px;
+        flex-shrink: 0;
+        border-radius: 50%;
+        background: #082F27;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 11px;
+        font-weight: 850;
+      }
+
+      .requestReceivedLabel {
+        color: #9B7A47;
+        text-transform: uppercase;
+        letter-spacing: 1.15px;
+        font-size: 7px;
+        font-weight: 850;
+      }
+
+      .requestReceived h3 {
+        margin: 5px 0 0;
+        color: #082F27;
+        font-size: 14px;
+        font-weight: 760;
+      }
+
+      .requestReceived p {
+        margin: 10px 0 0 48px;
+        color: #69766F;
+        font-size: 9px;
+        line-height: 1.65;
+      }
+
+      /* =====================================================
+         COMPOSER
+         ===================================================== */
+
+      .chatComposerArea {
+        flex-shrink: 0;
+        padding: 13px 14px 16px;
+        background: #FFFDF8;
+        border-top:
+          1px solid rgba(16,24,20,.08);
+      }
+
+      .composer {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding:
+          5px 5px 5px 16px;
+        background: #F3EFE7;
+        border-radius: 999px;
+        border:
+          1px solid rgba(16,24,20,.07);
+        transition:
+          opacity .25s ease;
+      }
+
+      .composerComplete {
+        opacity: .50;
+      }
+
+      .composer input {
+        flex: 1;
+        min-width: 0;
+        border: none;
+        outline: none;
+        background: transparent;
+        padding: 10px 0;
+        font-size: 11px;
+        color: #101814;
+      }
+
+      .composer button {
+        width: 40px;
+        height: 40px;
+        border: none;
+        border-radius: 50%;
+        background: #082F27;
+        color: white;
+        cursor: pointer;
+        font-size: 13px;
+        transition:
+          opacity .2s ease,
+          transform .2s ease;
+      }
+
+      .composer button:disabled {
+        opacity: .28;
+        cursor: not-allowed;
+      }
+
+      .composer button:not(:disabled):hover {
+        transform: scale(1.04);
+      }
+
+      .composerFooter {
+        margin-top: 9px;
+        text-align: center;
+        color: #999186;
+        font-size: 7px;
+        letter-spacing: .4px;
+      }
+
+      /* =====================================================
+         RESPONSIVE
+         ===================================================== */
+
+      @media (max-width: 1120px) {
+        .heroGrid,
+        .sectionHeaderSplit,
+        .channelHeader,
+        .visionTop {
+          gap: 50px;
+        }
+
+        .intelligenceWorkspace {
+          grid-template-columns:
+            minmax(0, 1fr)
+            170px
+            minmax(0, 1fr);
+        }
+
+        .commandCenter {
+          grid-template-columns:
+            180px 1fr;
+        }
+
+        .demoExperienceFrame {
+          width: 100%;
+          grid-template-columns:
+            .9fr 450px;
+        }
+
+        .demoStoryPanel {
+          padding: 42px;
+        }
+
+        .demoStoryPanel h1 {
+          font-size: 48px;
+        }
+      }
+
+      @media (max-width: 960px) {
+        .desktopNavLinks {
+          display: none;
+        }
+
+        .heroOuter {
+          padding-top: 35px;
+        }
+
+        .heroGrid {
+          grid-template-columns: 1fr;
+        }
+
+        .heroProductStage {
+          min-height: 610px;
+        }
+
+        .heroTitle {
+          font-size: 65px;
+        }
+
+        .sectionHeaderSplit,
+        .channelHeader,
+        .visionTop {
+          grid-template-columns: 1fr;
+          gap: 30px;
+        }
+
+        .intelligenceWorkspace {
+          grid-template-columns: 1fr;
+        }
+
+        .intelligenceCore {
+          height: 280px;
+        }
+
+        .structuredLeadPanel,
+        .intelligenceInputPanel {
+          min-height: auto;
+        }
+
+        .intelligenceStageRail {
+          overflow-x: auto;
+          grid-template-columns:
+            repeat(6, 125px);
+        }
+
+        .customerPerspective,
+        .salesPerspective {
+          grid-template-columns: 1fr;
+        }
+
+        .customerPhoneStage {
+          min-height: 580px;
+        }
+
+        .salesPerspectiveSidebar {
+          border-right: none;
+          border-bottom:
+            1px solid rgba(255,255,255,.08);
+        }
+
+        .channelExperience {
+          grid-template-columns: 1fr;
+        }
+
+        .channelList {
+          order: 2;
+        }
+
+        .channelMap {
+          order: 1;
+        }
+
+        .commandCenter {
+          grid-template-columns: 1fr;
+        }
+
+        .commandSidebar {
+          display: none;
+        }
+
+        .commandMainGrid {
+          grid-template-columns: 1fr;
+        }
+
+        .storyTrack {
+          grid-template-columns: 1fr;
+          gap: 28px;
+        }
+
+        .storyConnector {
+          width: 1px;
+          height: 28px;
+          margin: auto;
+        }
+
+        .siteFooter {
+          grid-template-columns: 1fr;
+          text-align: center;
+        }
+
+        .siteFooter > * {
+          justify-self: center;
+        }
+
+        .footerRight {
+          text-align: center;
+        }
+
+        .demoExperienceFrame {
+          max-width: 500px;
+          grid-template-columns: 1fr;
+        }
+
+        .demoStoryPanel {
+          display: none;
+        }
+
+        .chatShell {
+          min-height:
+            min(760px, calc(100vh - 80px));
+        }
+      }
+
+      @media (max-width: 620px) {
+        .siteNav {
+          padding:
+            20px 18px;
+        }
+
+        .primaryPill {
+          padding:
+            11px 14px;
+          font-size: 9px;
+        }
+
+        .heroOuter {
+          padding:
+            38px 18px 60px;
+        }
+
+        .heroTitle {
+          font-size: 48px;
+          letter-spacing: -2.7px;
+        }
+
+        .heroDescription {
+          font-size: 13px;
+        }
+
+        .heroStats {
+          grid-template-columns:
+            repeat(2, 1fr);
+        }
+
+        .heroProductStage {
+          min-height: 530px;
+        }
+
+        .heroFloatingCard {
+          max-width: 390px;
+        }
+
+        .floatingIntelligenceTag {
+          display: none;
+        }
+
+        .heroArchitectureArc {
+          width: 92%;
+          right: 4%;
+        }
+
+        .intelligenceSection,
+        .perspectiveSection,
+        .channelSection,
+        .visionSection {
+          padding:
+            78px 18px;
+        }
+
+        .sectionTitleLight,
+        .sectionTitleDark {
+          font-size: 42px;
+          letter-spacing: -2px;
+        }
+
+        .customerPerspectiveCopy {
+          padding: 35px 26px;
+        }
+
+        .customerPerspectiveCopy h3 {
+          font-size: 34px;
+        }
+
+        .customerPhoneStage {
+          padding: 30px 18px;
+        }
+
+        .salesPerspectiveMain,
+        .salesPerspectiveSidebar {
+          padding: 28px 22px;
+        }
+
+        .salesStructuredGrid {
+          grid-template-columns: 1fr;
+        }
+
+        .channelUniverse {
+          transform: scale(.78);
+        }
+
+        .commandCenterMain {
+          padding: 19px;
+        }
+
+        .commandStats {
+          grid-template-columns:
+            repeat(2, 1fr);
+        }
+
+        .commandLeadRow {
+          grid-template-columns:
+            30px 1fr 50px;
+        }
+
+        .commandLeadBudget,
+        .commandLeadStatus {
+          display: none;
+        }
+
+        .storySection {
+          padding:
+            64px 18px;
+        }
+
+        .finalCTAContent h2 {
+          font-size: 50px;
+          letter-spacing: -2.6px;
+        }
+
+        .liveDemoPage {
+          padding: 16px;
+        }
+
+        .backToNomadButton {
+          top: 12px;
+          left: 12px;
+        }
+
+        .demoExperienceFrame {
+          min-height:
+            calc(100vh - 32px);
+        }
+
+        .chatShell {
+          min-height:
+            calc(100vh - 32px);
+        }
+      }
+    `}</style>
+  );
+}
+
+/* =========================================================
+   SMALL SHARED COMPONENTS
+   ========================================================= */
+
+function Eyebrow({
+  children,
+  light = false,
 }) {
   return (
     <div
-      style={{
-        display: "flex",
-        gap: "12px",
-        alignItems: "center",
-      }}
+      className={
+        light
+          ? "eyebrow eyebrowLight"
+          : "eyebrow"
+      }
     >
-      <div
-        style={{
-          width: "44px",
-          height: "44px",
-          borderRadius: "50%",
-          background: dark
-            ? colors.champagne
-            : colors.forest,
-          color: dark
-            ? colors.ink
-            : "white",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          fontWeight: "800",
-          fontSize: "14px",
-          boxShadow: dark
-            ? "none"
-            : "0 12px 28px rgba(8,47,39,.16)",
-        }}
-      >
-        N
-      </div>
+      <span
+        className="eyebrowLine"
+      />
 
-      <div>
-        <div
-          style={{
-            fontSize: "16px",
-            fontWeight: "850",
-            letterSpacing: "1px",
-            color: dark
-              ? "white"
-              : colors.ink,
-          }}
-        >
-          NOMAD
-        </div>
-
-        <div
-          style={{
-            marginTop: "2px",
-            color: dark
-              ? "rgba(255,255,255,.44)"
-              : "#757D78",
-            fontSize: "8px",
-            letterSpacing: "1.8px",
-            textTransform:
-              "uppercase",
-          }}
-        >
-          Property Intelligence
-        </div>
-      </div>
+      {children}
     </div>
   );
 }
@@ -2179,14 +6027,20 @@ function Metric({
   return (
     <div
       style={{
-        paddingTop: "18px",
+        paddingTop:
+          "18px",
       }}
     >
       <div
         style={{
-          color: colors.forest,
-          fontSize: "17px",
-          fontWeight: "850",
+          color:
+            colors.forest,
+
+          fontSize:
+            "17px",
+
+          fontWeight:
+            "850",
         }}
       >
         {value}
@@ -2194,12 +6048,20 @@ function Metric({
 
       <div
         style={{
-          color: "#7F8882",
-          marginTop: "4px",
-          fontSize: "9px",
+          marginTop:
+            "4px",
+
+          color:
+            "#7F8882",
+
+          fontSize:
+            "8px",
+
           textTransform:
             "uppercase",
-          letterSpacing: "1px",
+
+          letterSpacing:
+            "1px",
         }}
       >
         {label}
@@ -2208,36 +6070,213 @@ function Metric({
   );
 }
 
-function PreviewBubblePremium({
-  children,
-  left = false,
+/* =========================================================
+   BRAND
+   ========================================================= */
+
+function BrandMark({
+  dark = false,
 }) {
   return (
     <div
       style={{
-        display: "flex",
-        justifyContent: left
-          ? "flex-start"
-          : "flex-end",
-        marginBottom: "13px",
+        display:
+          "flex",
+
+        gap:
+          "12px",
+
+        alignItems:
+          "center",
       }}
     >
       <div
         style={{
-          maxWidth: "80%",
-          padding: "11px 13px",
-          borderRadius: left
-            ? "14px 14px 14px 4px"
-            : "14px 14px 4px 14px",
-          background: left
-            ? colors.paper
-            : "#E9E4D8",
-          color: "#303A35",
-          fontSize: "11px",
-          lineHeight: "1.55",
+          width:
+            "44px",
+
+          height:
+            "44px",
+
+          borderRadius:
+            "50%",
+
+          background:
+            dark
+              ? colors.champagne
+              : colors.forest,
+
+          color:
+            dark
+              ? colors.ink
+              : "white",
+
+          display:
+            "flex",
+
+          alignItems:
+            "center",
+
+          justifyContent:
+            "center",
+
+          fontWeight:
+            "850",
+
+          fontSize:
+            "14px",
+
           boxShadow:
-            "0 3px 9px rgba(16,24,20,.045)",
+            dark
+              ? "none"
+              : "0 12px 28px rgba(8,47,39,.16)",
         }}
+      >
+        N
+      </div>
+
+      <div>
+        <div
+          style={{
+            fontSize:
+              "15px",
+
+            fontWeight:
+              "850",
+
+            letterSpacing:
+              "1px",
+
+            color:
+              dark
+                ? "white"
+                : colors.ink,
+          }}
+        >
+          NOMAD
+        </div>
+
+        <div
+          style={{
+            marginTop:
+              "2px",
+
+            color:
+              dark
+                ? "rgba(255,255,255,.44)"
+                : "#757D78",
+
+            fontSize:
+              "7px",
+
+            letterSpacing:
+              "1.8px",
+
+            textTransform:
+              "uppercase",
+          }}
+        >
+          Property Intelligence
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* =========================================================
+   HERO COMPONENTS
+   ========================================================= */
+
+function HeroGridOverlay() {
+  return (
+    <div
+      className="heroGridOverlay"
+    />
+  );
+}
+
+function HeroBottomFade() {
+  return (
+    <div
+      className="heroBottomFade"
+    />
+  );
+}
+
+function HeroOrbit({
+  pointer,
+}) {
+  return (
+    <div
+      className="heroOrbit"
+      style={{
+        transform: `translate(${pointer.x * 14}px, ${pointer.y * 10}px)`,
+      }}
+    >
+      <div
+        className="heroOrbitRing"
+      />
+    </div>
+  );
+}
+
+function DemoCardHeader() {
+  return (
+    <div
+      className="demoCardHeader"
+    >
+      <div
+        className="demoCardIdentity"
+      >
+        <div
+          className="demoMiniAvatar"
+        >
+          N
+        </div>
+
+        <div>
+          <div
+            className="demoCardTitle"
+          >
+            NOMAD Property
+            Assistant
+          </div>
+
+          <div
+            className="demoCardStatus"
+          >
+            <span>
+              ●
+            </span>{" "}
+
+            Available now
+          </div>
+        </div>
+      </div>
+
+      <div
+        className="demoLiveLabel"
+      >
+        LIVE
+      </div>
+    </div>
+  );
+}
+
+function PreviewBubble({
+  children,
+  assistant = false,
+}) {
+  return (
+    <div
+      className={
+        assistant
+          ? "previewBubbleRow previewBubbleAssistant"
+          : "previewBubbleRow previewBubbleUser"
+      }
+    >
+      <div
+        className="previewBubble"
       >
         {children}
       </div>
@@ -2245,536 +6284,514 @@ function PreviewBubblePremium({
   );
 }
 
-function FloatingTag({
-  eyebrow,
-  text,
+function FloatingIntelligenceTag({
+  label,
+  value,
+  detail,
   className = "",
-  style = {},
 }) {
   return (
     <div
-      className={className}
-      style={{
-        minWidth: "122px",
-        padding: "12px 14px",
-        background:
-          "rgba(255,253,248,.92)",
-        backdropFilter:
-          "blur(14px)",
-        borderRadius: "12px",
-        border:
-          "1px solid rgba(16,24,20,.07)",
-        boxShadow:
-          "0 15px 35px rgba(16,24,20,.12)",
-        ...style,
-      }}
+      className={`floatingIntelligenceTag ${className}`}
     >
       <div
-        style={{
-          color:
-            colors.champagne,
-          fontSize: "8px",
-          textTransform:
-            "uppercase",
-          letterSpacing: "1.2px",
-          fontWeight: "850",
-        }}
+        className="floatingIntelligenceTagLabel"
       >
-        {eyebrow}
+        {label}
       </div>
 
       <div
-        style={{
-          marginTop: "5px",
-          color: colors.forest,
-          fontSize: "11px",
-          fontWeight: "750",
-        }}
+        className="floatingIntelligenceTagValue"
       >
-        {text}
+        {value}
+      </div>
+
+      <div
+        className="floatingIntelligenceTagDetail"
+      >
+        {detail}
       </div>
     </div>
   );
 }
 
-function EditorialFeature({
-  number,
-  title,
-  text,
+/* =========================================================
+   INTELLIGENCE LAB
+   ========================================================= */
+
+function SectionOrb({
+  position = "left",
 }) {
   return (
     <div
-      style={{
-        padding:
-          "28px 32px 30px 0",
-        borderRight:
-          "1px solid rgba(255,255,255,.08)",
-      }}
+      className={
+        position === "left"
+          ? "sectionOrb sectionOrbLeft"
+          : "sectionOrb sectionOrbRight"
+      }
+    />
+  );
+}
+
+function PanelLabel({
+  children,
+}) {
+  return (
+    <div
+      className="panelLabel"
+    >
+      {children}
+    </div>
+  );
+}
+
+function ThinkingRow({
+  active,
+  label,
+  value,
+}) {
+  return (
+    <div
+      className={
+        active
+          ? "thinkingRow thinkingRowActive"
+          : "thinkingRow"
+      }
     >
       <div
-        style={{
-          color:
-            colors.champagneSoft,
-          fontSize: "9px",
-          letterSpacing: "1.4px",
-          fontWeight: "800",
-          marginBottom: "22px",
-        }}
+        className="thinkingCheck"
       >
-        {number}
+        {active
+          ? "✓"
+          : "·"}
       </div>
 
       <div
-        style={{
-          fontSize: "17px",
-          fontWeight: "700",
-        }}
+        className="thinkingLabel"
       >
-        {title}
+        {label}
       </div>
 
       <div
-        style={{
-          maxWidth: "285px",
-          marginTop: "10px",
-          fontSize: "12px",
-          lineHeight: "1.7",
-          color:
-            "rgba(255,255,255,.52)",
-        }}
+        className="thinkingValue"
       >
-        {text}
+        {active
+          ? value
+          : "Reading"}
       </div>
     </div>
   );
 }
 
-function ProcessStep({
-  number,
-  title,
-  text,
+function StructuredDataRow({
+  label,
+  value,
+  active,
 }) {
   return (
     <div
-      style={{
-        background:
-          colors.paper,
-        padding:
-          "26px 24px 28px",
-        minHeight: "180px",
-      }}
+      className={
+        active
+          ? "structuredDataRow structuredDataRowActive"
+          : "structuredDataRow"
+      }
     >
-      <div
-        style={{
-          color:
-            colors.champagne,
-          fontSize: "9px",
-          fontWeight: "850",
-          letterSpacing: "1.3px",
-        }}
+      <span
+        className="structuredDataLabel"
       >
-        {number}
-      </div>
+        {label}
+      </span>
 
-      <div
-        style={{
-          marginTop: "30px",
-          color: colors.forest,
-          fontSize: "17px",
-          fontWeight: "780",
-        }}
+      <strong
+        className="structuredDataValue"
       >
-        {title}
-      </div>
-
-      <div
-        style={{
-          marginTop: "9px",
-          color: "#77817B",
-          fontSize: "12px",
-          lineHeight: "1.65",
-        }}
-      >
-        {text}
-      </div>
+        {active
+          ? value
+          : "—"}
+      </strong>
     </div>
   );
 }
 
-function LeadSummaryModal({
-  lead,
-  onClose,
-  onNewConversation,
-}) {
-  const rows = [
-    ["Intent", lead.intent],
-    ["Property", lead.property_type],
-    ["Bedrooms", lead.bedrooms],
-    ["Budget", lead.budget],
-    ["Location", lead.location],
-    [
-      "Property status",
-      lead.property_status,
-    ],
-    ["Financing", lead.financing],
-    ["Timeline", lead.timeline],
-    ["Name", lead.name],
-    ["Phone", lead.phone],
-    [
-      "Callback",
-      lead.callback_time,
-    ],
-  ].filter(([, value]) => value);
+/* =========================================================
+   PERSPECTIVE SWITCH
+   ========================================================= */
 
+function PerspectiveSwitcher({
+  perspective,
+  setPerspective,
+}) {
   return (
     <div
-      onClick={onClose}
-      style={{
-        position: "fixed",
-        inset: 0,
-        zIndex: 100,
-        background:
-          "rgba(8,20,17,.58)",
-        backdropFilter:
-          "blur(10px)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "20px",
-        animation:
-          "successIn .28s ease-out both",
-      }}
+      className="perspectiveSwitcher"
     >
-      <div
-        onClick={(e) =>
-          e.stopPropagation()
+      <button
+        className={
+          perspective ===
+          "customer"
+            ? "perspectiveSwitcherActive"
+            : ""
         }
-        style={{
-          width: "100%",
-          maxWidth: "510px",
-          maxHeight:
-            "calc(100vh - 40px)",
-          overflowY: "auto",
-          background: colors.paper,
-          borderRadius: "26px",
-          boxShadow:
-            "0 40px 100px rgba(0,0,0,.30)",
-          border:
-            "1px solid rgba(255,255,255,.55)",
-        }}
+        onClick={() =>
+          setPerspective(
+            "customer"
+          )
+        }
+      >
+        CUSTOMER VIEW
+      </button>
+
+      <button
+        className={
+          perspective ===
+          "sales"
+            ? "perspectiveSwitcherActive"
+            : ""
+        }
+        onClick={() =>
+          setPerspective(
+            "sales"
+          )
+        }
+      >
+        SALES VIEW
+      </button>
+    </div>
+  );
+}
+
+function CustomerPerspective() {
+  return (
+    <div
+      className="customerPerspective"
+    >
+      <div
+        className="customerPerspectiveCopy"
       >
         <div
-          style={{
-            padding:
-              "24px 24px 22px",
-            background:
-              colors.forest,
-            color: "white",
-            borderRadius:
-              "26px 26px 0 0",
-            position: "relative",
-            overflow: "hidden",
-          }}
+          className="perspectiveMiniLabel"
+        >
+          CUSTOMER EXPERIENCE
+        </div>
+
+        <h3>
+          They never need to know
+          they&apos;re being
+          <span>
+            {" "}
+            qualified.
+          </span>
+        </h3>
+
+        <p>
+          The customer simply has a
+          useful conversation. NOMAD asks
+          only what matters, remembers
+          what has already been said and
+          finishes with a human handoff.
+        </p>
+
+        <div
+          className="customerPerspectiveList"
+        >
+          <CustomerPerspectivePoint>
+            Natural conversation
+          </CustomerPerspectivePoint>
+
+          <CustomerPerspectivePoint>
+            No rigid lead form
+          </CustomerPerspectivePoint>
+
+          <CustomerPerspectivePoint>
+            No internal CRM language
+          </CustomerPerspectivePoint>
+
+          <CustomerPerspectivePoint>
+            Clear consultant handoff
+          </CustomerPerspectivePoint>
+        </div>
+      </div>
+
+      <div
+        className="customerPhoneStage"
+      >
+        <div
+          className="customerPhone"
         >
           <div
-            style={{
-              position:
-                "absolute",
-              width: "170px",
-              height: "170px",
-              borderRadius: "50%",
-              right: "-55px",
-              top: "-80px",
-              border:
-                "1px solid rgba(216,198,166,.18)",
-            }}
-          />
-
-          <button
-            onClick={onClose}
-            style={{
-              position:
-                "absolute",
-              right: "18px",
-              top: "18px",
-              width: "34px",
-              height: "34px",
-              borderRadius: "50%",
-              border:
-                "1px solid rgba(255,255,255,.14)",
-              background:
-                "rgba(255,255,255,.06)",
-              color: "white",
-              cursor: "pointer",
-              fontSize: "16px",
-              zIndex: 2,
-            }}
-          >
-            ×
-          </button>
-
-          <div
-            style={{
-              color:
-                colors.champagneSoft,
-              textTransform:
-                "uppercase",
-              fontSize: "8px",
-              fontWeight: "800",
-              letterSpacing:
-                "1.35px",
-            }}
-          >
-            NOMAD qualification
-          </div>
-
-          <div
-            style={{
-              marginTop: "8px",
-              display: "flex",
-              gap: "11px",
-              alignItems: "center",
-            }}
+            className="customerPhoneHeader"
           >
             <div
-              style={{
-                width: "42px",
-                height: "42px",
-                borderRadius: "50%",
-                background:
-                  "rgba(255,255,255,.09)",
-                border:
-                  "1px solid rgba(255,255,255,.14)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent:
-                  "center",
-                fontWeight: "800",
-              }}
+              className="customerPhoneAvatar"
             >
-              ✓
+              N
             </div>
 
             <div>
-              <div
-                style={{
-                  fontSize: "20px",
-                  fontWeight: "750",
-                }}
-              >
-                Qualified Lead
-              </div>
+              <strong>
+                NOMAD
+              </strong>
 
-              <div
-                style={{
-                  marginTop: "3px",
-                  color:
-                    "rgba(255,255,255,.58)",
-                  fontSize: "10px",
-                }}
-              >
-                Ready for consultant
-                follow-up
-              </div>
+              <span>
+                Property Assistant
+              </span>
             </div>
+          </div>
+
+          <div
+            className="customerPhoneBody"
+          >
+            <div
+              className="customerPhoneBubble customerPhoneBubbleBot"
+            >
+              What type of property are
+              you looking for?
+            </div>
+
+            <div
+              className="customerPhoneBubble customerPhoneBubbleUser"
+            >
+              3-bedroom villa in Dubai
+              Hills.
+            </div>
+
+            <div
+              className="customerPhoneBubble customerPhoneBubbleBot"
+            >
+              Around what budget are you
+              considering?
+            </div>
+
+            <div
+              className="customerPhoneBubble customerPhoneBubbleUser"
+            >
+              Around AED 4 million.
+            </div>
+
+            <div
+              className="customerPhoneBubble customerPhoneBubbleBot"
+            >
+              Perfect. When would be a
+              convenient time for a
+              property consultant to
+              contact you?
+            </div>
+
+            <div
+              className="customerPhoneBubble customerPhoneBubbleUser"
+            >
+              Tomorrow at 11 AM.
+            </div>
+
+            <div
+              className="customerSuccessBubble"
+            >
+              <strong>
+                ✓ Request received
+              </strong>
+
+              <span>
+                Your property requirements
+                have been shared with our
+                team. A consultant will
+                contact you at your
+                preferred time.
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CustomerPerspectivePoint({
+  children,
+}) {
+  return (
+    <div
+      className="customerPerspectivePoint"
+    >
+      <span>
+        ✓
+      </span>
+
+      {children}
+    </div>
+  );
+}
+
+function SalesPerspective() {
+  return (
+    <div
+      className="salesPerspective"
+    >
+      <div
+        className="salesPerspectiveSidebar"
+      >
+        <div>
+          <div
+            className="perspectiveMiniLabel"
+          >
+            SALES INTELLIGENCE
+          </div>
+
+          <h3>
+            The same conversation,
+            transformed.
+          </h3>
+
+          <p>
+            The consultant receives
+            context before speaking to the
+            customer.
+          </p>
+        </div>
+
+        <div
+          className="salesDataTags"
+        >
+          <span
+            className="salesDataTag"
+          >
+            Intent
+          </span>
+
+          <span
+            className="salesDataTag"
+          >
+            Budget
+          </span>
+
+          <span
+            className="salesDataTag"
+          >
+            Location
+          </span>
+
+          <span
+            className="salesDataTag"
+          >
+            Financing
+          </span>
+
+          <span
+            className="salesDataTag"
+          >
+            Timeline
+          </span>
+
+          <span
+            className="salesDataTag"
+          >
+            Callback
+          </span>
+        </div>
+      </div>
+
+      <div
+        className="salesPerspectiveMain"
+      >
+        <div
+          className="salesOpportunityTop"
+        >
+          <div>
+            <div
+              className="panelLabel"
+            >
+              NEW OPPORTUNITY
+            </div>
+
+            <h3>
+              Taher M.
+            </h3>
+          </div>
+
+          <div
+            className="salesQualifiedBadge"
+          >
+            <span />
+
+            QUALIFIED
           </div>
         </div>
 
         <div
-          style={{
-            padding:
-              "22px 24px 25px",
-          }}
+          className="salesLeadSummary"
         >
-          {lead.summary && (
-            <div
-              style={{
-                marginBottom: "22px",
-                padding:
-                  "15px 16px",
-                background:
-                  "#F3EFE6",
-                borderRadius:
-                  "14px",
-                color: "#59635D",
-                fontSize: "12px",
-                lineHeight: "1.65",
-              }}
-            >
-              {lead.summary}
-            </div>
-          )}
+          <p>
+            Buyer looking for a
+            3-bedroom villa in Dubai
+            Hills around AED 4 million.
+            Open to ready-to-move and
+            off-plan. Plans to use
+            mortgage financing. Callback
+            requested tomorrow at 11 AM.
+          </p>
+        </div>
 
+        <div
+          className="salesStructuredGrid"
+        >
+          <SalesDataItem
+            label="Intent"
+            value="Buy"
+          />
+
+          <SalesDataItem
+            label="Property"
+            value="3BR Villa"
+          />
+
+          <SalesDataItem
+            label="Budget"
+            value="AED 4M"
+          />
+
+          <SalesDataItem
+            label="Location"
+            value="Dubai Hills"
+          />
+
+          <SalesDataItem
+            label="Status"
+            value="Ready + Off-plan"
+          />
+
+          <SalesDataItem
+            label="Financing"
+            value="Mortgage"
+          />
+
+          <SalesDataItem
+            label="Timeline"
+            value="Within 6 months"
+          />
+
+          <SalesDataItem
+            label="Callback"
+            value="Tomorrow · 11 AM"
+          />
+        </div>
+
+        <div
+          className="salesHandoffStrip"
+        >
           <div
-            style={{
-              color:
-                colors.champagne,
-              textTransform:
-                "uppercase",
-              letterSpacing:
-                "1.25px",
-              fontSize: "8px",
-              fontWeight: "800",
-              marginBottom: "7px",
-            }}
+            className="salesHandoffIcon"
           >
-            Captured requirements
+            ✓
           </div>
 
           <div>
-            {rows.map(
-              (
-                [label, value],
-                index
-              ) => (
-                <div
-                  key={label}
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns:
-                      "135px 1fr",
-                    gap: "18px",
-                    padding:
-                      "12px 0",
-                    borderBottom:
-                      index ===
-                      rows.length - 1
-                        ? "none"
-                        : `1px solid ${colors.line}`,
-                  }}
-                >
-                  <div
-                    style={{
-                      color:
-                        "#8A918C",
-                      fontSize:
-                        "10px",
-                    }}
-                  >
-                    {label}
-                  </div>
+            <strong>
+              Ready for consultant
+            </strong>
 
-                  <div
-                    style={{
-                      color:
-                        colors.forest,
-                      fontSize:
-                        "11px",
-                      fontWeight:
-                        "700",
-                      textAlign:
-                        "right",
-                    }}
-                  >
-                    {formatLeadValue(
-                      label,
-                      value
-                    )}
-                  </div>
-                </div>
-              )
-            )}
-          </div>
-
-          <div
-            style={{
-              marginTop: "20px",
-              padding:
-                "13px 14px",
-              borderRadius: "13px",
-              background: "#EDF4F0",
-              display: "flex",
-              alignItems: "center",
-              gap: "10px",
-            }}
-          >
-            <div
-              style={{
-                width: "28px",
-                height: "28px",
-                borderRadius: "50%",
-                background:
-                  colors.forest,
-                color: "white",
-                display: "flex",
-                justifyContent:
-                  "center",
-                alignItems: "center",
-                fontSize: "11px",
-                fontWeight: "800",
-              }}
-            >
-              ✓
-            </div>
-
-            <div>
-              <div
-                style={{
-                  fontSize: "10px",
-                  fontWeight: "800",
-                  color:
-                    colors.forest,
-                }}
-              >
-                Consultant handoff ready
-              </div>
-
-              <div
-                style={{
-                  marginTop: "2px",
-                  color: "#77827C",
-                  fontSize: "9px",
-                }}
-              >
-                Lead captured and sent to
-                the sales workflow
-              </div>
-            </div>
-          </div>
-
-          <div
-            style={{
-              display: "flex",
-              gap: "10px",
-              marginTop: "20px",
-            }}
-          >
-            <button
-              onClick={onClose}
-              style={{
-                flex: 1,
-                padding: "12px",
-                borderRadius: "12px",
-                border: `1px solid ${colors.line}`,
-                background: "white",
-                color: colors.forest,
-                cursor: "pointer",
-                fontSize: "10px",
-                fontWeight: "800",
-              }}
-            >
-              Back to Conversation
-            </button>
-
-            <button
-              onClick={
-                onNewConversation
-              }
-              style={{
-                flex: 1,
-                padding: "12px",
-                borderRadius: "12px",
-                border: "none",
-                background:
-                  colors.forest,
-                color: "white",
-                cursor: "pointer",
-                fontSize: "10px",
-                fontWeight: "800",
-              }}
-            >
-              New Conversation
-            </button>
+            <span>
+              Requirements captured before
+              the first human call
+            </span>
           </div>
         </div>
       </div>
@@ -2782,24 +6799,672 @@ function LeadSummaryModal({
   );
 }
 
-function formatLeadValue(
+function SalesDataItem({
   label,
-  value
-) {
-  if (!value) return "";
+  value,
+}) {
+  return (
+    <div
+      className="salesStructuredItem"
+    >
+      <span>
+        {label}
+      </span>
+
+      <strong>
+        {value}
+      </strong>
+    </div>
+  );
+}
+
+/* =========================================================
+   CHANNELS
+   ========================================================= */
+
+function ChannelBackground() {
+  return (
+    <div
+      className="channelBackground"
+    >
+      <div
+        className="channelBackgroundGrid"
+      />
+
+      <div
+        className="channelBackgroundGlow"
+      />
+    </div>
+  );
+}
+
+function ChannelUniverse({
+  activeChannel,
+}) {
+  return (
+    <div
+      className="channelUniverse"
+    >
+      <div
+        className="universeRing universeRingOne"
+      />
+
+      <div
+        className="universeRing universeRingTwo"
+      />
+
+      <div
+        className="universeRing universeRingThree"
+      />
+
+      <div
+        className={
+          activeChannel ===
+          "whatsapp"
+            ? "channelLine lineWhatsapp channelLineActive"
+            : "channelLine lineWhatsapp"
+        }
+      />
+
+      <div
+        className={
+          activeChannel ===
+          "website"
+            ? "channelLine lineWebsite channelLineActive"
+            : "channelLine lineWebsite"
+        }
+      />
+
+      <div
+        className={
+          activeChannel ===
+          "campaign"
+            ? "channelLine lineCampaign channelLineActive"
+            : "channelLine lineCampaign"
+        }
+      />
+
+      <div
+        className={
+          activeChannel ===
+          "portal"
+            ? "channelLine linePortal channelLineActive"
+            : "channelLine linePortal"
+        }
+      />
+
+      <ChannelNode
+        className="nodeWhatsapp"
+        active={
+          activeChannel ===
+          "whatsapp"
+        }
+        title="WhatsApp"
+        subtitle="Messaging"
+      />
+
+      <ChannelNode
+        className="nodeWebsite"
+        active={
+          activeChannel ===
+          "website"
+        }
+        title="Website"
+        subtitle="Owned channel"
+      />
+
+      <ChannelNode
+        className="nodeCampaign"
+        active={
+          activeChannel ===
+          "campaign"
+        }
+        title="Campaign"
+        subtitle="Paid demand"
+      />
+
+      <ChannelNode
+        className="nodePortal"
+        active={
+          activeChannel ===
+          "portal"
+        }
+        title="Portal"
+        subtitle="Property lead"
+      />
+
+      <div
+        className="universeCore"
+      >
+        <strong>
+          N
+        </strong>
+
+        <span>
+          INTELLIGENCE
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function ChannelNode({
+  className,
+  active,
+  title,
+  subtitle,
+}) {
+  return (
+    <div
+      className={
+        active
+          ? `channelNode channelNodeActive ${className}`
+          : `channelNode ${className}`
+      }
+    >
+      <strong>
+        {title}
+      </strong>
+
+      <span>
+        {subtitle}
+      </span>
+    </div>
+  );
+}
+
+/* =========================================================
+   COMMAND CENTER
+   ========================================================= */
+
+function CommandCenterSidebar() {
+  return (
+    <aside
+      className="commandSidebar"
+    >
+      <div>
+        <div
+          className="commandSidebarBrand"
+        >
+          <div
+            className="commandSidebarBrandIcon"
+          >
+            N
+          </div>
+
+          <div>
+            <strong>
+              NOMAD
+            </strong>
+
+            <span>
+              Intelligence OS
+            </span>
+          </div>
+        </div>
+
+        <div
+          className="commandMenu"
+        >
+          <CommandMenuItem
+            icon="⌂"
+            label="Overview"
+            active
+          />
+
+          <CommandMenuItem
+            icon="◎"
+            label="Opportunities"
+          />
+
+          <CommandMenuItem
+            icon="◌"
+            label="Conversations"
+          />
+
+          <CommandMenuItem
+            icon="⌁"
+            label="Sources"
+          />
+
+          <CommandMenuItem
+            icon="◇"
+            label="Performance"
+          />
+        </div>
+      </div>
+
+      <div
+        className="commandSidebarBottom"
+      >
+        <strong>
+          System active
+        </strong>
+
+        <span>
+          Qualification engine online
+        </span>
+      </div>
+    </aside>
+  );
+}
+
+function CommandMenuItem({
+  icon,
+  label,
+  active = false,
+}) {
+  return (
+    <div
+      className={
+        active
+          ? "commandMenuItem commandMenuItemActive"
+          : "commandMenuItem"
+      }
+    >
+      <span
+        className="commandMenuIcon"
+      >
+        {icon}
+      </span>
+
+      {label}
+    </div>
+  );
+}
+
+function CommandCenterHeader() {
+  return (
+    <div
+      className="commandHeader"
+    >
+      <div>
+        <span>
+          LIVE OPERATIONS
+        </span>
+
+        <h3>
+          Sales Intelligence
+        </h3>
+      </div>
+
+      <div
+        className="commandHeaderActions"
+      >
+        <div
+          className="commandHeaderButton"
+        >
+          Today
+        </div>
+
+        <div
+          className="commandHeaderButton"
+        >
+          All sources
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CommandStats() {
+  return (
+    <div
+      className="commandStats"
+    >
+      <CommandStat
+        label="New enquiries"
+        value="14"
+        detail="+18% today"
+      />
+
+      <CommandStat
+        label="Qualified"
+        value="9"
+        detail="64% conversion"
+      />
+
+      <CommandStat
+        label="Attention"
+        value="3"
+        detail="Review required"
+      />
+
+      <CommandStat
+        label="Callbacks due"
+        value="2"
+        detail="Next 60 min"
+      />
+    </div>
+  );
+}
+
+function CommandStat({
+  label,
+  value,
+  detail,
+}) {
+  return (
+    <div
+      className="commandStat"
+    >
+      <span>
+        {label}
+      </span>
+
+      <strong>
+        {value}
+      </strong>
+
+      <small>
+        {detail}
+      </small>
+    </div>
+  );
+}
+
+function CommandLeadRow({
+  lead,
+  active,
+  onEnter,
+  onLeave,
+}) {
+  let statusClass =
+    "commandLeadStatus";
 
   if (
-    label === "Intent" ||
-    label === "Property" ||
-    label === "Property status" ||
-    label === "Financing"
+    lead.status ===
+    "Qualified"
   ) {
-    return String(value)
-      .replaceAll("-", " ")
-      .replace(/\b\w/g, (letter) =>
-        letter.toUpperCase()
-      );
+    statusClass +=
+      " statusQualified";
   }
 
-  return String(value);
+  if (
+    lead.status ===
+    "In progress"
+  ) {
+    statusClass +=
+      " statusProgress";
+  }
+
+  if (
+    lead.status ===
+    "Callback due"
+  ) {
+    statusClass +=
+      " statusDue";
+  }
+
+  return (
+    <div
+      className={
+        active
+          ? "commandLeadRow commandLeadRowActive"
+          : "commandLeadRow"
+      }
+      onMouseEnter={
+        onEnter
+      }
+      onMouseLeave={
+        onLeave
+      }
+    >
+      <div
+        className="commandLeadAvatar"
+      >
+        {lead.initials}
+      </div>
+
+      <div
+        className="commandLeadIdentity"
+      >
+        <strong>
+          {lead.name}
+        </strong>
+
+        <span>
+          {lead.request}
+        </span>
+      </div>
+
+      <div
+        className="commandLeadBudget"
+      >
+        {lead.budget}
+      </div>
+
+      <div
+        className={
+          statusClass
+        }
+      >
+        {lead.status}
+      </div>
+
+      <div
+        className="commandLeadAge"
+      >
+        {lead.age}
+      </div>
+    </div>
+  );
+}
+
+function QualityRing() {
+  return (
+    <div
+      className="qualityRing"
+    >
+      <div
+        className="qualityRingInner"
+      >
+        <strong>
+          86
+        </strong>
+
+        <span>
+          QUALITY SCORE
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function QualityLine({
+  label,
+  value,
+}) {
+  return (
+    <div
+      className="qualityLine"
+    >
+      <span>
+        {label}
+      </span>
+
+      <strong>
+        {value}
+      </strong>
+    </div>
+  );
+}
+
+/* =========================================================
+   STORY
+   ========================================================= */
+
+function StoryPoint({
+  number,
+  title,
+  description,
+}) {
+  return (
+    <div
+      className="storyPoint"
+    >
+      <div
+        className="storyPointNumber"
+      >
+        {number}
+      </div>
+
+      <h3>
+        {title}
+      </h3>
+
+      <p>
+        {description}
+      </p>
+    </div>
+  );
+}
+
+function StoryConnector() {
+  return (
+    <div
+      className="storyConnector"
+    />
+  );
+}
+
+/* =========================================================
+   FINAL CTA
+   ========================================================= */
+
+function FinalCTAVisual() {
+  return (
+    <div
+      className="finalCTAVisual"
+    >
+      <div
+        className="finalCTARing finalCTARing1"
+      />
+
+      <div
+        className="finalCTARing finalCTARing2"
+      />
+
+      <div
+        className="finalCTARing finalCTARing3"
+      />
+    </div>
+  );
+}
+
+/* =========================================================
+   LIVE DEMO COMPONENTS
+   ========================================================= */
+
+function DemoRailItem({
+  number,
+  label,
+  active,
+}) {
+  return (
+    <div
+      className={
+        active
+          ? "demoRailItem demoRailItemActive"
+          : "demoRailItem"
+      }
+    >
+      <span>
+        {number}
+      </span>
+
+      <strong>
+        {label}
+      </strong>
+    </div>
+  );
+}
+
+function ChatMessage({
+  message,
+}) {
+  const isUser =
+    message.role ===
+    "user";
+
+  return (
+    <div
+      className={
+        isUser
+          ? "chatMessageRow chatMessageUser"
+          : "chatMessageRow chatMessageAssistant"
+      }
+    >
+      {!isUser && (
+        <div
+          className="chatMiniAvatar"
+        >
+          N
+        </div>
+      )}
+
+      <div
+        className="chatMessageBubble"
+      >
+        {message.text}
+      </div>
+    </div>
+  );
+}
+
+function TypingMessage() {
+  return (
+    <div
+      className="chatMessageRow chatMessageAssistant"
+    >
+      <div
+        className="chatMiniAvatar"
+      >
+        N
+      </div>
+
+      <div
+        className="typingBubble"
+      >
+        •••
+      </div>
+    </div>
+  );
+}
+
+function CustomerRequestReceived() {
+  return (
+    <div
+      className="requestReceived"
+    >
+      <div
+        className="requestReceivedTop"
+      >
+        <div
+          className="requestReceivedIcon"
+        >
+          ✓
+        </div>
+
+        <div>
+          <div
+            className="requestReceivedLabel"
+          >
+            Confirmation
+          </div>
+
+          <h3>
+            Request received
+          </h3>
+        </div>
+      </div>
+
+      <p>
+        Your property requirements have
+        been shared with the team. A
+        property consultant will contact
+        you at your preferred time.
+      </p>
+    </div>
+  );
 }
