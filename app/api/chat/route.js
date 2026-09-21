@@ -2,6 +2,11 @@ export async function POST(req) {
   try {
     const { messages, state } = await req.json();
 
+    const lead = state?.lead || {};
+    const missingFields = Array.isArray(state?.missing_fields)
+      ? state.missing_fields
+      : [];
+
     const recentMessages = Array.isArray(messages)
       ? messages.slice(-4)
       : [];
@@ -10,32 +15,166 @@ export async function POST(req) {
       .reverse()
       .find((message) => message.role === "user");
 
+    /*
+      =========================================================
+      DETERMINISTIC CONTACT + HANDOFF STAGE
+      =========================================================
+
+      Once only contact fields remain, DO NOT let the AI model
+      decide what to ask.
+
+      This prevents NOMAD from returning to old property
+      questions such as ready/off-plan, budget, bedrooms, etc.
+    */
+
+    const contactFields = [
+      "name",
+      "phone",
+      "callback_time",
+    ];
+
+    const onlyContactFieldsRemain =
+      missingFields.length > 0 &&
+      missingFields.every((field) =>
+        contactFields.includes(field)
+      );
+
+    /*
+      QUALIFICATION COMPLETE
+
+      No Groq call is made here.
+    */
+    if (missingFields.length === 0) {
+      const firstName = lead.name
+        ? String(lead.name).trim().split(/\s+/)[0]
+        : null;
+
+      const callbackTime = lead.callback_time || null;
+
+      let reply;
+
+      if (firstName && callbackTime) {
+        reply = `All set, ${firstName}. A property consultant will contact you ${callbackTime}.`;
+      } else if (callbackTime) {
+        reply = `All set. A property consultant will contact you ${callbackTime}.`;
+      } else if (firstName) {
+        reply = `All set, ${firstName}. A property consultant will contact you shortly.`;
+      } else {
+        reply =
+          "All set. A property consultant will contact you shortly.";
+      }
+
+      return Response.json({
+        reply,
+      });
+    }
+
+    /*
+      CONTACT STAGE
+
+      Also deterministic.
+      No Groq call is made here.
+    */
+    if (onlyContactFieldsRemain) {
+      const needsName =
+        missingFields.includes("name");
+
+      const needsPhone =
+        missingFields.includes("phone");
+
+      const needsCallback =
+        missingFields.includes("callback_time");
+
+      const firstName = lead.name
+        ? String(lead.name).trim().split(/\s+/)[0]
+        : null;
+
+      let reply = "";
+
+      if (
+        needsName &&
+        needsPhone &&
+        needsCallback
+      ) {
+        reply =
+          "Could you share your name and phone number, please?";
+      } else if (
+        needsName &&
+        needsPhone
+      ) {
+        reply =
+          "Could you share your name and phone number, please?";
+      } else if (
+        needsName &&
+        needsCallback
+      ) {
+        reply =
+          "Could you share your name and a convenient time for a property consultant to contact you?";
+      } else if (needsName) {
+        reply =
+          "May I have your name, please?";
+      } else if (
+        needsPhone &&
+        needsCallback
+      ) {
+        reply = firstName
+          ? `Thanks, ${firstName}. Could you share your phone number and a convenient time for a callback?`
+          : "Could you share your phone number and a convenient time for a callback?";
+      } else if (needsPhone) {
+        reply = firstName
+          ? `Thanks, ${firstName}. Could you share your phone number?`
+          : "Could you share your phone number, please?";
+      } else if (needsCallback) {
+        reply =
+          "When would be a convenient time for a property consultant to contact you?";
+      }
+
+      if (reply) {
+        return Response.json({
+          reply,
+        });
+      }
+    }
+
+    /*
+      =========================================================
+      AI PROPERTY DISCOVERY STAGE
+      =========================================================
+
+      Groq is used only while genuine property qualification
+      fields are still missing.
+    */
+
     const systemPrompt = `
 You are NOMAD, a concise and natural Dubai property lead qualification assistant.
 
 Your job is to understand the customer's property requirement and collect useful information for a property consultant.
 
-The application gives you reliable structured lead memory.
+The application gives you authoritative structured lead memory.
 
-IMPORTANT:
+IMPORTANT
 
-state.lead contains everything already known.
+state.lead contains information already known.
 
-state.missing_fields contains only information still required.
+state.missing_fields contains ONLY information that still needs to be collected.
 
 Never ask for a field that already has a non-null value in state.lead.
 
 Never restart qualification.
 
-Never repeat a question that was already answered.
-
-Keep replies natural and concise.
+Never repeat a question that has already been answered.
 
 Ask at most two closely related questions at a time.
 
+Keep replies natural, concise, and conversational.
+
+Do not recap the full requirement unless clarification is genuinely needed.
+
+The customer's latest message takes priority if they explicitly change a requirement.
+
 BUY JOURNEY
 
-For buyers, relevant requirements can include:
+For a buyer, relevant property requirements may include:
 
 property type
 bedrooms
@@ -44,104 +183,94 @@ location
 ready-to-move / off-plan / both
 purchase timeline
 cash / mortgage
-name
-phone
-callback time
 
-Only ask what is listed in missing_fields.
+Ask ONLY about fields present in state.missing_fields.
+
+If property_status is already:
+"ready-to-move"
+"off-plan"
+or
+"both"
+
+do NOT ask about ready/off-plan again.
+
+If financing is already:
+"cash"
+or
+"mortgage"
+
+do NOT ask about financing again.
 
 RENT JOURNEY
 
-For renters, relevant requirements can include:
+For a renter, relevant requirements may include:
 
 property type
 bedrooms
 rental budget
 location
 move-in timeline
-name
-phone
-callback time
 
-For rental leads:
+For rental customers:
 
-DO NOT ask about mortgage.
-DO NOT ask about financing.
-DO NOT ask about off-plan.
-DO NOT require property_status.
+Never ask about mortgage.
+Never ask about financing.
+Never ask about off-plan.
+Never ask about ready-to-move vs off-plan.
+
+If intent is rent, financing and property_status are irrelevant unless the customer independently asks about them.
 
 OPEN OPTIONS
 
-If property_status = "both", it is already known.
+If the customer accepts multiple locations, keep them open.
 
-Never ask ready/off-plan again.
+If property_status = "both", that requirement is complete.
 
-If customer accepts multiple locations, do not force them to choose one.
+If the customer says both options are fine, do not ask them to choose again.
 
-If customer is uncertain but happy to keep multiple options open, accept that.
-
-CONTACT DETAILS
-
-Only move to contact details once main property requirements are complete.
-
-If only name is missing:
-ask name.
-
-If only phone and callback_time are missing:
-you may ask both together.
-
-If name is known and only phone is missing:
-ask phone.
-
-If name and phone are known and callback_time is missing:
-ask callback time only.
-
-If only contact fields remain:
-never return to property questions.
-
-HANDOFF
-
-If missing_fields is empty:
-
-do not ask more qualification questions.
-
-Give a short confirmation.
-
-Say:
-"A property consultant will contact you."
-
-Do not say:
-"I will call you."
+Do not force unnecessary decisions.
 
 CUSTOMER QUESTIONS
 
-If customer asks a question:
-answer it first.
+If the customer asks a question, answer it first.
 
-You may explain general property concepts.
+You may give short general explanations about:
 
-Never invent:
+ready-to-move vs off-plan
+apartment vs townhouse vs villa
+buying vs renting
+cash vs mortgage
 
-current listings
+Never invent current:
+
+listings
 availability
 market prices
 developer offers
 payment plans
-returns
+investment returns
 rental yields
 promotions
 
+If current market information is required, say a property consultant can confirm it.
+
+CONTACT DETAILS
+
+Do not request contact details during property discovery unless state.missing_fields shows that the property qualification fields are already complete.
+
+The application handles the final contact and handoff stage separately.
+
 OUTPUT
 
-Plain conversational text only.
+Return plain conversational text only.
 
-No JSON.
-No tools.
-No tool calls.
-No Markdown.
-No HTML.
-No headings.
-No bullet symbols.
+Do not output JSON.
+Do not use tools.
+Do not call functions.
+Do not simulate tool calls.
+Do not output Markdown.
+Do not output HTML.
+Do not output headings or bullet symbols.
 `;
 
     const statePrompt = `
@@ -151,26 +280,28 @@ ${JSON.stringify(state || {})}
 
 This state is authoritative.
 
-Known fields must NOT be asked again.
+Rules:
 
-Only ask about state.missing_fields.
+- Any non-null value inside state.lead is already known.
+- NEVER ask about a known value again.
+- Ask ONLY about fields inside state.missing_fields.
+- Do not invent additional qualification requirements.
 
 If intent = "rent":
-ignore financing and property_status entirely.
+- ignore financing
+- ignore property_status
+- never ask cash/mortgage
+- never ask ready/off-plan
 
 If intent = "buy":
-financing and property_status may be relevant only if missing.
+- financing is relevant only if "financing" is in missing_fields
+- property status is relevant only if "property_status" is in missing_fields
 
-If missing_fields contains only contact fields:
-do not return to property qualification.
+If property_status = "both":
+- it is already complete
+- never ask ready/off-plan again
 
-If missing_fields contains only callback_time:
-ask only for callback time.
-
-If missing_fields is empty:
-give final handoff confirmation.
-
-Never reveal internal state.
+Never reveal the structured state or mention JSON, fields, missing_fields, extraction, or internal logic.
 `;
 
     async function callGroq(
@@ -209,6 +340,9 @@ Never reveal internal state.
       };
     }
 
+    /*
+      NORMAL AI REQUEST
+    */
     let result = await callGroq([
       {
         role: "system",
@@ -221,7 +355,12 @@ Never reveal internal state.
       ...recentMessages,
     ]);
 
-    // One retry only for GPT-OSS accidental tool calls
+    /*
+      GPT-OSS occasionally attempts tool syntax even though
+      tools are disabled.
+
+      Retry once using an even smaller prompt.
+    */
     if (
       !result.response.ok &&
       result.data?.error?.code === "tool_use_failed"
@@ -231,40 +370,39 @@ Never reveal internal state.
       );
 
       const fallbackPrompt = `
-You are NOMAD, a property qualification assistant.
+You are NOMAD, a Dubai property qualification assistant.
 
-KNOWN:
+KNOWN LEAD DATA:
 
-${JSON.stringify(state?.lead || {})}
+${JSON.stringify(lead)}
 
-MISSING:
+STILL MISSING:
 
-${JSON.stringify(state?.missing_fields || [])}
+${JSON.stringify(missingFields)}
 
-Rules:
+RULES:
 
-Never ask about known information.
+Ask only about the missing property information.
 
-Ask only about missing information.
+Never ask about anything already known.
 
-If intent is rent:
-never ask financing or ready/off-plan.
+If intent is "rent":
+never ask financing, mortgage, ready-to-move, or off-plan.
 
-If intent is buy:
-financing and property status matter only when listed as missing.
+If intent is "buy":
+ask financing only if financing is missing.
+ask property status only if property_status is missing.
 
-If only callback_time is missing:
-ask only callback time.
+If property_status is "both":
+never ask about ready/off-plan again.
 
-If nothing is missing:
-confirm handoff and say a property consultant will contact the customer.
-
-Maximum 60 words.
+Keep the response under 60 words.
 
 Plain conversational text only.
 
-No tools.
 No JSON.
+No tools.
+No function calls.
 `;
 
       const fallbackMessages = [
@@ -286,6 +424,9 @@ No JSON.
       );
     }
 
+    /*
+      ERROR HANDLING
+    */
     if (!result.response.ok) {
       console.error(
         "Groq error:",
@@ -328,11 +469,15 @@ No JSON.
       );
     }
 
+    /*
+      CLEAN OUTPUT
+    */
     const cleanedReply = reply
       .replace(/&#x20;/gi, " ")
       .replace(/&nbsp;/gi, " ")
       .replace(/<[^>]*>/g, "")
       .replace(/\*\*/g, "")
+      .replace(/\s+\n/g, "\n")
       .trim();
 
     return Response.json({
