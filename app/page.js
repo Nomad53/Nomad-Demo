@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const initialMessages = [
   {
@@ -14,6 +14,15 @@ export default function Home() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [leadSaved, setLeadSaved] = useState(false);
+
+  const chatEndRef = useRef(null);
+
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "end",
+    });
+  }, [messages, loading]);
 
   function startNewConversation() {
     if (loading) return;
@@ -494,6 +503,8 @@ export default function Home() {
               </div>
             </div>
           )}
+
+          <div ref={chatEndRef} />
         </div>
 
         {/* INPUT AREA */}
