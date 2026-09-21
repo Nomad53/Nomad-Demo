@@ -35,8 +35,9 @@ export default function Home() {
       }));
 
       // STEP 1:
-      // Extract the current structured state BEFORE generating the AI reply
-      const preExtractionResponse = await fetch("/api/extract-lead", {
+      // Extract the latest lead + structured state.
+      // The extractor only trusts customer messages.
+      const extractionResponse = await fetch("/api/extract-lead", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -46,11 +47,31 @@ export default function Home() {
         }),
       });
 
-      const preExtractionData = await preExtractionResponse.json();
+      let extractionData = {
+        success: false,
+        lead: null,
+        state: {
+          location_options: [],
+          property_type_options: [],
+          property_status_options: [],
+          uncertainties: [],
+          missing_fields: [],
+        },
+      };
+
+      try {
+        extractionData = await extractionResponse.json();
+      } catch (error) {
+        console.error("Could not read extraction response:", error);
+      }
+
+      if (!extractionResponse.ok || !extractionData.success) {
+        console.error("Lead extraction failed:", extractionData);
+      }
 
       const currentState =
-        preExtractionData.success && preExtractionData.state
-          ? preExtractionData.state
+        extractionData.success && extractionData.state
+          ? extractionData.state
           : {
               location_options: [],
               property_type_options: [],
@@ -60,7 +81,7 @@ export default function Home() {
             };
 
       // STEP 2:
-      // Send the conversation AND structured state to NOMAD
+      // Generate NOMAD's response using the structured state.
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: {
@@ -73,6 +94,12 @@ export default function Home() {
       });
 
       const data = await response.json();
+
+      if (!response.ok) {
+        console.error("Chat API failed:", data);
+
+        throw new Error("Chat API request failed");
+      }
 
       const assistantMessage = {
         role: "assistant",
@@ -89,24 +116,11 @@ export default function Home() {
       setMessages(conversationWithReply);
 
       // STEP 3:
-      // Re-extract after NOMAD replies so we have the latest lead state
-      const postExtractionResponse = await fetch("/api/extract-lead", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          messages: conversationWithReply.map((message) => ({
-            role: message.role,
-            content: message.text,
-          })),
-        }),
-      });
-
-      const extractionData = await postExtractionResponse.json();
-
-      // STEP 4:
-      // Save only when the lead is fully qualified
+      // No second extraction is needed.
+      // The customer's latest message has already been extracted above.
+      //
+      // If that message supplied the final missing information
+      // (for example callback time), the lead will now be Qualified.
       if (
         extractionData.success &&
         extractionData.lead?.lead_status === "Qualified" &&
@@ -117,6 +131,8 @@ export default function Home() {
           conversation: conversationWithReply,
         };
 
+        // STEP 4:
+        // Save qualified lead to Supabase.
         const saveResponse = await fetch("/api/save-lead", {
           method: "POST",
           headers: {
@@ -132,7 +148,7 @@ export default function Home() {
           console.log("Lead saved successfully");
 
           // STEP 5:
-          // Send notification email
+          // Send qualified lead email notification.
           try {
             const notifyResponse = await fetch("/api/notify-lead", {
               method: "POST",
