@@ -285,7 +285,8 @@ export default function Home() {
             margin: 0;
           }
 
-          button {
+          button,
+          a {
             font-family: inherit;
           }
 
@@ -311,6 +312,37 @@ export default function Home() {
             box-shadow:
               0 45px 110px rgba(0,0,0,.22),
               0 12px 40px rgba(5,45,35,.16);
+          }
+
+          .navLink {
+            color: #2E3934;
+            text-decoration: none;
+            font-size: 10px;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            font-weight: 700;
+            position: relative;
+            padding: 8px 0;
+            transition: color .2s ease;
+          }
+
+          .navLink::after {
+            content: "";
+            position: absolute;
+            left: 0;
+            bottom: 2px;
+            width: 0;
+            height: 1px;
+            background: #A9844D;
+            transition: width .25s ease;
+          }
+
+          .navLink:hover {
+            color: #082F27;
+          }
+
+          .navLink:hover::after {
+            width: 100%;
           }
 
           @keyframes floatNomad {
@@ -395,7 +427,6 @@ export default function Home() {
             backgroundPosition: "center 48%",
           }}
         >
-          {/* IMAGE TREATMENT */}
           <div
             style={{
               position: "absolute",
@@ -457,16 +488,20 @@ export default function Home() {
                 style={{
                   display: "flex",
                   gap: "30px",
-                  color: "#2E3934",
-                  fontSize: "10px",
-                  letterSpacing: "1.5px",
-                  textTransform: "uppercase",
-                  fontWeight: "700",
+                  alignItems: "center",
                 }}
               >
-                <span>Solutions</span>
-                <span>For Teams</span>
-                <span>How it works</span>
+                <a href="#solutions" className="navLink">
+                  Solutions
+                </a>
+
+                <a href="#for-teams" className="navLink">
+                  For Teams
+                </a>
+
+                <a href="#how-it-works" className="navLink">
+                  How It Works
+                </a>
               </div>
 
               <button
@@ -668,8 +703,6 @@ export default function Home() {
                   alignItems: "center",
                 }}
               >
-                {/* architectural line */}
-
                 <div
                   style={{
                     position: "absolute",
@@ -900,8 +933,6 @@ export default function Home() {
               </div>
             </div>
 
-            {/* BOTTOM HERO CAPTION */}
-
             <div
               style={{
                 marginTop: "16px",
@@ -923,7 +954,7 @@ export default function Home() {
                 }}
               />
 
-              Built for Dubai's real estate teams
+              Built for Dubai&apos;s real estate teams
             </div>
           </div>
         </section>
@@ -931,12 +962,14 @@ export default function Home() {
         {/* ================= POSITIONING ================= */}
 
         <section
+          id="solutions"
           style={{
             background: colors.forest,
             color: "white",
             position: "relative",
             overflow: "hidden",
-            padding: "108px 34px",
+            padding: "82px 34px 76px",
+            scrollMarginTop: "20px",
           }}
         >
           <div
@@ -966,7 +999,7 @@ export default function Home() {
                 fontWeight: "800",
                 letterSpacing: "1.7px",
                 textTransform: "uppercase",
-                marginBottom: "22px",
+                marginBottom: "18px",
               }}
             >
               Designed for the modern brokerage
@@ -974,11 +1007,11 @@ export default function Home() {
 
             <h2
               style={{
-                maxWidth: "850px",
+                maxWidth: "980px",
                 margin: 0,
-                fontSize: "clamp(42px,5vw,68px)",
-                lineHeight: "1.04",
-                letterSpacing: "-3px",
+                fontSize: "clamp(40px,4.3vw,60px)",
+                lineHeight: "1.03",
+                letterSpacing: "-2.6px",
                 fontWeight: "620",
               }}
             >
@@ -1000,13 +1033,15 @@ export default function Home() {
             </h2>
 
             <div
+              id="for-teams"
               style={{
                 display: "grid",
                 gridTemplateColumns:
                   "repeat(auto-fit,minmax(230px,1fr))",
-                marginTop: "76px",
+                marginTop: "52px",
                 borderTop:
                   "1px solid rgba(255,255,255,.10)",
+                scrollMarginTop: "28px",
               }}
             >
               <EditorialFeature
@@ -1033,9 +1068,11 @@ export default function Home() {
         {/* ================= FLOW ================= */}
 
         <section
+          id="how-it-works"
           style={{
             background: colors.ivorySoft,
-            padding: "110px 34px",
+            padding: "92px 34px 96px",
+            scrollMarginTop: "20px",
           }}
         >
           <div
@@ -1049,7 +1086,7 @@ export default function Home() {
                 display: "grid",
                 gridTemplateColumns:
                   "repeat(auto-fit,minmax(300px,1fr))",
-                gap: "80px",
+                gap: "70px",
                 alignItems: "end",
               }}
             >
@@ -1061,7 +1098,7 @@ export default function Home() {
                     textTransform: "uppercase",
                     letterSpacing: "1.7px",
                     fontWeight: "800",
-                    marginBottom: "20px",
+                    marginBottom: "18px",
                   }}
                 >
                   The NOMAD journey
@@ -1069,9 +1106,9 @@ export default function Home() {
 
                 <h2
                   style={{
-                    fontSize: "clamp(42px,4.5vw,60px)",
-                    lineHeight: "1.05",
-                    letterSpacing: "-2.4px",
+                    fontSize: "clamp(40px,4vw,56px)",
+                    lineHeight: "1.04",
+                    letterSpacing: "-2.2px",
                     margin: 0,
                     fontWeight: "640",
                   }}
@@ -1100,7 +1137,7 @@ export default function Home() {
 
             <div
               style={{
-                marginTop: "66px",
+                marginTop: "54px",
                 display: "grid",
                 gridTemplateColumns:
                   "repeat(auto-fit,minmax(220px,1fr))",
@@ -1136,7 +1173,7 @@ export default function Home() {
 
             <div
               style={{
-                marginTop: "68px",
+                marginTop: "56px",
                 textAlign: "center",
               }}
             >
@@ -1260,8 +1297,6 @@ export default function Home() {
             "1px solid rgba(16,24,20,.08)",
         }}
       >
-        {/* CHAT HEADER */}
-
         <div
           style={{
             background: colors.forest,
@@ -1347,8 +1382,6 @@ export default function Home() {
             ↻
           </button>
         </div>
-
-        {/* CHAT BODY */}
 
         <div
           style={{
@@ -1473,8 +1506,6 @@ export default function Home() {
           <div ref={chatEndRef} />
         </div>
 
-        {/* COMPOSER */}
-
         <div
           style={{
             padding: "13px 14px 16px",
@@ -1558,10 +1589,6 @@ export default function Home() {
     </main>
   );
 }
-
-/* ======================================================
-   COMPONENTS
-   ====================================================== */
 
 function BrandMark({ dark = false }) {
   return (
@@ -1752,7 +1779,7 @@ function EditorialFeature({
   return (
     <div
       style={{
-        padding: "34px 28px 16px 0",
+        padding: "28px 32px 30px 0",
         borderRight:
           "1px solid rgba(255,255,255,.08)",
       }}
@@ -1763,7 +1790,7 @@ function EditorialFeature({
           fontSize: "9px",
           letterSpacing: "1.4px",
           fontWeight: "800",
-          marginBottom: "30px",
+          marginBottom: "22px",
         }}
       >
         {number}
@@ -1781,9 +1808,9 @@ function EditorialFeature({
       <div
         style={{
           maxWidth: "285px",
-          marginTop: "11px",
+          marginTop: "10px",
           fontSize: "12px",
-          lineHeight: "1.75",
+          lineHeight: "1.7",
           color: "rgba(255,255,255,.52)",
         }}
       >
@@ -1802,8 +1829,8 @@ function ProcessStep({
     <div
       style={{
         background: colors.paper,
-        padding: "28px 25px 30px",
-        minHeight: "195px",
+        padding: "26px 24px 28px",
+        minHeight: "180px",
       }}
     >
       <div
@@ -1819,7 +1846,7 @@ function ProcessStep({
 
       <div
         style={{
-          marginTop: "35px",
+          marginTop: "30px",
           color: colors.forest,
           fontSize: "17px",
           fontWeight: "780",
@@ -1830,10 +1857,10 @@ function ProcessStep({
 
       <div
         style={{
-          marginTop: "10px",
+          marginTop: "9px",
           color: "#77817B",
           fontSize: "12px",
-          lineHeight: "1.68",
+          lineHeight: "1.65",
         }}
       >
         {text}
