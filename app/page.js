@@ -21,22 +21,34 @@ const initialLeadMemory = {
 };
 
 export default function Home() {
+  const [showDemo, setShowDemo] = useState(false);
+
   const [messages, setMessages] = useState(initialMessages);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [leadSaved, setLeadSaved] = useState(false);
 
-  // Persistent structured memory for the current conversation
   const [leadMemory, setLeadMemory] = useState(initialLeadMemory);
 
   const chatEndRef = useRef(null);
 
   useEffect(() => {
+    if (!showDemo) return;
+
     chatEndRef.current?.scrollIntoView({
       behavior: "smooth",
       block: "end",
     });
-  }, [messages, loading]);
+  }, [messages, loading, showDemo]);
+
+  function openDemo() {
+    setShowDemo(true);
+  }
+
+  function backToLanding() {
+    if (loading) return;
+    setShowDemo(false);
+  }
 
   function startNewConversation() {
     if (loading) return;
@@ -126,7 +138,6 @@ export default function Home() {
                 leadMemory.state?.missing_fields || [],
             };
 
-      // Persist structured memory for future turns
       if (extractionData.success) {
         setLeadMemory({
           lead: extractionData.lead || {},
@@ -151,7 +162,6 @@ export default function Home() {
 
       if (!response.ok) {
         console.error("Chat API failed:", data);
-
         throw new Error("Chat API request failed");
       }
 
@@ -170,7 +180,7 @@ export default function Home() {
       setMessages(conversationWithReply);
 
       // STEP 3:
-      // Save only once the deterministic extractor says Qualified
+      // Save only once deterministic extractor says Qualified
       if (
         extractionData.success &&
         extractionData.lead?.lead_status === "Qualified" &&
@@ -240,6 +250,540 @@ export default function Home() {
     }
   }
 
+  if (!showDemo) {
+    return (
+      <main
+        style={{
+          minHeight: "100vh",
+          background:
+            "radial-gradient(circle at 85% 10%, rgba(48,146,122,0.16), transparent 30%), radial-gradient(circle at 10% 85%, rgba(6,78,70,0.09), transparent 35%), linear-gradient(135deg, #f7fbf9 0%, #edf5f1 100%)",
+          fontFamily:
+            'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif',
+          color: "#102821",
+          overflow: "hidden",
+        }}
+      >
+        {/* NAV */}
+        <nav
+          style={{
+            width: "100%",
+            maxWidth: "1180px",
+            margin: "0 auto",
+            padding: "26px 28px",
+            boxSizing: "border-box",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "12px",
+            }}
+          >
+            <div
+              style={{
+                width: "42px",
+                height: "42px",
+                borderRadius: "13px",
+                background:
+                  "linear-gradient(135deg, #064e46, #0b796b)",
+                color: "white",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontWeight: "800",
+                fontSize: "17px",
+                boxShadow:
+                  "0 8px 22px rgba(7,94,84,0.18)",
+              }}
+            >
+              N
+            </div>
+
+            <div>
+              <div
+                style={{
+                  fontWeight: "800",
+                  fontSize: "17px",
+                  letterSpacing: "-0.3px",
+                }}
+              >
+                NOMAD
+              </div>
+
+              <div
+                style={{
+                  fontSize: "10px",
+                  color: "#71827c",
+                  letterSpacing: "1.1px",
+                  textTransform: "uppercase",
+                  marginTop: "1px",
+                }}
+              >
+                Property Intelligence
+              </div>
+            </div>
+          </div>
+
+          <button
+            onClick={openDemo}
+            style={{
+              border: "1px solid rgba(7,94,84,0.14)",
+              background: "rgba(255,255,255,0.72)",
+              color: "#075e54",
+              padding: "10px 17px",
+              borderRadius: "12px",
+              cursor: "pointer",
+              fontWeight: "700",
+              fontSize: "13px",
+              backdropFilter: "blur(10px)",
+            }}
+          >
+            Launch Demo
+          </button>
+        </nav>
+
+        {/* HERO */}
+        <section
+          style={{
+            width: "100%",
+            maxWidth: "1180px",
+            margin: "0 auto",
+            padding: "72px 28px 90px",
+            boxSizing: "border-box",
+            display: "grid",
+            gridTemplateColumns:
+              "repeat(auto-fit, minmax(320px, 1fr))",
+            alignItems: "center",
+            gap: "70px",
+          }}
+        >
+          {/* LEFT */}
+          <div>
+            <div
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "8px",
+                padding: "7px 12px",
+                borderRadius: "999px",
+                background: "rgba(7,94,84,0.07)",
+                border: "1px solid rgba(7,94,84,0.10)",
+                color: "#075e54",
+                fontSize: "11px",
+                fontWeight: "800",
+                letterSpacing: "0.8px",
+                textTransform: "uppercase",
+                marginBottom: "26px",
+              }}
+            >
+              <span
+                style={{
+                  width: "7px",
+                  height: "7px",
+                  borderRadius: "50%",
+                  background: "#16a085",
+                  boxShadow:
+                    "0 0 0 4px rgba(22,160,133,0.10)",
+                }}
+              />
+              AI for Real Estate Sales Teams
+            </div>
+
+            <h1
+              style={{
+                margin: 0,
+                fontSize: "clamp(48px, 6.4vw, 82px)",
+                lineHeight: "0.98",
+                letterSpacing: "-3.5px",
+                fontWeight: "800",
+                maxWidth: "760px",
+              }}
+            >
+              Turn property
+              <br />
+              enquiries into
+              <br />
+              <span
+                style={{
+                  color: "#087565",
+                }}
+              >
+                qualified leads.
+              </span>
+            </h1>
+
+            <p
+              style={{
+                marginTop: "30px",
+                marginBottom: 0,
+                maxWidth: "600px",
+                fontSize: "18px",
+                lineHeight: "1.7",
+                color: "#61716b",
+              }}
+            >
+              NOMAD understands property requirements,
+              qualifies buyers and tenants naturally, captures
+              structured lead data, and hands sales-ready
+              opportunities directly to your team.
+            </p>
+
+            <div
+              style={{
+                marginTop: "36px",
+                display: "flex",
+                flexWrap: "wrap",
+                gap: "12px",
+              }}
+            >
+              <button
+                onClick={openDemo}
+                style={{
+                  border: "none",
+                  background:
+                    "linear-gradient(135deg, #064e46 0%, #087565 100%)",
+                  color: "white",
+                  padding: "15px 24px",
+                  borderRadius: "14px",
+                  cursor: "pointer",
+                  fontWeight: "800",
+                  fontSize: "14px",
+                  boxShadow:
+                    "0 14px 32px rgba(7,94,84,0.20)",
+                }}
+              >
+                Try Live Demo →
+              </button>
+
+              <div
+                style={{
+                  padding: "14px 17px",
+                  borderRadius: "14px",
+                  border: "1px solid rgba(7,94,84,0.10)",
+                  background: "rgba(255,255,255,0.66)",
+                  color: "#66756f",
+                  fontSize: "13px",
+                  display: "flex",
+                  alignItems: "center",
+                  backdropFilter: "blur(8px)",
+                }}
+              >
+                No forms. Just conversation.
+              </div>
+            </div>
+
+            {/* PROOF STRIP */}
+            <div
+              style={{
+                marginTop: "54px",
+                display: "flex",
+                flexWrap: "wrap",
+                gap: "28px",
+              }}
+            >
+              {[
+                ["24/7", "Lead qualification"],
+                ["Instant", "Structured capture"],
+                ["Live", "Sales handoff"],
+              ].map(([big, small]) => (
+                <div key={small}>
+                  <div
+                    style={{
+                      fontSize: "18px",
+                      fontWeight: "800",
+                      color: "#133b31",
+                    }}
+                  >
+                    {big}
+                  </div>
+
+                  <div
+                    style={{
+                      marginTop: "4px",
+                      fontSize: "12px",
+                      color: "#7c8b85",
+                    }}
+                  >
+                    {small}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* RIGHT DEMO PREVIEW */}
+          <div
+            style={{
+              position: "relative",
+              minHeight: "540px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <div
+              style={{
+                position: "absolute",
+                width: "360px",
+                height: "360px",
+                borderRadius: "50%",
+                background:
+                  "radial-gradient(circle, rgba(8,117,101,0.16), rgba(8,117,101,0))",
+                filter: "blur(16px)",
+              }}
+            />
+
+            <div
+              style={{
+                width: "100%",
+                maxWidth: "400px",
+                background: "rgba(255,255,255,0.88)",
+                border: "1px solid rgba(7,94,84,0.09)",
+                borderRadius: "28px",
+                boxShadow:
+                  "0 30px 80px rgba(24,70,57,0.16)",
+                overflow: "hidden",
+                position: "relative",
+                backdropFilter: "blur(14px)",
+              }}
+            >
+              <div
+                style={{
+                  background:
+                    "linear-gradient(135deg, #064e46, #087565)",
+                  padding: "18px",
+                  color: "white",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "12px",
+                }}
+              >
+                <div
+                  style={{
+                    width: "38px",
+                    height: "38px",
+                    borderRadius: "50%",
+                    background: "rgba(255,255,255,0.16)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontWeight: "800",
+                  }}
+                >
+                  N
+                </div>
+
+                <div>
+                  <div
+                    style={{
+                      fontWeight: "700",
+                      fontSize: "14px",
+                    }}
+                  >
+                    NOMAD Property Assistant
+                  </div>
+
+                  <div
+                    style={{
+                      marginTop: "3px",
+                      fontSize: "11px",
+                      color: "rgba(255,255,255,0.72)",
+                    }}
+                  >
+                    ● Online
+                  </div>
+                </div>
+              </div>
+
+              <div
+                style={{
+                  padding: "22px",
+                  minHeight: "390px",
+                  background: "#f7f9f8",
+                }}
+              >
+                <PreviewBubble left>
+                  Hi! 👋 Are you looking to buy or rent a
+                  property in Dubai?
+                </PreviewBubble>
+
+                <PreviewBubble>
+                  I’m looking to buy a 3-bedroom villa in
+                  Dubai Hills around AED 4 million.
+                </PreviewBubble>
+
+                <PreviewBubble left>
+                  Are you considering ready-to-move,
+                  off-plan, or both?
+                </PreviewBubble>
+
+                <PreviewBubble>
+                  Both are fine. I’ll be using a mortgage.
+                </PreviewBubble>
+
+                <div
+                  style={{
+                    marginTop: "26px",
+                    padding: "14px 16px",
+                    borderRadius: "14px",
+                    background: "#edf8f4",
+                    border: "1px solid #d8eee6",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "11px",
+                  }}
+                >
+                  <div
+                    style={{
+                      width: "28px",
+                      height: "28px",
+                      borderRadius: "50%",
+                      background: "#0b7a69",
+                      color: "white",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: "13px",
+                      fontWeight: "800",
+                    }}
+                  >
+                    ✓
+                  </div>
+
+                  <div>
+                    <div
+                      style={{
+                        fontSize: "12px",
+                        fontWeight: "800",
+                        color: "#174c3f",
+                      }}
+                    >
+                      Structured qualification
+                    </div>
+
+                    <div
+                      style={{
+                        fontSize: "11px",
+                        color: "#6f837b",
+                        marginTop: "2px",
+                      }}
+                    >
+                      Requirements captured in real time
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* VALUE SECTION */}
+        <section
+          style={{
+            width: "100%",
+            background: "#0d352d",
+            color: "white",
+            padding: "72px 28px",
+            boxSizing: "border-box",
+          }}
+        >
+          <div
+            style={{
+              width: "100%",
+              maxWidth: "1120px",
+              margin: "0 auto",
+            }}
+          >
+            <div
+              style={{
+                maxWidth: "650px",
+                marginBottom: "42px",
+              }}
+            >
+              <div
+                style={{
+                  fontSize: "11px",
+                  fontWeight: "800",
+                  color: "#83c9b6",
+                  textTransform: "uppercase",
+                  letterSpacing: "1.2px",
+                  marginBottom: "12px",
+                }}
+              >
+                Built for real estate teams
+              </div>
+
+              <h2
+                style={{
+                  margin: 0,
+                  fontSize: "36px",
+                  lineHeight: "1.15",
+                  letterSpacing: "-1.4px",
+                }}
+              >
+                From first enquiry to qualified opportunity.
+              </h2>
+            </div>
+
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns:
+                  "repeat(auto-fit, minmax(220px, 1fr))",
+                gap: "16px",
+              }}
+            >
+              <FeatureCard
+                number="01"
+                title="Natural qualification"
+                text="Understands buyers and renters without turning the conversation into a rigid form."
+              />
+
+              <FeatureCard
+                number="02"
+                title="Structured lead capture"
+                text="Turns conversation into usable requirements, contact details and callback information."
+              />
+
+              <FeatureCard
+                number="03"
+                title="Sales handoff"
+                text="Qualified opportunities are saved, surfaced to the team and ready for follow-up."
+              />
+            </div>
+
+            <div
+              style={{
+                marginTop: "46px",
+                textAlign: "center",
+              }}
+            >
+              <button
+                onClick={openDemo}
+                style={{
+                  border: "1px solid rgba(255,255,255,0.18)",
+                  background: "white",
+                  color: "#0d352d",
+                  padding: "14px 24px",
+                  borderRadius: "13px",
+                  cursor: "pointer",
+                  fontWeight: "800",
+                  fontSize: "14px",
+                }}
+              >
+                Experience NOMAD
+              </button>
+            </div>
+          </div>
+        </section>
+      </main>
+    );
+  }
+
   return (
     <main
       style={{
@@ -255,6 +799,35 @@ export default function Home() {
         boxSizing: "border-box",
       }}
     >
+      <div
+        style={{
+          position: "fixed",
+          top: "22px",
+          left: "22px",
+          zIndex: 10,
+        }}
+      >
+        <button
+          onClick={backToLanding}
+          disabled={loading}
+          style={{
+            border: "1px solid rgba(7,94,84,0.10)",
+            background: "rgba(255,255,255,0.78)",
+            color: "#075e54",
+            padding: "9px 13px",
+            borderRadius: "11px",
+            cursor: loading ? "not-allowed" : "pointer",
+            fontSize: "12px",
+            fontWeight: "700",
+            opacity: loading ? 0.5 : 1,
+            boxShadow: "0 5px 18px rgba(20,55,45,0.06)",
+            backdropFilter: "blur(8px)",
+          }}
+        >
+          ← NOMAD
+        </button>
+      </div>
+
       <div
         style={{
           width: "100%",
@@ -339,7 +912,9 @@ export default function Home() {
                     width: "7px",
                     height: "7px",
                     borderRadius: "50%",
-                    background: loading ? "#ffd166" : "#65e6a7",
+                    background: loading
+                      ? "#ffd166"
+                      : "#65e6a7",
                   }}
                 />
 
@@ -353,13 +928,16 @@ export default function Home() {
             disabled={loading}
             title="Start new conversation"
             style={{
-              border: "1px solid rgba(255,255,255,0.22)",
+              border:
+                "1px solid rgba(255,255,255,0.22)",
               background: "rgba(255,255,255,0.10)",
               color: "white",
               width: "38px",
               height: "38px",
               borderRadius: "12px",
-              cursor: loading ? "not-allowed" : "pointer",
+              cursor: loading
+                ? "not-allowed"
+                : "pointer",
               fontSize: "20px",
               opacity: loading ? 0.55 : 1,
             }}
@@ -368,7 +946,7 @@ export default function Home() {
           </button>
         </div>
 
-        {/* CHAT AREA */}
+        {/* CHAT */}
         <div
           style={{
             flex: 1,
@@ -454,7 +1032,8 @@ export default function Home() {
                     whiteSpace: "pre-line",
                     fontSize: "14px",
                     lineHeight: "1.55",
-                    boxShadow: "0 2px 9px rgba(20,45,37,0.06)",
+                    boxShadow:
+                      "0 2px 9px rgba(20,45,37,0.06)",
                   }}
                 >
                   {message.text}
@@ -526,9 +1105,13 @@ export default function Home() {
           >
             <input
               value={input}
-              onChange={(e) => setInput(e.target.value)}
+              onChange={(e) =>
+                setInput(e.target.value)
+              }
               onKeyDown={(e) => {
-                if (e.key === "Enter") sendMessage();
+                if (e.key === "Enter") {
+                  sendMessage();
+                }
               }}
               placeholder="Type your message..."
               disabled={loading}
@@ -580,5 +1163,84 @@ export default function Home() {
         </div>
       </div>
     </main>
+  );
+}
+
+function PreviewBubble({ children, left = false }) {
+  return (
+    <div
+      style={{
+        display: "flex",
+        justifyContent: left
+          ? "flex-start"
+          : "flex-end",
+        marginBottom: "12px",
+      }}
+    >
+      <div
+        style={{
+          maxWidth: "78%",
+          padding: "10px 13px",
+          borderRadius: left
+            ? "14px 14px 14px 4px"
+            : "14px 14px 4px 14px",
+          background: left
+            ? "white"
+            : "#dff7d9",
+          color: "#29423a",
+          fontSize: "12px",
+          lineHeight: "1.5",
+          boxShadow:
+            "0 2px 7px rgba(30,60,50,0.05)",
+        }}
+      >
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function FeatureCard({ number, title, text }) {
+  return (
+    <div
+      style={{
+        padding: "24px",
+        borderRadius: "18px",
+        background: "rgba(255,255,255,0.06)",
+        border: "1px solid rgba(255,255,255,0.08)",
+      }}
+    >
+      <div
+        style={{
+          fontSize: "11px",
+          color: "#7dc6b4",
+          fontWeight: "800",
+          letterSpacing: "0.8px",
+          marginBottom: "24px",
+        }}
+      >
+        {number}
+      </div>
+
+      <div
+        style={{
+          fontSize: "17px",
+          fontWeight: "800",
+          marginBottom: "10px",
+        }}
+      >
+        {title}
+      </div>
+
+      <div
+        style={{
+          fontSize: "13px",
+          lineHeight: "1.65",
+          color: "rgba(255,255,255,0.64)",
+        }}
+      >
+        {text}
+      </div>
+    </div>
   );
 }
