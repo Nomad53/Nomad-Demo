@@ -1,11 +1,16 @@
 export async function POST(req) {
   try {
-    const { messages } = await req.json();
+    const { messages, previous } = await req.json();
 
-    // Extraction only trusts information explicitly provided by the customer.
     const customerMessages = Array.isArray(messages)
       ? messages.filter((message) => message.role === "user")
       : [];
+
+    const latestCustomerMessage =
+      customerMessages[customerMessages.length - 1];
+
+    const previousLead = previous?.lead || {};
+    const previousState = previous?.state || {};
 
     const response = await fetch(
       "https://api.groq.com/openai/v1/chat/completions",
@@ -23,13 +28,15 @@ export async function POST(req) {
             {
               role: "system",
               content: `
-You extract structured lead information from CUSTOMER messages in a Dubai property conversation.
+You update structured Dubai property lead information.
 
-You receive only customer messages.
+You receive:
+1. previously known lead information
+2. the customer's latest message
 
-Never guess missing information.
+Extract ONLY information explicitly provided or changed in the latest customer message.
 
-Return ONLY valid JSON in exactly this structure:
+Return valid JSON only:
 
 {
   "lead": {
@@ -44,42 +51,88 @@ Return ONLY valid JSON in exactly this structure:
     "financing": null,
     "timeline": null,
     "callback_time": null,
-    "lead_status": "Incomplete",
     "summary": null
   },
   "state": {
     "location_options": [],
     "property_type_options": [],
     "property_status_options": [],
-    "uncertainties": [],
-    "missing_fields": []
+    "uncertainties": []
   }
 }
 
-GENERAL RULES
+IMPORTANT:
 
-- Use only information explicitly stated by the customer.
-- Never invent or infer a requirement simply because it is common.
-- The latest explicit customer instruction replaces older information.
-- Preserve approximate information.
-- Preserve uncertainty.
-- Multiple acceptable options are valid.
-- Buying and renting are different journeys.
-- Do not assume buyer-only information is required for a rental lead.
+null means:
+"the customer did not provide or change this field in the latest message."
 
-INTENT
+Do NOT use null to erase previous information.
+
+The application will merge new information with previous information.
 
 Normalize:
 
-buy / buying / purchase / purchasing
-=> "buy"
+BUY:
+buy / purchase => "buy"
 
-rent / renting / lease / leasing
-=> "rent"
+RENT:
+rent / lease => "rent"
 
-PROPERTY TYPE
+PROPERTY STATUS:
+
+ready / ready-to-move => "ready-to-move"
+
+off-plan => "off-plan"
+
+If customer accepts both:
+=> "both"
 
 Examples:
+"both are fine"
+"either is fine"
+"I'm open to both"
+"ready or off-plan"
+=> property_status = "both"
+
+FINANCING:
+
+mortgage / home loan / bank finance => "mortgage"
+
+cash / self-funded => "cash"
+
+BUDGET:
+
+Preserve customer meaning and flexibility.
+
+Examples:
+"around AED 4 million"
+"AED 120k to 140k yearly"
+
+TIMELINE:
+
+Preserve approximate wording.
+
+Examples:
+"within 6 months"
+"next month"
+"no rush"
+
+CALLBACK TIME:
+
+Only extract a callback time explicitly provided by customer.
+
+Never confuse purchase/move-in timeline with callback time.
+
+LOCATION:
+
+If customer gives multiple acceptable locations:
+put readable combined value in location
+and separate values in location_options.
+
+If customer narrows previous choices:
+return the new selected location.
+
+PROPERTY TYPE:
 
 apartment
 villa
@@ -87,242 +140,44 @@ townhouse
 penthouse
 studio
 
-If the customer remains open to multiple property types:
+BEDROOMS:
 
-"property_type": null
+Preserve latest explicit bedroom count.
 
-and list acceptable options in:
+NAME:
 
-"property_type_options"
+Only customer-provided name.
 
-BEDROOMS
+PHONE:
 
-Preserve the latest bedroom requirement.
+Only customer-provided phone.
 
-Example:
-
-Earlier:
-"I need 2 bedrooms."
-
-Later:
-"Actually make it 3."
-
-Result:
-
-"bedrooms": "3"
-
-A studio does not require a bedroom count.
-
-BUDGET
-
-Preserve the customer's intended meaning.
-
-Buying examples:
-
-"AED 2 million"
-"around AED 1.5 million"
-"AED 1.5 to 1.8 million"
-"around AED 1.5 million, flexible"
-
-Rental examples:
-
-"AED 120k yearly"
-"AED 120k to 140k per year"
-"around AED 10k monthly"
-"up to AED 150k annually"
-
-Do not convert an approximate or flexible budget into a strict maximum.
-
-Preserve whether the customer states monthly or annual rent.
-
-LOCATION
-
-If one location remains:
-
-store it normally.
-
-If multiple locations remain acceptable:
-
-combine them into a readable string and also list them separately.
-
-Example:
-
-"location": "Dubai Marina, JLT"
-
-"location_options": [
-  "Dubai Marina",
-  "JLT"
-]
-
-If the customer later narrows the choice, use only the latest remaining location or locations.
-
-PROPERTY STATUS
-
-This field is mainly relevant to BUYERS.
-
-Allowed values:
-
-"ready-to-move"
-"off-plan"
-"both"
-
-For BUY leads:
-
-If the customer is open to both ready-to-move and off-plan:
-
-"property_status": "both"
-
-and:
-
-"property_status_options": [
-  "ready-to-move",
-  "off-plan"
-]
-
-For RENT leads:
-
-- property_status is NOT required for qualification.
-- Do not invent a property_status.
-- If the customer explicitly says something such as "ready to move", you may preserve it.
-- Otherwise property_status may remain null.
-
-FINANCING
-
-This field is relevant to BUYERS.
-
-Normalize:
-
-mortgage
-home loan
-bank financing
-finance
-=> "mortgage"
-
-cash
-cash buyer
-self-funded
-=> "cash"
-
-For BUY leads:
-
-- preserve financing when explicitly stated.
-- if undecided, use null and record the uncertainty.
-
-For RENT leads:
-
-- financing is NOT required.
-- Do not ask or infer whether the renter will use cash or mortgage.
-- financing should normally remain null unless the customer explicitly says something relevant.
-
-TIMELINE
-
-Preserve approximate timing.
-
-Buying examples:
-
-"within 3 months"
-"within 6 months"
-"by year-end"
-"sometime next year"
-"no rush"
-
-Rental examples:
-
-"next month"
-"within 2 months"
-"moving in December"
-"as soon as possible"
-"no rush"
-
-Do not force unnecessary precision.
-
-NAME
-
-Extract only when explicitly provided by the customer.
-
-PHONE
-
-Extract only when explicitly provided by the customer.
-
-CALLBACK TIME
-
-callback_time must ONLY contain a time explicitly supplied by the CUSTOMER for when they want to be contacted.
-
-Examples that count:
-
-"Tomorrow at 10 AM"
-"Call me after 4"
-"Monday morning"
-"Anytime after lunch"
-"Tonight around 7"
-
-If the customer has NOT explicitly provided a callback time:
-
-"callback_time": null
-
-Never invent it.
-Never infer it from their purchase or move-in timeline.
-
-CHANGES
-
-The latest customer instruction wins.
-
-Example:
-
-Earlier:
-"Marina or JLT"
-
-Later:
-"JLT only"
-
-Result:
-
-"location": "JLT"
-
-"location_options": [
-  "JLT"
-]
-
-UNCERTAINTIES
-
-Use uncertainties for unresolved choices.
-
-Examples:
-
-"budget is flexible"
-"open to multiple locations"
-"open to several property types"
-"undecided between cash and mortgage"
-
-Do not treat intentionally open options as missing if they are already sufficient for qualification.
-
-SUMMARY
-
-Write one concise internal sales summary using customer-provided information only.
-
-BUY example:
-
-"Customer wants to buy a 3-bedroom apartment in JLT around AED 1.5 million, is open to ready-to-move or off-plan, and plans to purchase within 6 months using a mortgage."
-
-RENT example:
-
-"Customer wants to rent a 2-bedroom apartment in Dubai Marina or JLT for AED 120k–140k annually and plans to move within 2 months."
-
-Do not invent anything.
-
-IMPORTANT
-
-lead_status and missing_fields will be validated by application code after your response.
-
-Return JSON only.
+Never invent.
+Never infer from assistant messages.
+Never erase previous information.
 `,
             },
 
-            ...customerMessages,
+            {
+              role: "system",
+              content: `
+PREVIOUS LEAD:
+
+${JSON.stringify(previousLead)}
+
+PREVIOUS STATE:
+
+${JSON.stringify(previousState)}
+`,
+            },
+
+            ...(latestCustomerMessage
+              ? [latestCustomerMessage]
+              : []),
           ],
 
           temperature: 0,
-          max_completion_tokens: 650,
+          max_completion_tokens: 400,
           reasoning_effort: "low",
           include_reasoning: false,
           stream: false,
@@ -347,8 +202,6 @@ Return JSON only.
     const content = data.choices?.[0]?.message?.content;
 
     if (!content) {
-      console.error("No extraction content returned:", data);
-
       return Response.json(
         {
           success: false,
@@ -363,11 +216,11 @@ Return JSON only.
       .replace(/```/g, "")
       .trim();
 
-    let result;
+    let extracted;
 
     try {
-      result = JSON.parse(cleanedContent);
-    } catch (parseError) {
+      extracted = JSON.parse(cleanedContent);
+    } catch (error) {
       console.error(
         "Extraction JSON parse failed:",
         cleanedContent
@@ -382,121 +235,100 @@ Return JSON only.
       );
     }
 
-    if (!result?.lead) {
-      console.error("Missing lead object:", result);
+    const newLead = extracted?.lead || {};
+    const newState = extracted?.state || {};
 
-      return Response.json(
-        {
-          success: false,
-          error: "Invalid extraction structure",
-        },
-        { status: 500 }
-      );
-    }
+    // Preserve old values unless customer explicitly supplied a new one
+    const mergedLead = {
+      name: newLead.name ?? previousLead.name ?? null,
+      phone: newLead.phone ?? previousLead.phone ?? null,
+      intent: newLead.intent ?? previousLead.intent ?? null,
+      property_type:
+        newLead.property_type ??
+        previousLead.property_type ??
+        null,
+      bedrooms:
+        newLead.bedrooms ??
+        previousLead.bedrooms ??
+        null,
+      budget:
+        newLead.budget ??
+        previousLead.budget ??
+        null,
+      location:
+        newLead.location ??
+        previousLead.location ??
+        null,
+      property_status:
+        newLead.property_status ??
+        previousLead.property_status ??
+        null,
+      financing:
+        newLead.financing ??
+        previousLead.financing ??
+        null,
+      timeline:
+        newLead.timeline ??
+        previousLead.timeline ??
+        null,
+      callback_time:
+        newLead.callback_time ??
+        previousLead.callback_time ??
+        null,
+      summary: null,
+      lead_status: "Incomplete",
+    };
 
-    const lead = result.lead;
+    const mergedState = {
+      location_options:
+        Array.isArray(newState.location_options) &&
+        newState.location_options.length > 0
+          ? newState.location_options
+          : previousState.location_options || [],
 
-    const intent = String(lead.intent || "").toLowerCase();
+      property_type_options:
+        Array.isArray(newState.property_type_options) &&
+        newState.property_type_options.length > 0
+          ? newState.property_type_options
+          : previousState.property_type_options || [],
+
+      property_status_options:
+        Array.isArray(newState.property_status_options) &&
+        newState.property_status_options.length > 0
+          ? newState.property_status_options
+          : previousState.property_status_options || [],
+
+      uncertainties:
+        Array.isArray(newState.uncertainties) &&
+        newState.uncertainties.length > 0
+          ? newState.uncertainties
+          : previousState.uncertainties || [],
+
+      missing_fields: [],
+    };
+
+    const intent = String(
+      mergedLead.intent || ""
+    ).toLowerCase();
 
     const propertyType = String(
-      lead.property_type || ""
+      mergedLead.property_type || ""
     ).toLowerCase();
 
     const isBuy = intent === "buy";
     const isRent = intent === "rent";
 
-    // Studio does not require a bedroom count.
     const bedroomsKnown =
-      Boolean(lead.bedrooms) ||
+      Boolean(mergedLead.bedrooms) ||
       propertyType === "studio";
-
-    /*
-      QUALIFICATION RULES
-
-      BUY:
-      intent
-      property type
-      bedrooms (unless studio)
-      budget
-      location
-      property status
-      timeline
-      financing
-      name
-      phone
-      callback time
-
-      RENT:
-      intent
-      property type
-      bedrooms (unless studio)
-      budget
-      location
-      timeline
-      name
-      phone
-      callback time
-
-      Rent does NOT require:
-      property_status
-      financing
-    */
-
-    let requiredFieldsKnown = false;
-
-    if (isBuy) {
-      requiredFieldsKnown =
-        Boolean(lead.intent) &&
-        Boolean(lead.property_type) &&
-        bedroomsKnown &&
-        Boolean(lead.budget) &&
-        Boolean(lead.location) &&
-        Boolean(lead.property_status) &&
-        Boolean(lead.timeline) &&
-        Boolean(lead.financing) &&
-        Boolean(lead.name) &&
-        Boolean(lead.phone) &&
-        Boolean(lead.callback_time);
-    }
-
-    if (isRent) {
-      requiredFieldsKnown =
-        Boolean(lead.intent) &&
-        Boolean(lead.property_type) &&
-        bedroomsKnown &&
-        Boolean(lead.budget) &&
-        Boolean(lead.location) &&
-        Boolean(lead.timeline) &&
-        Boolean(lead.name) &&
-        Boolean(lead.phone) &&
-        Boolean(lead.callback_time);
-    }
-
-    lead.lead_status = requiredFieldsKnown
-      ? "Qualified"
-      : "Incomplete";
-
-    const state = result.state || {
-      location_options: [],
-      property_type_options: [],
-      property_status_options: [],
-      uncertainties: [],
-      missing_fields: [],
-    };
-
-    /*
-      Rebuild missing_fields in code so the AI
-      cannot accidentally force buyer questions
-      into a rental conversation.
-    */
 
     const missingFields = [];
 
-    if (!lead.intent) {
+    if (!mergedLead.intent) {
       missingFields.push("intent");
     }
 
-    if (!lead.property_type) {
+    if (!mergedLead.property_type) {
       missingFields.push("property_type");
     }
 
@@ -504,50 +336,103 @@ Return JSON only.
       missingFields.push("bedrooms");
     }
 
-    if (!lead.budget) {
+    if (!mergedLead.budget) {
       missingFields.push("budget");
     }
 
-    if (!lead.location) {
+    if (!mergedLead.location) {
       missingFields.push("location");
     }
 
-    /*
-      Buyer-only property stage.
-    */
-    if (isBuy && !lead.property_status) {
+    // Buyer only
+    if (isBuy && !mergedLead.property_status) {
       missingFields.push("property_status");
     }
 
-    if (!lead.timeline) {
+    if (!mergedLead.timeline) {
       missingFields.push("timeline");
     }
 
-    /*
-      Buyer-only financing.
-    */
-    if (isBuy && !lead.financing) {
+    // Buyer only
+    if (isBuy && !mergedLead.financing) {
       missingFields.push("financing");
     }
 
-    if (!lead.name) {
+    if (!mergedLead.name) {
       missingFields.push("name");
     }
 
-    if (!lead.phone) {
+    if (!mergedLead.phone) {
       missingFields.push("phone");
     }
 
-    if (!lead.callback_time) {
+    if (!mergedLead.callback_time) {
       missingFields.push("callback_time");
     }
 
-    state.missing_fields = missingFields;
+    mergedState.missing_fields = missingFields;
+
+    mergedLead.lead_status =
+      missingFields.length === 0
+        ? "Qualified"
+        : "Incomplete";
+
+    // Deterministic summary
+    const summaryParts = [];
+
+    if (mergedLead.name) {
+      summaryParts.push(mergedLead.name);
+    } else {
+      summaryParts.push("Customer");
+    }
+
+    if (mergedLead.intent) {
+      summaryParts.push(
+        `wants to ${mergedLead.intent}`
+      );
+    }
+
+    if (mergedLead.bedrooms) {
+      summaryParts.push(
+        `a ${mergedLead.bedrooms}-bedroom`
+      );
+    }
+
+    if (mergedLead.property_type) {
+      summaryParts.push(mergedLead.property_type);
+    }
+
+    if (mergedLead.location) {
+      summaryParts.push(
+        `in ${mergedLead.location}`
+      );
+    }
+
+    if (mergedLead.budget) {
+      summaryParts.push(
+        `with a budget of ${mergedLead.budget}`
+      );
+    }
+
+    if (mergedLead.timeline) {
+      summaryParts.push(
+        `and timeline ${mergedLead.timeline}`
+      );
+    }
+
+    if (isBuy && mergedLead.financing) {
+      summaryParts.push(
+        `using ${mergedLead.financing}`
+      );
+    }
+
+    mergedLead.summary =
+      summaryParts.join(" ") + ".";
 
     return Response.json({
       success: true,
-      lead,
-      state,
+      lead: mergedLead,
+      state: mergedState,
     });
   } catch (error) {
     console.error(
