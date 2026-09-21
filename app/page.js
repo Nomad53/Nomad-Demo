@@ -47,6 +47,10 @@ export default function Home() {
 
   const [leadMemory, setLeadMemory] = useState(initialLeadMemory);
 
+  // NEW:
+  // Controls the structured lead summary panel.
+  const [showLeadSummary, setShowLeadSummary] = useState(false);
+
   const chatEndRef = useRef(null);
 
   useEffect(() => {
@@ -56,7 +60,7 @@ export default function Home() {
       behavior: "smooth",
       block: "end",
     });
-  }, [messages, loading, showDemo]);
+  }, [messages, loading, showDemo, leadSaved]);
 
   function openDemo() {
     setShowDemo(true);
@@ -64,6 +68,8 @@ export default function Home() {
 
   function backToLanding() {
     if (loading) return;
+
+    setShowLeadSummary(false);
     setShowDemo(false);
   }
 
@@ -75,6 +81,7 @@ export default function Home() {
     setLoading(false);
     setLeadSaved(false);
     setLeadMemory(initialLeadMemory);
+    setShowLeadSummary(false);
   }
 
   async function sendMessage() {
@@ -371,6 +378,34 @@ export default function Home() {
             }
           }
 
+          @keyframes successIn {
+            0% {
+              opacity: 0;
+              transform: translateY(14px) scale(.985);
+            }
+
+            100% {
+              opacity: 1;
+              transform: translateY(0) scale(1);
+            }
+          }
+
+          @keyframes successCheck {
+            0% {
+              transform: scale(.6);
+              opacity: 0;
+            }
+
+            60% {
+              transform: scale(1.1);
+            }
+
+            100% {
+              transform: scale(1);
+              opacity: 1;
+            }
+          }
+
           @media (max-width: 960px) {
             .heroGrid {
               grid-template-columns: 1fr !important;
@@ -415,7 +450,7 @@ export default function Home() {
           }
         `}</style>
 
-        {/* ================= HERO ================= */}
+        {/* HERO */}
 
         <section
           style={{
@@ -459,8 +494,6 @@ export default function Home() {
               animation: "glowPulse 8s ease-in-out infinite",
             }}
           />
-
-          {/* NAV */}
 
           <nav
             style={{
@@ -527,8 +560,6 @@ export default function Home() {
             </div>
           </nav>
 
-          {/* HERO CONTENT */}
-
           <div
             className="heroSection"
             style={{
@@ -549,8 +580,6 @@ export default function Home() {
                 alignItems: "center",
               }}
             >
-              {/* LEFT */}
-
               <div className="heroContent">
                 <div
                   style={{
@@ -690,8 +719,6 @@ export default function Home() {
                   />
                 </div>
               </div>
-
-              {/* RIGHT PRODUCT */}
 
               <div
                 className="heroPreview"
@@ -959,7 +986,7 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ================= POSITIONING ================= */}
+        {/* POSITIONING */}
 
         <section
           id="solutions"
@@ -1065,7 +1092,7 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ================= FLOW ================= */}
+        {/* HOW IT WORKS */}
 
         <section
           id="how-it-works"
@@ -1200,8 +1227,6 @@ export default function Home() {
           </div>
         </section>
 
-        {/* FOOTER */}
-
         <footer
           style={{
             background: colors.ink,
@@ -1237,10 +1262,13 @@ export default function Home() {
     );
   }
 
-  /* ======================================================
-     LIVE DEMO
-     BUSINESS LOGIC UNCHANGED
-     ====================================================== */
+  /*
+    ======================================================
+    LIVE DEMO
+    ======================================================
+  */
+
+  const qualifiedLead = leadMemory?.lead || {};
 
   return (
     <main
@@ -1254,8 +1282,39 @@ export default function Home() {
         fontFamily:
           'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif',
         padding: "20px",
+        position: "relative",
       }}
     >
+      <style>{`
+        @keyframes successIn {
+          0% {
+            opacity: 0;
+            transform: translateY(12px);
+          }
+
+          100% {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        @keyframes checkPop {
+          0% {
+            transform: scale(.55);
+            opacity: 0;
+          }
+
+          65% {
+            transform: scale(1.1);
+          }
+
+          100% {
+            transform: scale(1);
+            opacity: 1;
+          }
+        }
+      `}</style>
+
       <button
         onClick={backToLanding}
         disabled={loading}
@@ -1297,6 +1356,8 @@ export default function Home() {
             "1px solid rgba(16,24,20,.08)",
         }}
       >
+        {/* HEADER */}
+
         <div
           style={{
             background: colors.forest,
@@ -1364,6 +1425,7 @@ export default function Home() {
           <button
             onClick={startNewConversation}
             disabled={loading}
+            title="Start a new conversation"
             style={{
               width: "38px",
               height: "38px",
@@ -1382,6 +1444,8 @@ export default function Home() {
             ↻
           </button>
         </div>
+
+        {/* CHAT BODY */}
 
         <div
           style={{
@@ -1503,8 +1567,139 @@ export default function Home() {
             </div>
           )}
 
+          {/* NEW QUALIFIED SUCCESS MOMENT */}
+
+          {leadSaved && (
+            <div
+              style={{
+                marginTop: "22px",
+                animation:
+                  "successIn .45s ease-out both",
+              }}
+            >
+              <div
+                style={{
+                  background:
+                    "linear-gradient(135deg,#0A392F,#0B4B3D)",
+                  color: "white",
+                  borderRadius: "20px",
+                  padding: "20px",
+                  boxShadow:
+                    "0 18px 38px rgba(8,47,39,.15)",
+                  position: "relative",
+                  overflow: "hidden",
+                }}
+              >
+                <div
+                  style={{
+                    position: "absolute",
+                    right: "-40px",
+                    top: "-60px",
+                    width: "150px",
+                    height: "150px",
+                    borderRadius: "50%",
+                    border:
+                      "1px solid rgba(216,198,166,.18)",
+                  }}
+                />
+
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "flex-start",
+                    gap: "13px",
+                    position: "relative",
+                  }}
+                >
+                  <div
+                    style={{
+                      width: "38px",
+                      height: "38px",
+                      borderRadius: "50%",
+                      flexShrink: 0,
+                      background:
+                        "rgba(255,255,255,.10)",
+                      border:
+                        "1px solid rgba(255,255,255,.14)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: "15px",
+                      animation:
+                        "checkPop .5s ease-out both",
+                    }}
+                  >
+                    ✓
+                  </div>
+
+                  <div>
+                    <div
+                      style={{
+                        color: colors.champagneSoft,
+                        textTransform: "uppercase",
+                        letterSpacing: "1.25px",
+                        fontSize: "8px",
+                        fontWeight: "800",
+                      }}
+                    >
+                      Qualification complete
+                    </div>
+
+                    <div
+                      style={{
+                        marginTop: "6px",
+                        fontSize: "16px",
+                        fontWeight: "750",
+                      }}
+                    >
+                      Lead qualified
+                    </div>
+
+                    <div
+                      style={{
+                        marginTop: "7px",
+                        color:
+                          "rgba(255,255,255,.64)",
+                        fontSize: "11px",
+                        lineHeight: "1.6",
+                      }}
+                    >
+                      Requirement captured · Callback scheduled ·
+                      Consultant handoff ready
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() =>
+                    setShowLeadSummary(true)
+                  }
+                  style={{
+                    width: "100%",
+                    marginTop: "17px",
+                    border:
+                      "1px solid rgba(255,255,255,.14)",
+                    background:
+                      "rgba(255,255,255,.08)",
+                    color: "white",
+                    borderRadius: "12px",
+                    padding: "11px 14px",
+                    cursor: "pointer",
+                    fontSize: "10px",
+                    fontWeight: "800",
+                    letterSpacing: ".35px",
+                  }}
+                >
+                  View Lead Summary →
+                </button>
+              </div>
+            </div>
+          )}
+
           <div ref={chatEndRef} />
         </div>
+
+        {/* COMPOSER */}
 
         <div
           style={{
@@ -1535,8 +1730,12 @@ export default function Home() {
                   sendMessage();
                 }
               }}
-              placeholder="Ask NOMAD..."
-              disabled={loading}
+              placeholder={
+                leadSaved
+                  ? "Lead qualified"
+                  : "Ask NOMAD..."
+              }
+              disabled={loading || leadSaved}
               style={{
                 flex: 1,
                 border: "none",
@@ -1545,12 +1744,17 @@ export default function Home() {
                 padding: "10px 0",
                 fontSize: "13px",
                 color: colors.ink,
+                opacity: leadSaved ? 0.5 : 1,
               }}
             />
 
             <button
               onClick={sendMessage}
-              disabled={loading || !input.trim()}
+              disabled={
+                loading ||
+                !input.trim() ||
+                leadSaved
+              }
               style={{
                 width: "40px",
                 height: "40px",
@@ -1560,12 +1764,16 @@ export default function Home() {
                 color: "white",
                 fontSize: "15px",
                 cursor:
-                  loading || !input.trim()
+                  loading ||
+                  !input.trim() ||
+                  leadSaved
                     ? "not-allowed"
                     : "pointer",
                 opacity:
-                  loading || !input.trim()
-                    ? 0.38
+                  loading ||
+                  !input.trim() ||
+                  leadSaved
+                    ? 0.3
                     : 1,
               }}
             >
@@ -1586,9 +1794,28 @@ export default function Home() {
           </div>
         </div>
       </div>
+
+      {/* NEW LEAD SUMMARY MODAL */}
+
+      {showLeadSummary && (
+        <LeadSummaryModal
+          lead={qualifiedLead}
+          onClose={() =>
+            setShowLeadSummary(false)
+          }
+          onNewConversation={() => {
+            setShowLeadSummary(false);
+            startNewConversation();
+          }}
+        />
+      )}
     </main>
   );
 }
+
+/* ======================================================
+   COMPONENTS
+   ====================================================== */
 
 function BrandMark({ dark = false }) {
   return (
@@ -1867,4 +2094,367 @@ function ProcessStep({
       </div>
     </div>
   );
+}
+
+/*
+  ======================================================
+  NEW: STRUCTURED LEAD SUMMARY
+  ======================================================
+*/
+
+function LeadSummaryModal({
+  lead,
+  onClose,
+  onNewConversation,
+}) {
+  const rows = [
+    ["Intent", lead.intent],
+    ["Property", lead.property_type],
+    ["Bedrooms", lead.bedrooms],
+    ["Budget", lead.budget],
+    ["Location", lead.location],
+    ["Property status", lead.property_status],
+    ["Financing", lead.financing],
+    ["Timeline", lead.timeline],
+    ["Name", lead.name],
+    ["Phone", lead.phone],
+    ["Callback", lead.callback_time],
+  ].filter(([, value]) => value);
+
+  return (
+    <div
+      onClick={onClose}
+      style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 100,
+        background:
+          "rgba(8,20,17,.58)",
+        backdropFilter: "blur(10px)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "20px",
+        animation:
+          "successIn .28s ease-out both",
+      }}
+    >
+      <div
+        onClick={(e) =>
+          e.stopPropagation()
+        }
+        style={{
+          width: "100%",
+          maxWidth: "510px",
+          maxHeight: "calc(100vh - 40px)",
+          overflowY: "auto",
+          background: colors.paper,
+          borderRadius: "26px",
+          boxShadow:
+            "0 40px 100px rgba(0,0,0,.30)",
+          border:
+            "1px solid rgba(255,255,255,.55)",
+        }}
+      >
+        <div
+          style={{
+            padding: "24px 24px 22px",
+            background: colors.forest,
+            color: "white",
+            borderRadius:
+              "26px 26px 0 0",
+            position: "relative",
+            overflow: "hidden",
+          }}
+        >
+          <div
+            style={{
+              position: "absolute",
+              width: "170px",
+              height: "170px",
+              borderRadius: "50%",
+              right: "-55px",
+              top: "-80px",
+              border:
+                "1px solid rgba(216,198,166,.18)",
+            }}
+          />
+
+          <button
+            onClick={onClose}
+            style={{
+              position: "absolute",
+              right: "18px",
+              top: "18px",
+              width: "34px",
+              height: "34px",
+              borderRadius: "50%",
+              border:
+                "1px solid rgba(255,255,255,.14)",
+              background:
+                "rgba(255,255,255,.06)",
+              color: "white",
+              cursor: "pointer",
+              fontSize: "16px",
+              zIndex: 2,
+            }}
+          >
+            ×
+          </button>
+
+          <div
+            style={{
+              color: colors.champagneSoft,
+              textTransform: "uppercase",
+              fontSize: "8px",
+              fontWeight: "800",
+              letterSpacing: "1.35px",
+            }}
+          >
+            NOMAD qualification
+          </div>
+
+          <div
+            style={{
+              marginTop: "8px",
+              display: "flex",
+              gap: "11px",
+              alignItems: "center",
+            }}
+          >
+            <div
+              style={{
+                width: "42px",
+                height: "42px",
+                borderRadius: "50%",
+                background:
+                  "rgba(255,255,255,.09)",
+                border:
+                  "1px solid rgba(255,255,255,.14)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontWeight: "800",
+              }}
+            >
+              ✓
+            </div>
+
+            <div>
+              <div
+                style={{
+                  fontSize: "20px",
+                  fontWeight: "750",
+                }}
+              >
+                Qualified Lead
+              </div>
+
+              <div
+                style={{
+                  marginTop: "3px",
+                  color:
+                    "rgba(255,255,255,.58)",
+                  fontSize: "10px",
+                }}
+              >
+                Ready for consultant follow-up
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div
+          style={{
+            padding: "22px 24px 25px",
+          }}
+        >
+          {lead.summary && (
+            <div
+              style={{
+                marginBottom: "22px",
+                padding: "15px 16px",
+                background: "#F3EFE6",
+                borderRadius: "14px",
+                color: "#59635D",
+                fontSize: "12px",
+                lineHeight: "1.65",
+              }}
+            >
+              {lead.summary}
+            </div>
+          )}
+
+          <div
+            style={{
+              color: colors.champagne,
+              textTransform: "uppercase",
+              letterSpacing: "1.25px",
+              fontSize: "8px",
+              fontWeight: "800",
+              marginBottom: "7px",
+            }}
+          >
+            Captured requirements
+          </div>
+
+          <div>
+            {rows.map(
+              ([label, value], index) => (
+                <div
+                  key={label}
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns:
+                      "135px 1fr",
+                    gap: "18px",
+                    padding: "12px 0",
+                    borderBottom:
+                      index === rows.length - 1
+                        ? "none"
+                        : `1px solid ${colors.line}`,
+                  }}
+                >
+                  <div
+                    style={{
+                      color: "#8A918C",
+                      fontSize: "10px",
+                    }}
+                  >
+                    {label}
+                  </div>
+
+                  <div
+                    style={{
+                      color: colors.forest,
+                      fontSize: "11px",
+                      fontWeight: "700",
+                      textAlign: "right",
+                    }}
+                  >
+                    {formatLeadValue(
+                      label,
+                      value
+                    )}
+                  </div>
+                </div>
+              )
+            )}
+          </div>
+
+          <div
+            style={{
+              marginTop: "20px",
+              padding: "13px 14px",
+              borderRadius: "13px",
+              background: "#EDF4F0",
+              display: "flex",
+              alignItems: "center",
+              gap: "10px",
+            }}
+          >
+            <div
+              style={{
+                width: "28px",
+                height: "28px",
+                borderRadius: "50%",
+                background: colors.forest,
+                color: "white",
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                fontSize: "11px",
+                fontWeight: "800",
+              }}
+            >
+              ✓
+            </div>
+
+            <div>
+              <div
+                style={{
+                  fontSize: "10px",
+                  fontWeight: "800",
+                  color: colors.forest,
+                }}
+              >
+                Consultant handoff ready
+              </div>
+
+              <div
+                style={{
+                  marginTop: "2px",
+                  color: "#77827C",
+                  fontSize: "9px",
+                }}
+              >
+                Lead captured and sent to the sales workflow
+              </div>
+            </div>
+          </div>
+
+          <div
+            style={{
+              display: "flex",
+              gap: "10px",
+              marginTop: "20px",
+            }}
+          >
+            <button
+              onClick={onClose}
+              style={{
+                flex: 1,
+                padding: "12px",
+                borderRadius: "12px",
+                border: `1px solid ${colors.line}`,
+                background: "white",
+                color: colors.forest,
+                cursor: "pointer",
+                fontSize: "10px",
+                fontWeight: "800",
+              }}
+            >
+              Back to Conversation
+            </button>
+
+            <button
+              onClick={onNewConversation}
+              style={{
+                flex: 1,
+                padding: "12px",
+                borderRadius: "12px",
+                border: "none",
+                background: colors.forest,
+                color: "white",
+                cursor: "pointer",
+                fontSize: "10px",
+                fontWeight: "800",
+              }}
+            >
+              New Conversation
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function formatLeadValue(label, value) {
+  if (!value) return "";
+
+  if (
+    label === "Intent" ||
+    label === "Property" ||
+    label === "Property status" ||
+    label === "Financing"
+  ) {
+    return String(value)
+      .replaceAll("-", " ")
+      .replace(/\b\w/g, (letter) =>
+        letter.toUpperCase()
+      );
+  }
+
+  return String(value);
 }
