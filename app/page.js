@@ -2,17 +2,27 @@
 
 import { useState } from "react";
 
-export default function Home() {
-  const [messages, setMessages] = useState([
-    {
-      role: "assistant",
-      text: "Hi! 👋 I'm your property assistant.\n\nAre you looking to buy or rent a property in Dubai?",
-    },
-  ]);
+const initialMessages = [
+  {
+    role: "assistant",
+    text: "Hi! 👋 I'm your property assistant.\n\nAre you looking to buy or rent a property in Dubai?",
+  },
+];
 
+export default function Home() {
+  const [messages, setMessages] = useState(initialMessages);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [leadSaved, setLeadSaved] = useState(false);
+
+  function startNewConversation() {
+    if (loading) return;
+
+    setMessages(initialMessages);
+    setInput("");
+    setLoading(false);
+    setLeadSaved(false);
+  }
 
   async function sendMessage() {
     if (!input.trim() || loading) return;
@@ -226,18 +236,43 @@ export default function Home() {
             background: "#075e54",
             color: "white",
             padding: "20px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: "16px",
           }}
         >
-          <strong>NOMAD Property Assistant</strong>
+          <div>
+            <strong>NOMAD Property Assistant</strong>
 
-          <div
+            <div
+              style={{
+                fontSize: "13px",
+                marginTop: "4px",
+              }}
+            >
+              {loading ? "Typing..." : "Online"}
+            </div>
+          </div>
+
+          <button
+            onClick={startNewConversation}
+            disabled={loading}
             style={{
-              fontSize: "13px",
-              marginTop: "4px",
+              border: "1px solid rgba(255,255,255,0.45)",
+              background: "rgba(255,255,255,0.12)",
+              color: "white",
+              padding: "8px 12px",
+              borderRadius: "10px",
+              cursor: loading ? "not-allowed" : "pointer",
+              fontSize: "12px",
+              fontWeight: "600",
+              opacity: loading ? 0.6 : 1,
+              whiteSpace: "nowrap",
             }}
           >
-            {loading ? "Typing..." : "Online"}
-          </div>
+            New Conversation
+          </button>
         </div>
 
         <div
