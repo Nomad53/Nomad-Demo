@@ -9,11 +9,25 @@ const initialMessages = [
   },
 ];
 
+const initialLeadMemory = {
+  lead: {},
+  state: {
+    location_options: [],
+    property_type_options: [],
+    property_status_options: [],
+    uncertainties: [],
+    missing_fields: [],
+  },
+};
+
 export default function Home() {
   const [messages, setMessages] = useState(initialMessages);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [leadSaved, setLeadSaved] = useState(false);
+
+  // Persistent structured memory for the current conversation
+  const [leadMemory, setLeadMemory] = useState(initialLeadMemory);
 
   const chatEndRef = useRef(null);
 
@@ -31,6 +45,7 @@ export default function Home() {
     setInput("");
     setLoading(false);
     setLeadSaved(false);
+    setLeadMemory(initialLeadMemory);
   }
 
   async function sendMessage() {
@@ -54,7 +69,7 @@ export default function Home() {
       }));
 
       // STEP 1:
-      // Extract the latest lead data and structured state
+      // Extract/update structured lead memory
       const extractionResponse = await fetch("/api/extract-lead", {
         method: "POST",
         headers: {
@@ -62,19 +77,14 @@ export default function Home() {
         },
         body: JSON.stringify({
           messages: formattedMessages,
+          previous: leadMemory,
         }),
       });
 
       let extractionData = {
         success: false,
-        lead: null,
-        state: {
-          location_options: [],
-          property_type_options: [],
-          property_status_options: [],
-          uncertainties: [],
-          missing_fields: [],
-        },
+        lead: leadMemory.lead || {},
+        state: leadMemory.state || initialLeadMemory.state,
       };
 
       try {
@@ -87,8 +97,6 @@ export default function Home() {
         console.error("Lead extraction failed:", extractionData);
       }
 
-      // IMPORTANT:
-      // Send both the actual lead values AND the structured state to chat
       const currentState =
         extractionData.success
           ? {
@@ -105,16 +113,29 @@ export default function Home() {
                 extractionData.state?.missing_fields || [],
             }
           : {
-              lead: {},
-              location_options: [],
-              property_type_options: [],
-              property_status_options: [],
-              uncertainties: [],
-              missing_fields: [],
+              lead: leadMemory.lead || {},
+              location_options:
+                leadMemory.state?.location_options || [],
+              property_type_options:
+                leadMemory.state?.property_type_options || [],
+              property_status_options:
+                leadMemory.state?.property_status_options || [],
+              uncertainties:
+                leadMemory.state?.uncertainties || [],
+              missing_fields:
+                leadMemory.state?.missing_fields || [],
             };
 
+      // Persist structured memory for future turns
+      if (extractionData.success) {
+        setLeadMemory({
+          lead: extractionData.lead || {},
+          state: extractionData.state || initialLeadMemory.state,
+        });
+      }
+
       // STEP 2:
-      // Generate NOMAD response using structured lead state
+      // Generate conversational response
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: {
@@ -130,6 +151,7 @@ export default function Home() {
 
       if (!response.ok) {
         console.error("Chat API failed:", data);
+
         throw new Error("Chat API request failed");
       }
 
@@ -148,8 +170,7 @@ export default function Home() {
       setMessages(conversationWithReply);
 
       // STEP 3:
-      // If the latest customer message completed qualification,
-      // save the lead and send the notification
+      // Save only once the deterministic extractor says Qualified
       if (
         extractionData.success &&
         extractionData.lead?.lead_status === "Qualified" &&
@@ -160,7 +181,6 @@ export default function Home() {
           conversation: conversationWithReply,
         };
 
-        // Save qualified lead to Supabase
         const saveResponse = await fetch("/api/save-lead", {
           method: "POST",
           headers: {
@@ -173,9 +193,9 @@ export default function Home() {
 
         if (saveData.success) {
           setLeadSaved(true);
+
           console.log("Lead saved successfully");
 
-          // Send email notification
           try {
             const notifyResponse = await fetch("/api/notify-lead", {
               method: "POST",
@@ -257,7 +277,7 @@ export default function Home() {
             background:
               "linear-gradient(135deg, #064e46 0%, #075e54 55%, #087467 100%)",
             color: "white",
-            padding: "18px 18px",
+            padding: "18px",
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
@@ -284,10 +304,8 @@ export default function Home() {
                 justifyContent: "center",
                 fontSize: "16px",
                 fontWeight: "800",
-                letterSpacing: "-0.5px",
                 marginRight: "12px",
                 flexShrink: 0,
-                boxShadow: "0 4px 14px rgba(0,0,0,0.10)",
               }}
             >
               N
@@ -298,7 +316,6 @@ export default function Home() {
                 style={{
                   fontSize: "15px",
                   fontWeight: "700",
-                  letterSpacing: "-0.1px",
                   whiteSpace: "nowrap",
                   overflow: "hidden",
                   textOverflow: "ellipsis",
@@ -323,10 +340,6 @@ export default function Home() {
                     height: "7px",
                     borderRadius: "50%",
                     background: loading ? "#ffd166" : "#65e6a7",
-                    display: "inline-block",
-                    boxShadow: loading
-                      ? "0 0 0 3px rgba(255,209,102,0.12)"
-                      : "0 0 0 3px rgba(101,230,167,0.12)",
                   }}
                 />
 
@@ -348,13 +361,7 @@ export default function Home() {
               borderRadius: "12px",
               cursor: loading ? "not-allowed" : "pointer",
               fontSize: "20px",
-              lineHeight: 1,
-              fontWeight: "300",
               opacity: loading ? 0.55 : 1,
-              flexShrink: 0,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
             }}
           >
             ↻
@@ -447,12 +454,7 @@ export default function Home() {
                     whiteSpace: "pre-line",
                     fontSize: "14px",
                     lineHeight: "1.55",
-                    boxShadow: isUser
-                      ? "0 2px 7px rgba(30,90,65,0.06)"
-                      : "0 2px 9px rgba(20,45,37,0.06)",
-                    border: isUser
-                      ? "1px solid rgba(79,159,103,0.08)"
-                      : "1px solid rgba(0,0,0,0.035)",
+                    boxShadow: "0 2px 9px rgba(20,45,37,0.06)",
                   }}
                 >
                   {message.text}
@@ -466,7 +468,6 @@ export default function Home() {
               style={{
                 display: "flex",
                 alignItems: "center",
-                marginTop: "2px",
               }}
             >
               <div
@@ -490,12 +491,9 @@ export default function Home() {
               <div
                 style={{
                   background: "white",
-                  borderRadius: "16px 16px 16px 4px",
+                  borderRadius: "16px",
                   padding: "11px 14px",
-                  border: "1px solid rgba(0,0,0,0.035)",
-                  boxShadow: "0 2px 9px rgba(20,45,37,0.06)",
                   color: "#77827e",
-                  fontSize: "13px",
                   letterSpacing: "2px",
                 }}
               >
@@ -507,13 +505,12 @@ export default function Home() {
           <div ref={chatEndRef} />
         </div>
 
-        {/* INPUT AREA */}
+        {/* INPUT */}
         <div
           style={{
             padding: "14px 14px 16px",
             background: "#ffffff",
             borderTop: "1px solid #edf0ef",
-            flexShrink: 0,
           }}
         >
           <div
@@ -541,16 +538,13 @@ export default function Home() {
                 border: "none",
                 outline: "none",
                 background: "transparent",
-                color: "#26332f",
                 fontSize: "14px",
-                minWidth: 0,
               }}
             />
 
             <button
               onClick={sendMessage}
               disabled={loading || !input.trim()}
-              title="Send message"
               style={{
                 border: "none",
                 width: "42px",
@@ -566,12 +560,7 @@ export default function Home() {
                   loading || !input.trim()
                     ? 0.45
                     : 1,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                flexShrink: 0,
                 fontSize: "17px",
-                transition: "opacity 0.2s ease",
               }}
             >
               ➤
