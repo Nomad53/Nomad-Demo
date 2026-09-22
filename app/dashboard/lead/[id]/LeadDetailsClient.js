@@ -66,6 +66,28 @@ export default function LeadDetailsClient({
     setDeleteError,
   ] = useState("");
 
+  const [
+    notes,
+    setNotes,
+  ] = useState(
+    initialLead.notes || ""
+  );
+
+  const [
+    savingNotes,
+    setSavingNotes,
+  ] = useState(false);
+
+  const [
+    notesSaved,
+    setNotesSaved,
+  ] = useState(false);
+
+  const [
+    notesError,
+    setNotesError,
+  ] = useState("");
+
   const qualityScore =
     useMemo(
       () =>
@@ -262,6 +284,83 @@ export default function LeadDetailsClient({
     );
   }
 
+  async function saveNotes() {
+    if (
+      savingNotes ||
+      notes ===
+        (lead.notes || "")
+    ) {
+      return;
+    }
+
+    setSavingNotes(true);
+    setNotesError("");
+    setNotesSaved(false);
+
+    try {
+      const response =
+        await fetch(
+          "/api/update-lead-notes",
+          {
+            method: "POST",
+
+            headers: {
+              "Content-Type":
+                "application/json",
+            },
+
+            body:
+              JSON.stringify({
+                id:
+                  lead.id,
+
+                notes,
+              }),
+          }
+        );
+
+      const data =
+        await response.json();
+
+      if (
+        !response.ok ||
+        !data.success
+      ) {
+        throw new Error(
+          data.error ||
+            "Could not save note."
+        );
+      }
+
+      setLead(
+        (current) => ({
+          ...current,
+          notes,
+        })
+      );
+
+      setNotesSaved(true);
+
+      window.setTimeout(
+        () =>
+          setNotesSaved(false),
+        2500
+      );
+    } catch (error) {
+      console.error(
+        "Save notes error:",
+        error
+      );
+
+      setNotesError(
+        error.message ||
+          "Something went wrong while saving the note."
+      );
+    } finally {
+      setSavingNotes(false);
+    }
+  }
+
   function openDeleteModal() {
     setDeleteError("");
     setDeleteModalOpen(true);
@@ -277,7 +376,10 @@ export default function LeadDetailsClient({
   }
 
   async function deleteLead() {
-    if (!lead?.id || deletingLead) {
+    if (
+      !lead?.id ||
+      deletingLead
+    ) {
       return;
     }
 
@@ -338,6 +440,10 @@ export default function LeadDetailsClient({
       );
     }
   }
+
+  const notesChanged =
+    notes !==
+    (lead.notes || "");
 
   return (
     <main
@@ -449,6 +555,26 @@ export default function LeadDetailsClient({
             </span>
 
             Requirements
+          </button>
+
+          <button
+            className="sidebarItem"
+            onClick={() =>
+              document
+                .getElementById(
+                  "sales-notes"
+                )
+                ?.scrollIntoView({
+                  behavior:
+                    "smooth",
+                })
+            }
+          >
+            <span>
+              ✎
+            </span>
+
+            Sales Notes
           </button>
         </div>
 
@@ -1046,6 +1172,114 @@ export default function LeadDetailsClient({
             </section>
 
             <section
+              id="sales-notes"
+              className="panel notesPanel"
+            >
+              <div
+                className="notesHeader"
+              >
+                <PanelHeading
+                  eyebrow="INTERNAL CRM"
+                  title="Sales notes"
+                />
+
+                <div
+                  className="notesPrivacy"
+                >
+                  Internal only
+                </div>
+              </div>
+
+              <p
+                className="notesDescription"
+              >
+                Add internal context,
+                follow-up details or
+                consultant notes for this
+                opportunity.
+              </p>
+
+              <textarea
+                className="notesTextarea"
+                value={
+                  notes
+                }
+                onChange={(
+                  event
+                ) => {
+                  setNotes(
+                    event.target
+                      .value
+                  );
+
+                  setNotesSaved(
+                    false
+                  );
+
+                  setNotesError(
+                    ""
+                  );
+                }}
+                placeholder="Add a note for the sales team..."
+                disabled={
+                  savingNotes
+                }
+              />
+
+              {notesError && (
+                <div
+                  className="notesError"
+                >
+                  {
+                    notesError
+                  }
+                </div>
+              )}
+
+              <div
+                className="notesFooter"
+              >
+                <div>
+                  {notesSaved ? (
+                    <span
+                      className="notesStatus notesStatusSaved"
+                    >
+                      Saved ✓
+                    </span>
+                  ) : notesChanged ? (
+                    <span
+                      className="notesStatus notesStatusUnsaved"
+                    >
+                      Unsaved changes
+                    </span>
+                  ) : (
+                    <span
+                      className="notesStatus"
+                    >
+                      Notes are visible to
+                      your sales team only
+                    </span>
+                  )}
+                </div>
+
+                <button
+                  className="saveNotesButton"
+                  onClick={
+                    saveNotes
+                  }
+                  disabled={
+                    savingNotes ||
+                    !notesChanged
+                  }
+                >
+                  {savingNotes
+                    ? "Saving..."
+                    : "Save Note"}
+                </button>
+              </div>
+            </section>
+
+            <section
               className="panel contactPanel"
             >
               <PanelHeading
@@ -1322,7 +1556,8 @@ function Requirement({
       </span>
 
       <strong>
-        {value || "Not specified"}
+        {value ||
+          "Not specified"}
       </strong>
     </div>
   );
@@ -1341,7 +1576,8 @@ function ContactRow({
       </span>
 
       <strong>
-        {value || "Not available"}
+        {value ||
+          "Not available"}
       </strong>
     </div>
   );
@@ -1695,7 +1931,8 @@ function LeadStyles() {
       }
 
       button,
-      select {
+      select,
+      textarea {
         font-family: inherit;
       }
 
@@ -2422,6 +2659,133 @@ function LeadStyles() {
         line-height: 1.6;
       }
 
+      .notesPanel {
+        border-color: rgba(216,198,166,.08);
+        background:
+          linear-gradient(
+            145deg,
+            rgba(216,198,166,.035),
+            rgba(255,255,255,.025)
+          );
+      }
+
+      .notesHeader {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .notesPrivacy {
+        padding: 5px 8px;
+        border-radius: 999px;
+        background: rgba(216,198,166,.07);
+        color: #D8C6A6;
+        font-size: 7px;
+        font-weight: 750;
+        white-space: nowrap;
+      }
+
+      .notesDescription {
+        margin: 13px 0 0;
+        color: rgba(255,255,255,.40);
+        font-size: 9px;
+        line-height: 1.6;
+      }
+
+      .notesTextarea {
+        width: 100%;
+        min-height: 130px;
+        margin-top: 15px;
+        padding: 13px;
+        resize: vertical;
+        border-radius: 11px;
+        border: 1px solid rgba(255,255,255,.07);
+        outline: none;
+        background: rgba(255,255,255,.035);
+        color: rgba(255,255,255,.82);
+        font-family: inherit;
+        font-size: 10px;
+        line-height: 1.65;
+        transition:
+          border .2s ease,
+          background .2s ease,
+          box-shadow .2s ease;
+      }
+
+      .notesTextarea::placeholder {
+        color: rgba(255,255,255,.24);
+      }
+
+      .notesTextarea:focus {
+        border-color: rgba(216,198,166,.25);
+        background: rgba(255,255,255,.045);
+        box-shadow:
+          0 0 0 3px
+          rgba(216,198,166,.035);
+      }
+
+      .notesTextarea:disabled {
+        opacity: .6;
+      }
+
+      .notesFooter {
+        margin-top: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+      }
+
+      .notesStatus {
+        color: rgba(255,255,255,.30);
+        font-size: 8px;
+      }
+
+      .notesStatusSaved {
+        color: #75D0AC;
+      }
+
+      .notesStatusUnsaved {
+        color: #D8C6A6;
+      }
+
+      .saveNotesButton {
+        min-height: 36px;
+        padding: 0 14px;
+        border: none;
+        border-radius: 9px;
+        background: #D8C6A6;
+        color: #082F27;
+        font-size: 9px;
+        font-weight: 800;
+        cursor: pointer;
+        transition:
+          transform .2s ease,
+          background .2s ease;
+      }
+
+      .saveNotesButton:hover:not(:disabled) {
+        transform: translateY(-1px);
+        background: #E2D2B5;
+      }
+
+      .saveNotesButton:disabled {
+        opacity: .35;
+        cursor: not-allowed;
+      }
+
+      .notesError {
+        margin-top: 9px;
+        padding: 9px 10px;
+        border-radius: 8px;
+        background: rgba(217,131,131,.08);
+        border: 1px solid rgba(217,131,131,.10);
+        color: #E6A0A0;
+        font-size: 8px;
+        line-height: 1.5;
+      }
+
       .contactRow {
         min-height: 42px;
         border-top: 1px solid rgba(255,255,255,.05);
@@ -2721,6 +3085,7 @@ function LeadStyles() {
         }
 
         .contactPanel,
+        .notesPanel,
         .dangerPanel {
           grid-column: 1 / -1;
         }
@@ -2789,12 +3154,22 @@ function LeadStyles() {
         }
 
         .contactPanel,
+        .notesPanel,
         .dangerPanel {
           grid-column: auto;
         }
 
         .conversationBubble {
           max-width: 80vw;
+        }
+
+        .notesFooter {
+          align-items: flex-start;
+          flex-direction: column;
+        }
+
+        .saveNotesButton {
+          width: 100%;
         }
 
         .deleteModal {
