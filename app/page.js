@@ -1062,7 +1062,7 @@ export default function Home() {
               <div>
                 <Eyebrow light>
                   Watch intelligence happen
-                </Eyrow>
+                </Eybrow>
 
                 <h2 className="sectionTitleLight">
                   Conversation
