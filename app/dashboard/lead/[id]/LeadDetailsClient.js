@@ -51,6 +51,21 @@ export default function LeadDetailsClient({
     setCopied,
   ] = useState(false);
 
+  const [
+    deleteModalOpen,
+    setDeleteModalOpen,
+  ] = useState(false);
+
+  const [
+    deletingLead,
+    setDeletingLead,
+  ] = useState(false);
+
+  const [
+    deleteError,
+    setDeleteError,
+  ] = useState("");
+
   const qualityScore =
     useMemo(
       () =>
@@ -247,6 +262,83 @@ export default function LeadDetailsClient({
     );
   }
 
+  function openDeleteModal() {
+    setDeleteError("");
+    setDeleteModalOpen(true);
+  }
+
+  function closeDeleteModal() {
+    if (deletingLead) {
+      return;
+    }
+
+    setDeleteError("");
+    setDeleteModalOpen(false);
+  }
+
+  async function deleteLead() {
+    if (!lead?.id || deletingLead) {
+      return;
+    }
+
+    setDeletingLead(true);
+    setDeleteError("");
+
+    try {
+      const response =
+        await fetch(
+          "/api/delete-lead",
+          {
+            method: "POST",
+
+            headers: {
+              "Content-Type":
+                "application/json",
+            },
+
+            body:
+              JSON.stringify({
+                id:
+                  lead.id,
+              }),
+          }
+        );
+
+      const data =
+        await response.json();
+
+      if (
+        !response.ok ||
+        !data.success
+      ) {
+        throw new Error(
+          data.error ||
+            "Lead deletion failed."
+        );
+      }
+
+      router.push(
+        "/dashboard"
+      );
+
+      router.refresh();
+    } catch (error) {
+      console.error(
+        "Delete lead error:",
+        error
+      );
+
+      setDeleteError(
+        error.message ||
+          "Something went wrong while deleting this lead."
+      );
+
+      setDeletingLead(
+        false
+      );
+    }
+  }
+
   return (
     <main
       className="leadPage"
@@ -261,9 +353,23 @@ export default function LeadDetailsClient({
         className="ambient ambientTwo"
       />
 
-      {/* ===================================================
-          SIDEBAR
-          =================================================== */}
+      {deleteModalOpen && (
+        <DeleteLeadModal
+          lead={lead}
+          deleting={
+            deletingLead
+          }
+          error={
+            deleteError
+          }
+          onCancel={
+            closeDeleteModal
+          }
+          onConfirm={
+            deleteLead
+          }
+        />
+      )}
 
       <aside
         className="leadSidebar"
@@ -365,17 +471,9 @@ export default function LeadDetailsClient({
         </div>
       </aside>
 
-      {/* ===================================================
-          MAIN
-          =================================================== */}
-
       <section
         className="leadMain"
       >
-        {/* =================================================
-            TOP NAVIGATION
-            ================================================= */}
-
         <header
           className="leadHeader"
         >
@@ -408,10 +506,6 @@ export default function LeadDetailsClient({
             />
           </div>
         </header>
-
-        {/* =================================================
-            HERO
-            ================================================= */}
 
         <section
           className="leadHero"
@@ -496,10 +590,6 @@ export default function LeadDetailsClient({
           </div>
         </section>
 
-        {/* =================================================
-            KPI STRIP
-            ================================================= */}
-
         <div
           className="kpiGrid"
         >
@@ -538,24 +628,12 @@ export default function LeadDetailsClient({
           />
         </div>
 
-        {/* =================================================
-            MAIN GRID
-            ================================================= */}
-
         <div
           className="contentGrid"
         >
-          {/* ===============================================
-              LEFT
-              =============================================== */}
-
           <div
             className="contentLeft"
           >
-            {/* ---------------------------------------------
-                AI SUMMARY
-                --------------------------------------------- */}
-
             <section
               className="panel summaryPanel"
             >
@@ -594,10 +672,6 @@ export default function LeadDetailsClient({
                 </div>
               </div>
             </section>
-
-            {/* ---------------------------------------------
-                REQUIREMENTS
-                --------------------------------------------- */}
 
             <section
               id="requirements"
@@ -691,10 +765,6 @@ export default function LeadDetailsClient({
               </div>
             </section>
 
-            {/* ---------------------------------------------
-                CONVERSATION
-                --------------------------------------------- */}
-
             <section
               id="conversation"
               className="panel conversationPanel"
@@ -739,17 +809,9 @@ export default function LeadDetailsClient({
             </section>
           </div>
 
-          {/* ===============================================
-              RIGHT
-              =============================================== */}
-
           <aside
             className="contentRight"
           >
-            {/* ---------------------------------------------
-                QUALITY
-                --------------------------------------------- */}
-
             <section
               className="panel qualityPanel"
             >
@@ -852,10 +914,6 @@ export default function LeadDetailsClient({
                 />
               </div>
             </section>
-
-            {/* ---------------------------------------------
-                SALES OWNERSHIP
-                --------------------------------------------- */}
 
             <section
               className="panel managementPanel"
@@ -987,10 +1045,6 @@ export default function LeadDetailsClient({
               </div>
             </section>
 
-            {/* ---------------------------------------------
-                CONTACT
-                --------------------------------------------- */}
-
             <section
               className="panel contactPanel"
             >
@@ -1031,6 +1085,49 @@ export default function LeadDetailsClient({
                 />
               )}
             </section>
+
+            <section
+              className="panel dangerPanel"
+            >
+              <div
+                className="dangerHeader"
+              >
+                <div>
+                  <span
+                    className="dangerEyebrow"
+                  >
+                    DANGER ZONE
+                  </span>
+
+                  <h2>
+                    Delete this lead
+                  </h2>
+                </div>
+
+                <div
+                  className="dangerIcon"
+                >
+                  !
+                </div>
+              </div>
+
+              <p
+                className="dangerDescription"
+              >
+                Permanently remove this
+                opportunity and its stored
+                conversation from NOMAD.
+              </p>
+
+              <button
+                className="deleteLeadButton"
+                onClick={
+                  openDeleteModal
+                }
+              >
+                Delete Lead
+              </button>
+            </section>
           </aside>
         </div>
       </section>
@@ -1038,9 +1135,141 @@ export default function LeadDetailsClient({
   );
 }
 
-/* =========================================================
-   COMPONENTS
-   ========================================================= */
+function DeleteLeadModal({
+  lead,
+  deleting,
+  error,
+  onCancel,
+  onConfirm,
+}) {
+  return (
+    <div
+      className="deleteModalBackdrop"
+      onMouseDown={
+        onCancel
+      }
+    >
+      <div
+        className="deleteModal"
+        onMouseDown={(
+          event
+        ) =>
+          event.stopPropagation()
+        }
+      >
+        <div
+          className="deleteModalIcon"
+        >
+          !
+        </div>
+
+        <div
+          className="deleteModalEyebrow"
+        >
+          PERMANENT ACTION
+        </div>
+
+        <h2>
+          Delete this lead?
+        </h2>
+
+        <p>
+          You are about to permanently
+          delete{" "}
+          <strong>
+            {lead.name ||
+              "this lead"}
+          </strong>
+          .
+        </p>
+
+        <div
+          className="deleteLeadPreview"
+        >
+          <div>
+            <span>
+              Customer
+            </span>
+
+            <strong>
+              {lead.name ||
+                "Unnamed lead"}
+            </strong>
+          </div>
+
+          <div>
+            <span>
+              Phone
+            </span>
+
+            <strong>
+              {lead.phone ||
+                "Not available"}
+            </strong>
+          </div>
+
+          <div>
+            <span>
+              Property
+            </span>
+
+            <strong>
+              {formatProperty(
+                lead
+              )}
+            </strong>
+          </div>
+        </div>
+
+        <div
+          className="deleteWarning"
+        >
+          This action cannot be undone.
+          The lead will be removed from
+          your dashboard and database.
+        </div>
+
+        {error && (
+          <div
+            className="deleteError"
+          >
+            {error}
+          </div>
+        )}
+
+        <div
+          className="deleteModalActions"
+        >
+          <button
+            className="cancelDeleteButton"
+            onClick={
+              onCancel
+            }
+            disabled={
+              deleting
+            }
+          >
+            Keep Lead
+          </button>
+
+          <button
+            className="confirmDeleteButton"
+            onClick={
+              onConfirm
+            }
+            disabled={
+              deleting
+            }
+          >
+            {deleting
+              ? "Deleting..."
+              : "Delete Lead Permanently"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function PanelHeading({
   eyebrow,
@@ -1240,10 +1469,6 @@ function StatusBadge({
     </div>
   );
 }
-
-/* =========================================================
-   HELPERS
-   ========================================================= */
 
 function calculateLeadQuality(
   lead
@@ -1453,10 +1678,6 @@ function buildRecommendation(
   return `${lead.assigned_to} has the captured property requirement available for consultant follow-up.`;
 }
 
-/* =========================================================
-   CSS
-   ========================================================= */
-
 function LeadStyles() {
   return (
     <style>{`
@@ -1540,8 +1761,6 @@ function LeadStyles() {
             transparent 68%
           );
       }
-
-      /* SIDEBAR */
 
       .leadSidebar {
         height: 100vh;
@@ -1652,8 +1871,6 @@ function LeadStyles() {
         color: rgba(255,255,255,.38);
         font-size: 8px;
       }
-
-      /* MAIN */
 
       .leadMain {
         min-width: 0;
@@ -1784,8 +2001,6 @@ function LeadStyles() {
         background: #D98383;
       }
 
-      /* HERO */
-
       .leadHero {
         margin-top: 32px;
         display: flex;
@@ -1873,8 +2088,6 @@ function LeadStyles() {
         cursor: not-allowed;
       }
 
-      /* KPI */
-
       .kpiGrid {
         margin-top: 30px;
         display: grid;
@@ -1904,8 +2117,6 @@ function LeadStyles() {
         font-size: 15px;
         line-height: 1.35;
       }
-
-      /* CONTENT */
 
       .contentGrid {
         margin-top: 16px;
@@ -1990,8 +2201,6 @@ function LeadStyles() {
         line-height: 1.5;
       }
 
-      /* REQUIREMENTS */
-
       .requirementsGrid {
         margin-top: 20px;
         display: grid;
@@ -2021,8 +2230,6 @@ function LeadStyles() {
         font-size: 12px;
         line-height: 1.45;
       }
-
-      /* CONVERSATION */
 
       .conversationStream {
         margin-top: 22px;
@@ -2096,8 +2303,6 @@ function LeadStyles() {
         font-size: 11px;
       }
 
-      /* QUALITY */
-
       .qualityRing {
         width: 155px;
         height: 155px;
@@ -2156,8 +2361,6 @@ function LeadStyles() {
       .missing {
         color: #D98383;
       }
-
-      /* MANAGEMENT */
 
       .controlGroup {
         margin-top: 18px;
@@ -2219,8 +2422,6 @@ function LeadStyles() {
         line-height: 1.6;
       }
 
-      /* CONTACT */
-
       .contactRow {
         min-height: 42px;
         border-top: 1px solid rgba(255,255,255,.05);
@@ -2245,7 +2446,257 @@ function LeadStyles() {
         text-align: right;
       }
 
-      /* RESPONSIVE */
+      .dangerPanel {
+        border-color: rgba(224,98,98,.12);
+        background:
+          linear-gradient(
+            145deg,
+            rgba(224,98,98,.045),
+            rgba(255,255,255,.02)
+          );
+      }
+
+      .dangerHeader {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 15px;
+      }
+
+      .dangerEyebrow {
+        color: #D98383;
+        font-size: 8px;
+        font-weight: 800;
+        letter-spacing: 1px;
+      }
+
+      .dangerHeader h2 {
+        margin: 6px 0 0;
+        font-size: 17px;
+        font-weight: 650;
+      }
+
+      .dangerIcon {
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        border: 1px solid rgba(217,131,131,.15);
+        background: rgba(217,131,131,.08);
+        color: #D98383;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 13px;
+        font-weight: 850;
+      }
+
+      .dangerDescription {
+        margin: 14px 0 0;
+        color: rgba(255,255,255,.43);
+        font-size: 9px;
+        line-height: 1.6;
+      }
+
+      .deleteLeadButton {
+        width: 100%;
+        min-height: 39px;
+        margin-top: 16px;
+        border-radius: 9px;
+        border: 1px solid rgba(217,131,131,.20);
+        background: rgba(217,131,131,.08);
+        color: #E6A0A0;
+        font-size: 10px;
+        font-weight: 750;
+        cursor: pointer;
+        transition: .2s ease;
+      }
+
+      .deleteLeadButton:hover {
+        background: rgba(217,131,131,.14);
+        border-color: rgba(217,131,131,.30);
+      }
+
+      .deleteModalBackdrop {
+        position: fixed;
+        inset: 0;
+        z-index: 1000;
+        padding: 25px;
+        background: rgba(2,15,12,.72);
+        backdrop-filter: blur(12px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        animation: modalFade .18s ease;
+      }
+
+      @keyframes modalFade {
+        from {
+          opacity: 0;
+        }
+
+        to {
+          opacity: 1;
+        }
+      }
+
+      .deleteModal {
+        width: 100%;
+        max-width: 470px;
+        padding: 30px;
+        border-radius: 20px;
+        border: 1px solid rgba(217,131,131,.15);
+        background:
+          linear-gradient(
+            145deg,
+            #103A31,
+            #092C25
+          );
+        box-shadow:
+          0 30px 100px rgba(0,0,0,.45);
+        animation: modalRise .2s ease;
+      }
+
+      @keyframes modalRise {
+        from {
+          transform: translateY(8px) scale(.985);
+          opacity: .7;
+        }
+
+        to {
+          transform: translateY(0) scale(1);
+          opacity: 1;
+        }
+      }
+
+      .deleteModalIcon {
+        width: 46px;
+        height: 46px;
+        border-radius: 50%;
+        background: rgba(217,131,131,.09);
+        border: 1px solid rgba(217,131,131,.16);
+        color: #E39B9B;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 17px;
+        font-weight: 850;
+      }
+
+      .deleteModalEyebrow {
+        margin-top: 20px;
+        color: #D98383;
+        font-size: 8px;
+        letter-spacing: 1.1px;
+        font-weight: 850;
+      }
+
+      .deleteModal h2 {
+        margin: 7px 0 0;
+        font-size: 24px;
+        font-weight: 650;
+        letter-spacing: -.5px;
+      }
+
+      .deleteModal > p {
+        margin: 11px 0 0;
+        color: rgba(255,255,255,.56);
+        font-size: 11px;
+        line-height: 1.65;
+      }
+
+      .deleteModal > p strong {
+        color: white;
+      }
+
+      .deleteLeadPreview {
+        margin-top: 20px;
+        border-radius: 12px;
+        overflow: hidden;
+        border: 1px solid rgba(255,255,255,.055);
+      }
+
+      .deleteLeadPreview > div {
+        min-height: 46px;
+        padding: 0 13px;
+        border-bottom: 1px solid rgba(255,255,255,.05);
+        background: rgba(255,255,255,.025);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+      }
+
+      .deleteLeadPreview > div:last-child {
+        border-bottom: none;
+      }
+
+      .deleteLeadPreview span {
+        color: rgba(255,255,255,.36);
+        font-size: 9px;
+      }
+
+      .deleteLeadPreview strong {
+        color: rgba(255,255,255,.78);
+        font-size: 9px;
+        text-align: right;
+      }
+
+      .deleteWarning {
+        margin-top: 15px;
+        padding: 11px 12px;
+        border-radius: 10px;
+        background: rgba(217,131,131,.065);
+        border: 1px solid rgba(217,131,131,.09);
+        color: #DFA0A0;
+        font-size: 9px;
+        line-height: 1.55;
+      }
+
+      .deleteError {
+        margin-top: 12px;
+        padding: 10px 12px;
+        border-radius: 9px;
+        background: rgba(217,131,131,.10);
+        color: #F0B3B3;
+        font-size: 9px;
+        line-height: 1.5;
+      }
+
+      .deleteModalActions {
+        margin-top: 22px;
+        display: grid;
+        grid-template-columns: 1fr 1.4fr;
+        gap: 9px;
+      }
+
+      .deleteModalActions button {
+        min-height: 42px;
+        border-radius: 10px;
+        font-size: 9px;
+        font-weight: 800;
+        cursor: pointer;
+      }
+
+      .cancelDeleteButton {
+        border: 1px solid rgba(255,255,255,.07);
+        background: rgba(255,255,255,.04);
+        color: rgba(255,255,255,.65);
+      }
+
+      .confirmDeleteButton {
+        border: 1px solid rgba(217,131,131,.18);
+        background: #B95C5C;
+        color: white;
+      }
+
+      .confirmDeleteButton:hover:not(:disabled) {
+        background: #C76565;
+      }
+
+      .deleteModalActions button:disabled {
+        opacity: .5;
+        cursor: not-allowed;
+      }
 
       @media (max-width: 1050px) {
         .leadPage {
@@ -2269,7 +2720,8 @@ function LeadStyles() {
           grid-template-columns: repeat(2,minmax(0,1fr));
         }
 
-        .contactPanel {
+        .contactPanel,
+        .dangerPanel {
           grid-column: 1 / -1;
         }
       }
@@ -2336,12 +2788,21 @@ function LeadStyles() {
           grid-template-columns: 1fr;
         }
 
-        .contactPanel {
+        .contactPanel,
+        .dangerPanel {
           grid-column: auto;
         }
 
         .conversationBubble {
           max-width: 80vw;
+        }
+
+        .deleteModal {
+          padding: 23px;
+        }
+
+        .deleteModalActions {
+          grid-template-columns: 1fr;
         }
       }
     `}</style>
