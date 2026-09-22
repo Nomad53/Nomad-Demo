@@ -72,20 +72,45 @@ export default function Dashboard() {
   const [leads, setLeads] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [updatingStatusId, setUpdatingStatusId] = useState(null);
-  const [updatingAssignmentId, setUpdatingAssignmentId] = useState(null);
+  const [updatingStatusId, setUpdatingStatusId] =
+    useState(null);
+  const [
+    updatingAssignmentId,
+    setUpdatingAssignmentId,
+  ] = useState(null);
 
-  const [statusFilter, setStatusFilter] = useState("All");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedLeadId, setSelectedLeadId] = useState(null);
-  const [hoveredLeadId, setHoveredLeadId] = useState(null);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [
+    statusFilter,
+    setStatusFilter,
+  ] = useState("All");
+
+  const [
+    searchQuery,
+    setSearchQuery,
+  ] = useState("");
+
+  const [
+    selectedLeadId,
+    setSelectedLeadId,
+  ] = useState(null);
+
+  const [
+    hoveredLeadId,
+    setHoveredLeadId,
+  ] = useState(null);
+
+  const [
+    sidebarOpen,
+    setSidebarOpen,
+  ] = useState(false);
 
   useEffect(() => {
     loadLeads();
   }, []);
 
-  async function loadLeads({ silent = false } = {}) {
+  async function loadLeads({
+    silent = false,
+  } = {}) {
     if (silent) {
       setRefreshing(true);
     } else {
@@ -93,128 +118,201 @@ export default function Dashboard() {
     }
 
     try {
-      const response = await fetch("/api/leads", {
-        cache: "no-store",
-      });
+      const response = await fetch(
+        "/api/leads",
+        {
+          cache: "no-store",
+        }
+      );
 
-      const data = await response.json();
+      const data =
+        await response.json();
 
       if (data.success) {
-        const nextLeads = Array.isArray(data.leads)
-          ? data.leads
-          : [];
+        const nextLeads =
+          Array.isArray(
+            data.leads
+          )
+            ? data.leads
+            : [];
 
-        setLeads(nextLeads);
+        setLeads(
+          nextLeads
+        );
 
-        setSelectedLeadId((current) => {
-          if (
-            current &&
-            nextLeads.some((lead) => lead.id === current)
-          ) {
-            return current;
+        setSelectedLeadId(
+          (current) => {
+            if (
+              current &&
+              nextLeads.some(
+                (lead) =>
+                  lead.id ===
+                  current
+              )
+            ) {
+              return current;
+            }
+
+            return (
+              nextLeads[0]
+                ?.id ||
+              null
+            );
           }
-
-          return nextLeads[0]?.id || null;
-        });
+        );
       } else {
-        console.error("Failed to load leads:", data);
+        console.error(
+          "Failed to load leads:",
+          data
+        );
       }
     } catch (error) {
-      console.error("Lead loading error:", error);
+      console.error(
+        "Lead loading error:",
+        error
+      );
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
   }
 
-  async function updateLeadStatus(id, lead_status) {
-    setUpdatingStatusId(id);
+  async function updateLeadStatus(
+    id,
+    lead_status
+  ) {
+    setUpdatingStatusId(
+      id
+    );
 
     try {
-      const response = await fetch(
-        "/api/update-lead-status",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            id,
-            lead_status,
-          }),
-        }
-      );
+      const response =
+        await fetch(
+          "/api/update-lead-status",
+          {
+            method: "POST",
 
-      const data = await response.json();
+            headers: {
+              "Content-Type":
+                "application/json",
+            },
+
+            body:
+              JSON.stringify({
+                id,
+                lead_status,
+              }),
+          }
+        );
+
+      const data =
+        await response.json();
 
       if (data.success) {
-        setLeads((previous) =>
-          previous.map((lead) =>
-            lead.id === id
-              ? {
-                  ...lead,
-                  lead_status,
-                }
-              : lead
-          )
+        setLeads(
+          (previous) =>
+            previous.map(
+              (lead) =>
+                lead.id ===
+                id
+                  ? {
+                      ...lead,
+                      lead_status,
+                    }
+                  : lead
+            )
         );
       } else {
-        console.error("Status update failed:", data);
+        console.error(
+          "Status update failed:",
+          data
+        );
       }
     } catch (error) {
-      console.error("Status update error:", error);
+      console.error(
+        "Status update error:",
+        error
+      );
     } finally {
-      setUpdatingStatusId(null);
+      setUpdatingStatusId(
+        null
+      );
     }
   }
 
-  async function updateLeadAssignment(id, assigned_to) {
-    setUpdatingAssignmentId(id);
+  async function updateLeadAssignment(
+    id,
+    assigned_to
+  ) {
+    setUpdatingAssignmentId(
+      id
+    );
 
     try {
-      const response = await fetch(
-        "/api/update-lead-assignment",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            id,
-            assigned_to,
-          }),
-        }
-      );
+      const response =
+        await fetch(
+          "/api/update-lead-assignment",
+          {
+            method: "POST",
 
-      const data = await response.json();
+            headers: {
+              "Content-Type":
+                "application/json",
+            },
+
+            body:
+              JSON.stringify({
+                id,
+                assigned_to,
+              }),
+          }
+        );
+
+      const data =
+        await response.json();
 
       if (data.success) {
-        setLeads((previous) =>
-          previous.map((lead) =>
-            lead.id === id
-              ? {
-                  ...lead,
-                  assigned_to,
-                }
-              : lead
-          )
+        setLeads(
+          (previous) =>
+            previous.map(
+              (lead) =>
+                lead.id ===
+                id
+                  ? {
+                      ...lead,
+                      assigned_to,
+                    }
+                  : lead
+            )
         );
       } else {
-        console.error("Assignment update failed:", data);
+        console.error(
+          "Assignment update failed:",
+          data
+        );
       }
     } catch (error) {
-      console.error("Assignment update error:", error);
+      console.error(
+        "Assignment update error:",
+        error
+      );
     } finally {
-      setUpdatingAssignmentId(null);
+      setUpdatingAssignmentId(
+        null
+      );
     }
   }
 
   function openLead(id) {
-    router.push(`/dashboard/lead/${id}`);
+    router.push(
+      `/dashboard/lead/${id}`
+    );
   }
 
   function selectLead(id) {
-    setSelectedLeadId(id);
+    setSelectedLeadId(
+      id
+    );
   }
 
   /* =========================================================
@@ -223,58 +321,122 @@ export default function Dashboard() {
      ========================================================= */
 
   function exportLeadsToExcel() {
-    if (!Array.isArray(leads) || leads.length === 0) {
-      window.alert("There are no leads to export yet.");
+    if (
+      !Array.isArray(
+        leads
+      ) ||
+      leads.length === 0
+    ) {
+      window.alert(
+        "There are no leads to export yet."
+      );
+
       return;
     }
 
-    const exportRows = leads.map((lead, index) => ({
-      "Sr. No.": index + 1,
-      "Lead ID": lead.id || "",
-      Name: lead.name || "",
-      Phone: lead.phone || "",
-      Intent: formatIntent(lead.intent),
+    const exportRows =
+      leads.map(
+        (
+          lead,
+          index
+        ) => ({
+          "Sr. No.":
+            index + 1,
 
-      "Property Type": lead.property_type
-        ? capitalize(String(lead.property_type))
-        : "",
+          "Lead ID":
+            lead.id || "",
 
-      Bedrooms: lead.bedrooms || "",
-      Budget: lead.budget || "",
-      Location: lead.location || "",
+          Name:
+            lead.name || "",
 
-      "Property Status": lead.property_status
-        ? capitalize(String(lead.property_status))
-        : "",
+          Phone:
+            lead.phone ||
+            "",
 
-      Financing: lead.financing
-        ? capitalize(String(lead.financing))
-        : "",
+          Intent:
+            formatIntent(
+              lead.intent
+            ),
 
-      Timeline: lead.timeline || "",
-      "Callback Time": lead.callback_time || "",
+          "Property Type":
+            lead.property_type
+              ? capitalize(
+                  String(
+                    lead.property_type
+                  )
+                )
+              : "",
 
-      "Assigned To":
-        lead.assigned_to || "Unassigned",
+          Bedrooms:
+            lead.bedrooms ||
+            "",
 
-      "Lead Status":
-        lead.lead_status || "Qualified",
+          Budget:
+            lead.budget ||
+            "",
 
-      "AI Summary": lead.summary || "",
+          Location:
+            lead.location ||
+            "",
 
-      Source: lead.source || "",
+          "Property Status":
+            lead.property_status
+              ? capitalize(
+                  String(
+                    lead.property_status
+                  )
+                )
+              : "",
 
-      "Created At": formatExcelDate(
-        lead.created_at
-      ),
+          Financing:
+            lead.financing
+              ? capitalize(
+                  String(
+                    lead.financing
+                  )
+                )
+              : "",
 
-      "Updated At": formatExcelDate(
-        lead.updated_at
-      ),
-    }));
+          Timeline:
+            lead.timeline ||
+            "",
+
+          "Callback Time":
+            lead.callback_time ||
+            "",
+
+          "Assigned To":
+            lead.assigned_to ||
+            "Unassigned",
+
+          "Lead Status":
+            lead.lead_status ||
+            "Qualified",
+
+          "AI Summary":
+            lead.summary ||
+            "",
+
+          Source:
+            lead.source ||
+            "",
+
+          "Created At":
+            formatExcelDate(
+              lead.created_at
+            ),
+
+          "Updated At":
+            formatExcelDate(
+              lead.updated_at
+            ),
+        })
+      );
 
     const worksheet =
-      XLSX.utils.json_to_sheet(exportRows);
+      XLSX.utils.json_to_sheet(
+        exportRows
+      );
 
     worksheet["!cols"] = [
       { wch: 8 },
@@ -298,13 +460,23 @@ export default function Dashboard() {
       { wch: 22 },
     ];
 
-    if (worksheet["!ref"]) {
-      worksheet["!autofilter"] = {
-        ref: worksheet["!ref"],
+    if (
+      worksheet[
+        "!ref"
+      ]
+    ) {
+      worksheet[
+        "!autofilter"
+      ] = {
+        ref:
+          worksheet[
+            "!ref"
+          ],
       };
     }
 
-    const workbook = XLSX.utils.book_new();
+    const workbook =
+      XLSX.utils.book_new();
 
     XLSX.utils.book_append_sheet(
       workbook,
@@ -312,9 +484,10 @@ export default function Dashboard() {
       "NOMAD Leads"
     );
 
-    const dateStamp = new Date()
-      .toISOString()
-      .slice(0, 10);
+    const dateStamp =
+      new Date()
+        .toISOString()
+        .slice(0, 10);
 
     XLSX.writeFile(
       workbook,
@@ -322,112 +495,196 @@ export default function Dashboard() {
     );
   }
 
-  const filteredLeads = useMemo(() => {
-    const query = searchQuery.trim().toLowerCase();
+  /* =========================================================
+     FILTERED LEADS
 
-    return leads.filter((lead) => {
-      const matchesStatus =
-        statusFilter === "All" ||
-        lead.lead_status === statusFilter;
+     IMPORTANT:
+     "Assigned" now means the lead has an assigned_to value.
+     It does NOT require lead_status === "Assigned".
+     ========================================================= */
 
-      if (!matchesStatus) {
-        return false;
-      }
+  const filteredLeads =
+    useMemo(() => {
+      const query =
+        searchQuery
+          .trim()
+          .toLowerCase();
 
-      if (!query) {
-        return true;
-      }
+      return leads.filter(
+        (lead) => {
+          let matchesStatus =
+            true;
 
-      const searchable = [
-        lead.name,
-        lead.phone,
-        lead.intent,
-        lead.property_type,
-        lead.bedrooms,
-        lead.location,
-        lead.budget,
-        lead.property_status,
-        lead.financing,
-        lead.timeline,
-        lead.callback_time,
-        lead.assigned_to,
-        lead.lead_status,
-        lead.summary,
-      ]
-        .filter(Boolean)
-        .join(" ")
-        .toLowerCase();
+          if (
+            statusFilter ===
+            "Assigned"
+          ) {
+            matchesStatus =
+              Boolean(
+                lead.assigned_to
+              );
+          } else if (
+            statusFilter !==
+            "All"
+          ) {
+            matchesStatus =
+              lead.lead_status ===
+              statusFilter;
+          }
 
-      return searchable.includes(query);
-    });
-  }, [leads, statusFilter, searchQuery]);
+          if (
+            !matchesStatus
+          ) {
+            return false;
+          }
 
-  const selectedLead = useMemo(() => {
-    if (selectedLeadId) {
-      const matching = leads.find(
-        (lead) => lead.id === selectedLeadId
+          if (!query) {
+            return true;
+          }
+
+          const searchable =
+            [
+              lead.name,
+              lead.phone,
+              lead.intent,
+              lead.property_type,
+              lead.bedrooms,
+              lead.location,
+              lead.budget,
+              lead.property_status,
+              lead.financing,
+              lead.timeline,
+              lead.callback_time,
+              lead.assigned_to,
+              lead.lead_status,
+              lead.summary,
+              lead.notes,
+            ]
+              .filter(
+                Boolean
+              )
+              .join(" ")
+              .toLowerCase();
+
+          return searchable.includes(
+            query
+          );
+        }
       );
+    }, [
+      leads,
+      statusFilter,
+      searchQuery,
+    ]);
 
-      if (matching) {
-        return matching;
+  const selectedLead =
+    useMemo(() => {
+      if (
+        selectedLeadId
+      ) {
+        const matching =
+          leads.find(
+            (lead) =>
+              lead.id ===
+              selectedLeadId
+          );
+
+        if (matching) {
+          return matching;
+        }
       }
-    }
 
-    return filteredLeads[0] || leads[0] || null;
-  }, [leads, filteredLeads, selectedLeadId]);
+      return (
+        filteredLeads[0] ||
+        leads[0] ||
+        null
+      );
+    }, [
+      leads,
+      filteredLeads,
+      selectedLeadId,
+    ]);
 
-  const stats = useMemo(() => {
-    const total = leads.length;
+  const stats =
+    useMemo(() => {
+      const total =
+        leads.length;
 
-    const qualified = leads.filter(
-      (lead) => lead.lead_status === "Qualified"
-    ).length;
+      const qualified =
+        leads.filter(
+          (lead) =>
+            lead.lead_status ===
+            "Qualified"
+        ).length;
 
-    const assigned = leads.filter((lead) =>
-      Boolean(lead.assigned_to)
-    ).length;
+      const assigned =
+        leads.filter(
+          (lead) =>
+            Boolean(
+              lead.assigned_to
+            )
+        ).length;
 
-    const followUps = leads.filter(
-      (lead) =>
-        lead.lead_status === "Follow-up" ||
-        lead.lead_status === "Contacted"
-    ).length;
+      const followUps =
+        leads.filter(
+          (lead) =>
+            lead.lead_status ===
+              "Follow-up" ||
+            lead.lead_status ===
+              "Contacted"
+        ).length;
 
-    const won = leads.filter(
-      (lead) => lead.lead_status === "Won"
-    ).length;
+      const won =
+        leads.filter(
+          (lead) =>
+            lead.lead_status ===
+            "Won"
+        ).length;
 
-    const unassigned = leads.filter(
-      (lead) => !lead.assigned_to
-    ).length;
+      const unassigned =
+        leads.filter(
+          (lead) =>
+            !lead.assigned_to
+        ).length;
 
-    return {
-      total,
-      qualified,
-      assigned,
-      followUps,
-      won,
-      unassigned,
-    };
-  }, [leads]);
+      return {
+        total,
+        qualified,
+        assigned,
+        followUps,
+        won,
+        unassigned,
+      };
+    }, [leads]);
 
-  const qualityScore = useMemo(() => {
-    return calculateLeadQuality(selectedLead);
-  }, [selectedLead]);
+  const qualityScore =
+    useMemo(() => {
+      return calculateLeadQuality(
+        selectedLead
+      );
+    }, [selectedLead]);
 
   return (
-    <main className="dashboardPage">
+    <main
+      className="dashboardPage"
+    >
       <DashboardStyles />
 
       {sidebarOpen && (
         <button
           className="sidebarBackdrop"
-          onClick={() => setSidebarOpen(false)}
+          onClick={() =>
+            setSidebarOpen(
+              false
+            )
+          }
           aria-label="Close menu"
         />
       )}
 
-      <div className="dashboardShell">
+      <div
+        className="dashboardShell"
+      >
         <aside
           className={
             sidebarOpen
@@ -436,143 +693,250 @@ export default function Dashboard() {
           }
         >
           <div>
-            <div className="sidebarBrand">
-              <div className="sidebarBrandIcon">N</div>
+            <div
+              className="sidebarBrand"
+            >
+              <div
+                className="sidebarBrandIcon"
+              >
+                N
+              </div>
 
               <div>
-                <strong>NOMAD</strong>
-                <span>Intelligence OS</span>
+                <strong>
+                  NOMAD
+                </strong>
+
+                <span>
+                  Intelligence OS
+                </span>
               </div>
             </div>
 
-            <div className="sidebarSectionLabel">
+            <div
+              className="sidebarSectionLabel"
+            >
               Workspace
             </div>
 
-            <nav className="sidebarMenu">
+            <nav
+              className="sidebarMenu"
+            >
               <SidebarItem
                 icon="⌂"
                 label="Overview"
-                active={statusFilter === "All"}
-                count={stats.total}
+                active={
+                  statusFilter ===
+                  "All"
+                }
+                count={
+                  stats.total
+                }
                 onClick={() => {
-                  setStatusFilter("All");
-                  setSidebarOpen(false);
+                  setStatusFilter(
+                    "All"
+                  );
+
+                  setSidebarOpen(
+                    false
+                  );
                 }}
               />
 
               <SidebarItem
                 icon="◎"
                 label="Qualified"
-                active={statusFilter === "Qualified"}
-                count={stats.qualified}
+                active={
+                  statusFilter ===
+                  "Qualified"
+                }
+                count={
+                  stats.qualified
+                }
                 onClick={() => {
-                  setStatusFilter("Qualified");
-                  setSidebarOpen(false);
+                  setStatusFilter(
+                    "Qualified"
+                  );
+
+                  setSidebarOpen(
+                    false
+                  );
                 }}
               />
 
               <SidebarItem
                 icon="↗"
                 label="Assigned"
-                active={statusFilter === "Assigned"}
+                active={
+                  statusFilter ===
+                  "Assigned"
+                }
                 count={
-                  leads.filter(
-                    (lead) => lead.lead_status === "Assigned"
-                  ).length
+                  stats.assigned
                 }
                 onClick={() => {
-                  setStatusFilter("Assigned");
-                  setSidebarOpen(false);
+                  setStatusFilter(
+                    "Assigned"
+                  );
+
+                  setSidebarOpen(
+                    false
+                  );
                 }}
               />
 
               <SidebarItem
                 icon="◌"
                 label="Follow-up"
-                active={statusFilter === "Follow-up"}
+                active={
+                  statusFilter ===
+                  "Follow-up"
+                }
                 count={
                   leads.filter(
-                    (lead) => lead.lead_status === "Follow-up"
+                    (lead) =>
+                      lead.lead_status ===
+                      "Follow-up"
                   ).length
                 }
                 onClick={() => {
-                  setStatusFilter("Follow-up");
-                  setSidebarOpen(false);
+                  setStatusFilter(
+                    "Follow-up"
+                  );
+
+                  setSidebarOpen(
+                    false
+                  );
                 }}
               />
 
               <SidebarItem
                 icon="✓"
                 label="Won"
-                active={statusFilter === "Won"}
-                count={stats.won}
+                active={
+                  statusFilter ===
+                  "Won"
+                }
+                count={
+                  stats.won
+                }
                 onClick={() => {
-                  setStatusFilter("Won");
-                  setSidebarOpen(false);
+                  setStatusFilter(
+                    "Won"
+                  );
+
+                  setSidebarOpen(
+                    false
+                  );
                 }}
               />
             </nav>
 
-            <div className="sidebarSectionLabel sidebarSecondLabel">
+            <div
+              className="sidebarSectionLabel sidebarSecondLabel"
+            >
               Management
             </div>
 
-            <div className="sidebarMiniStats">
+            <div
+              className="sidebarMiniStats"
+            >
               <SidebarMiniStat
                 label="Assigned"
-                value={stats.assigned}
+                value={
+                  stats.assigned
+                }
               />
 
               <SidebarMiniStat
                 label="Unassigned"
-                value={stats.unassigned}
+                value={
+                  stats.unassigned
+                }
               />
             </div>
           </div>
 
-          <div className="sidebarSystem">
-            <div className="systemPulse" />
+          <div
+            className="sidebarSystem"
+          >
+            <div
+              className="systemPulse"
+            />
 
             <div>
-              <strong>System active</strong>
-              <span>Qualification engine online</span>
+              <strong>
+                System active
+              </strong>
+
+              <span>
+                Qualification engine online
+              </span>
             </div>
           </div>
         </aside>
 
-        <section className="dashboardMain">
-          <header className="dashboardHeader">
-            <div className="headerIdentity">
+        <section
+          className="dashboardMain"
+        >
+          <header
+            className="dashboardHeader"
+          >
+            <div
+              className="headerIdentity"
+            >
               <button
                 className="mobileMenuButton"
-                onClick={() => setSidebarOpen(true)}
+                onClick={() =>
+                  setSidebarOpen(
+                    true
+                  )
+                }
               >
                 ☰
               </button>
 
               <div>
-                <div className="headerEyebrow">
+                <div
+                  className="headerEyebrow"
+                >
                   LIVE OPERATIONS
                 </div>
 
-                <h1>Sales Intelligence</h1>
+                <h1>
+                  Sales Intelligence
+                </h1>
               </div>
             </div>
 
-            <div className="headerActions">
-              <div className="headerLive">
+            <div
+              className="headerActions"
+            >
+              <div
+                className="headerLive"
+              >
                 <span />
                 Live data
               </div>
 
               <button
                 className="exportButton"
-                onClick={exportLeadsToExcel}
-                disabled={loading || leads.length === 0}
+                onClick={
+                  exportLeadsToExcel
+                }
+                disabled={
+                  loading ||
+                  leads.length ===
+                    0
+                }
                 title="Download all leads as an Excel file"
               >
-                <span className="exportIcon">⇩</span>
+                <span
+                  className="exportIcon"
+                >
+                  ⇩
+                </span>
+
                 Export Excel
               </button>
 
@@ -580,10 +944,13 @@ export default function Dashboard() {
                 className="refreshButton"
                 onClick={() =>
                   loadLeads({
-                    silent: true,
+                    silent:
+                      true,
                   })
                 }
-                disabled={refreshing}
+                disabled={
+                  refreshing
+                }
               >
                 <span
                   className={
@@ -595,73 +962,120 @@ export default function Dashboard() {
                   ↻
                 </span>
 
-                {refreshing ? "Refreshing" : "Refresh"}
+                {refreshing
+                  ? "Refreshing"
+                  : "Refresh"}
               </button>
             </div>
           </header>
 
-          <div className="statsGrid">
+          <div
+            className="statsGrid"
+          >
             <DashboardStat
               label="Total enquiries"
-              value={stats.total}
+              value={
+                stats.total
+              }
               detail="Captured by NOMAD"
               accent
             />
 
             <DashboardStat
               label="Qualified"
-              value={stats.qualified}
+              value={
+                stats.qualified
+              }
               detail="Ready for action"
             />
 
             <DashboardStat
               label="Assigned"
-              value={stats.assigned}
+              value={
+                stats.assigned
+              }
               detail="With sales team"
             />
 
             <DashboardStat
               label="Follow-up queue"
-              value={stats.followUps}
+              value={
+                stats.followUps
+              }
               detail="Contacted or due"
             />
           </div>
 
-          <div className="dashboardToolbar">
-            <div className="filterRail">
-              {FILTERS.map((filter) => (
-                <button
-                  key={filter}
-                  onClick={() => setStatusFilter(filter)}
-                  className={
-                    statusFilter === filter
-                      ? "filterButton filterButtonActive"
-                      : "filterButton"
-                  }
-                >
-                  {filter}
+          <div
+            className="dashboardToolbar"
+          >
+            <div
+              className="filterRail"
+            >
+              {FILTERS.map(
+                (
+                  filter
+                ) => (
+                  <button
+                    key={
+                      filter
+                    }
+                    onClick={() =>
+                      setStatusFilter(
+                        filter
+                      )
+                    }
+                    className={
+                      statusFilter ===
+                      filter
+                        ? "filterButton filterButtonActive"
+                        : "filterButton"
+                    }
+                  >
+                    {
+                      filter
+                    }
 
-                  <span>
-                    {getFilterCount(leads, filter)}
-                  </span>
-                </button>
-              ))}
+                    <span>
+                      {getFilterCount(
+                        leads,
+                        filter
+                      )}
+                    </span>
+                  </button>
+                )
+              )}
             </div>
 
-            <div className="searchBox">
-              <span>⌕</span>
+            <div
+              className="searchBox"
+            >
+              <span>
+                ⌕
+              </span>
 
               <input
-                value={searchQuery}
-                onChange={(event) =>
-                  setSearchQuery(event.target.value)
+                value={
+                  searchQuery
+                }
+                onChange={(
+                  event
+                ) =>
+                  setSearchQuery(
+                    event.target
+                      .value
+                  )
                 }
                 placeholder="Search leads, locations, phone..."
               />
 
               {searchQuery && (
                 <button
-                  onClick={() => setSearchQuery("")}
+                  onClick={() =>
+                    setSearchQuery(
+                      ""
+                    )
+                  }
                 >
                   ×
                 </button>
@@ -669,87 +1083,154 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <div className="dashboardContentGrid">
-            <section className="opportunityPanel">
-              <div className="panelTop">
+          <div
+            className="dashboardContentGrid"
+          >
+            <section
+              className="opportunityPanel"
+            >
+              <div
+                className="panelTop"
+              >
                 <div>
-                  <span className="panelEyebrow">
+                  <span
+                    className="panelEyebrow"
+                  >
                     LIVE OPPORTUNITY FEED
                   </span>
 
                   <h2>
-                    {statusFilter === "All"
+                    {statusFilter ===
+                    "All"
                       ? "All leads"
                       : `${statusFilter} leads`}
                   </h2>
                 </div>
 
-                <div className="liveChip">
+                <div
+                  className="liveChip"
+                >
                   <span />
-                  {filteredLeads.length} shown
+
+                  {
+                    filteredLeads.length
+                  }{" "}
+                  shown
                 </div>
               </div>
 
-              <div className="leadHeaderRow">
-                <div>Opportunity</div>
-                <div>Budget</div>
-                <div>Assigned</div>
-                <div>Status</div>
+              <div
+                className="leadHeaderRow"
+              >
+                <div>
+                  Opportunity
+                </div>
+
+                <div>
+                  Budget
+                </div>
+
+                <div>
+                  Assigned
+                </div>
+
+                <div>
+                  Status
+                </div>
+
                 <div />
               </div>
 
               {loading ? (
                 <DashboardLoading />
               ) : (
-                <div className="leadRows">
-                  {filteredLeads.map((lead) => (
-                    <RealLeadRow
-                      key={lead.id}
-                      lead={lead}
-                      selected={
-                        selectedLead?.id === lead.id
-                      }
-                      hovered={
-                        hoveredLeadId === lead.id
-                      }
-                      updatingStatus={
-                        updatingStatusId === lead.id
-                      }
-                      updatingAssignment={
-                        updatingAssignmentId === lead.id
-                      }
-                      onHover={() =>
-                        setHoveredLeadId(lead.id)
-                      }
-                      onLeave={() =>
-                        setHoveredLeadId(null)
-                      }
-                      onSelect={() =>
-                        selectLead(lead.id)
-                      }
-                      onOpen={() => openLead(lead.id)}
-                      onStatusChange={(nextStatus) =>
-                        updateLeadStatus(
-                          lead.id,
+                <div
+                  className="leadRows"
+                >
+                  {filteredLeads.map(
+                    (
+                      lead
+                    ) => (
+                      <RealLeadRow
+                        key={
+                          lead.id
+                        }
+                        lead={
+                          lead
+                        }
+                        selected={
+                          selectedLead?.id ===
+                          lead.id
+                        }
+                        hovered={
+                          hoveredLeadId ===
+                          lead.id
+                        }
+                        updatingStatus={
+                          updatingStatusId ===
+                          lead.id
+                        }
+                        updatingAssignment={
+                          updatingAssignmentId ===
+                          lead.id
+                        }
+                        onHover={() =>
+                          setHoveredLeadId(
+                            lead.id
+                          )
+                        }
+                        onLeave={() =>
+                          setHoveredLeadId(
+                            null
+                          )
+                        }
+                        onSelect={() =>
+                          selectLead(
+                            lead.id
+                          )
+                        }
+                        onOpen={() =>
+                          openLead(
+                            lead.id
+                          )
+                        }
+                        onStatusChange={(
                           nextStatus
-                        )
-                      }
-                      onAssignmentChange={(nextPerson) =>
-                        updateLeadAssignment(
-                          lead.id,
+                        ) =>
+                          updateLeadStatus(
+                            lead.id,
+                            nextStatus
+                          )
+                        }
+                        onAssignmentChange={(
                           nextPerson
-                        )
-                      }
-                    />
-                  ))}
+                        ) =>
+                          updateLeadAssignment(
+                            lead.id,
+                            nextPerson
+                          )
+                        }
+                      />
+                    )
+                  )}
 
-                  {filteredLeads.length === 0 && (
+                  {filteredLeads.length ===
+                    0 && (
                     <EmptyState
-                      searchQuery={searchQuery}
-                      statusFilter={statusFilter}
+                      searchQuery={
+                        searchQuery
+                      }
+                      statusFilter={
+                        statusFilter
+                      }
                       onReset={() => {
-                        setSearchQuery("");
-                        setStatusFilter("All");
+                        setSearchQuery(
+                          ""
+                        );
+
+                        setStatusFilter(
+                          "All"
+                        );
                       }}
                     />
                   )}
@@ -757,55 +1238,94 @@ export default function Dashboard() {
               )}
 
               {!loading &&
-                filteredLeads.length > 0 && (
-                  <div className="tableFooter">
-                    Showing {filteredLeads.length} of{" "}
-                    {leads.length} leads
+                filteredLeads.length >
+                  0 && (
+                  <div
+                    className="tableFooter"
+                  >
+                    Showing{" "}
+                    {
+                      filteredLeads.length
+                    }{" "}
+                    of{" "}
+                    {
+                      leads.length
+                    }{" "}
+                    leads
 
                     <span>
-                      Click any row to preview · Open for
-                      full conversation
+                      Click any row
+                      to preview ·
+                      Open for full
+                      conversation
                     </span>
                   </div>
                 )}
             </section>
 
-            <aside className="intelligencePanel">
+            <aside
+              className="intelligencePanel"
+            >
               {selectedLead ? (
                 <>
-                  <div className="intelligenceTop">
+                  <div
+                    className="intelligenceTop"
+                  >
                     <div>
-                      <span className="panelEyebrow champagneText">
-                        NOMAD INTELLIGENCE
+                      <span
+                        className="panelEyebrow champagneText"
+                      >
+                        NOMAD
+                        INTELLIGENCE
                       </span>
 
-                      <h2>Opportunity quality</h2>
+                      <h2>
+                        Opportunity
+                        quality
+                      </h2>
                     </div>
 
                     <StatusBadge
-                      status={selectedLead.lead_status}
+                      status={
+                        selectedLead.lead_status
+                      }
                     />
                   </div>
 
-                  <QualityRing score={qualityScore} />
+                  <QualityRing
+                    score={
+                      qualityScore
+                    }
+                  />
 
-                  <div className="selectedLeadIdentity">
-                    <div className="selectedLeadAvatar">
-                      {getInitials(selectedLead.name)}
+                  <div
+                    className="selectedLeadIdentity"
+                  >
+                    <div
+                      className="selectedLeadAvatar"
+                    >
+                      {getInitials(
+                        selectedLead.name
+                      )}
                     </div>
 
                     <div>
                       <strong>
-                        {selectedLead.name || "Unnamed lead"}
+                        {selectedLead.name ||
+                          "Unnamed lead"}
                       </strong>
 
                       <span>
-                        {formatProperty(selectedLead)}
+                        {formatProperty(
+                          selectedLead
+                        )}
                       </span>
                     </div>
                   </div>
 
-                  <div className="qualityDetails">
+                  <div
+                    className="qualityDetails"
+                  >
                     <QualityLine
                       label="Property intent"
                       value={
@@ -813,7 +1333,11 @@ export default function Dashboard() {
                           ? "Known"
                           : "Missing"
                       }
-                      good={Boolean(selectedLead.intent)}
+                      good={
+                        Boolean(
+                          selectedLead.intent
+                        )
+                      }
                     />
 
                     <QualityLine
@@ -823,7 +1347,11 @@ export default function Dashboard() {
                           ? "Known"
                           : "Missing"
                       }
-                      good={Boolean(selectedLead.budget)}
+                      good={
+                        Boolean(
+                          selectedLead.budget
+                        )
+                      }
                     />
 
                     <QualityLine
@@ -833,7 +1361,11 @@ export default function Dashboard() {
                           ? "Known"
                           : "Missing"
                       }
-                      good={Boolean(selectedLead.timeline)}
+                      good={
+                        Boolean(
+                          selectedLead.timeline
+                        )
+                      }
                     />
 
                     <QualityLine
@@ -843,9 +1375,11 @@ export default function Dashboard() {
                           ? "Scheduled"
                           : "Not set"
                       }
-                      good={Boolean(
-                        selectedLead.callback_time
-                      )}
+                      good={
+                        Boolean(
+                          selectedLead.callback_time
+                        )
+                      }
                     />
 
                     <QualityLine
@@ -855,45 +1389,89 @@ export default function Dashboard() {
                           ? "Captured"
                           : "Missing"
                       }
-                      good={Boolean(selectedLead.phone)}
+                      good={
+                        Boolean(
+                          selectedLead.phone
+                        )
+                      }
                     />
                   </div>
 
                   {selectedLead.summary && (
-                    <div className="intelligenceSummary">
-                      <span>Lead summary</span>
-                      <p>{selectedLead.summary}</p>
+                    <div
+                      className="intelligenceSummary"
+                    >
+                      <span>
+                        Lead
+                        summary
+                      </span>
+
+                      <p>
+                        {
+                          selectedLead.summary
+                        }
+                      </p>
                     </div>
                   )}
 
-                  <div className="intelligenceControlGroup">
-                    <label>Assigned to</label>
+                  <div
+                    className="intelligenceControlGroup"
+                  >
+                    <label>
+                      Assigned
+                      to
+                    </label>
 
                     <select
-                      value={selectedLead.assigned_to || ""}
+                      value={
+                        selectedLead.assigned_to ||
+                        ""
+                      }
                       disabled={
                         updatingAssignmentId ===
                         selectedLead.id
                       }
-                      onChange={(event) =>
+                      onChange={(
+                        event
+                      ) =>
                         updateLeadAssignment(
                           selectedLead.id,
-                          event.target.value
+                          event
+                            .target
+                            .value
                         )
                       }
                     >
-                      <option value="">Unassigned</option>
-                      <option value="Ahmed">Ahmed</option>
-                      <option value="Sarah">Sarah</option>
-                      <option value="Ali">Ali</option>
+                      <option value="">
+                        Unassigned
+                      </option>
+
+                      <option value="Ahmed">
+                        Ahmed
+                      </option>
+
+                      <option value="Sarah">
+                        Sarah
+                      </option>
+
+                      <option value="Ali">
+                        Ali
+                      </option>
+
                       <option value="Sales Team A">
-                        Sales Team A
+                        Sales Team
+                        A
                       </option>
                     </select>
                   </div>
 
-                  <div className="intelligenceControlGroup">
-                    <label>Lead status</label>
+                  <div
+                    className="intelligenceControlGroup"
+                  >
+                    <label>
+                      Lead
+                      status
+                    </label>
 
                     <select
                       value={
@@ -901,39 +1479,67 @@ export default function Dashboard() {
                         "Qualified"
                       }
                       disabled={
-                        updatingStatusId === selectedLead.id
+                        updatingStatusId ===
+                        selectedLead.id
                       }
-                      onChange={(event) =>
+                      onChange={(
+                        event
+                      ) =>
                         updateLeadStatus(
                           selectedLead.id,
-                          event.target.value
+                          event
+                            .target
+                            .value
                         )
                       }
                     >
-                      {STATUS_OPTIONS.map((status) => (
-                        <option
-                          key={status}
-                          value={status}
-                        >
-                          {status}
-                        </option>
-                      ))}
+                      {STATUS_OPTIONS.map(
+                        (
+                          status
+                        ) => (
+                          <option
+                            key={
+                              status
+                            }
+                            value={
+                              status
+                            }
+                          >
+                            {
+                              status
+                            }
+                          </option>
+                        )
+                      )}
                     </select>
                   </div>
 
-                  <div className="qualityRecommendation">
-                    <span>NOMAD</span>
-                    {buildRecommendation(selectedLead)}
+                  <div
+                    className="qualityRecommendation"
+                  >
+                    <span>
+                      NOMAD
+                    </span>
+
+                    {buildRecommendation(
+                      selectedLead
+                    )}
                   </div>
 
                   <button
                     className="openLeadButton"
                     onClick={() =>
-                      openLead(selectedLead.id)
+                      openLead(
+                        selectedLead.id
+                      )
                     }
                   >
-                    Open full lead
-                    <span>↗</span>
+                    Open full
+                    lead
+
+                    <span>
+                      ↗
+                    </span>
                   </button>
                 </>
               ) : (
@@ -956,25 +1562,51 @@ function SidebarItem({
 }) {
   return (
     <button
-      onClick={onClick}
+      onClick={
+        onClick
+      }
       className={
         active
           ? "sidebarMenuItem sidebarMenuItemActive"
           : "sidebarMenuItem"
       }
     >
-      <span className="sidebarMenuIcon">{icon}</span>
-      <span className="sidebarMenuLabel">{label}</span>
-      <span className="sidebarMenuCount">{count}</span>
+      <span
+        className="sidebarMenuIcon"
+      >
+        {icon}
+      </span>
+
+      <span
+        className="sidebarMenuLabel"
+      >
+        {label}
+      </span>
+
+      <span
+        className="sidebarMenuCount"
+      >
+        {count}
+      </span>
     </button>
   );
 }
 
-function SidebarMiniStat({ label, value }) {
+function SidebarMiniStat({
+  label,
+  value,
+}) {
   return (
-    <div className="sidebarMiniStat">
-      <span>{label}</span>
-      <strong>{value}</strong>
+    <div
+      className="sidebarMiniStat"
+    >
+      <span>
+        {label}
+      </span>
+
+      <strong>
+        {value}
+      </strong>
     </div>
   );
 }
@@ -993,9 +1625,17 @@ function DashboardStat({
           : "dashboardStat"
       }
     >
-      <span>{label}</span>
-      <strong>{value}</strong>
-      <small>{detail}</small>
+      <span>
+        {label}
+      </span>
+
+      <strong>
+        {value}
+      </strong>
+
+      <small>
+        {detail}
+      </small>
     </div>
   );
 }
@@ -1022,35 +1662,74 @@ function RealLeadRow({
           ? "realLeadRow realLeadRowHovered"
           : "realLeadRow"
       }
-      onMouseEnter={onHover}
-      onMouseLeave={onLeave}
-      onClick={onSelect}
+      onMouseEnter={
+        onHover
+      }
+      onMouseLeave={
+        onLeave
+      }
+      onClick={
+        onSelect
+      }
     >
-      <div className="leadPrimary">
-        <div className="leadAvatar">
-          {getInitials(lead.name)}
+      <div
+        className="leadPrimary"
+      >
+        <div
+          className="leadAvatar"
+        >
+          {getInitials(
+            lead.name
+          )}
         </div>
 
-        <div className="leadIdentity">
-          <strong>{lead.name || "Unnamed lead"}</strong>
+        <div
+          className="leadIdentity"
+        >
+          <strong>
+            {lead.name ||
+              "Unnamed lead"}
+          </strong>
 
           <span>
-            {formatProperty(lead)}
-            {lead.location ? ` · ${lead.location}` : ""}
+            {formatProperty(
+              lead
+            )}
+
+            {lead.location
+              ? ` · ${lead.location}`
+              : ""}
           </span>
 
-          <small>{lead.phone || "No phone"}</small>
+          <small>
+            {lead.phone ||
+              "No phone"}
+          </small>
         </div>
       </div>
 
-      <div className="leadBudget">
-        <strong>{lead.budget || "Not specified"}</strong>
-        <span>{formatIntent(lead.intent)}</span>
+      <div
+        className="leadBudget"
+      >
+        <strong>
+          {lead.budget ||
+            "Not specified"}
+        </strong>
+
+        <span>
+          {formatIntent(
+            lead.intent
+          )}
+        </span>
       </div>
 
       <div
         className="leadControlCell"
-        onClick={(event) => event.stopPropagation()}
+        onClick={(
+          event
+        ) =>
+          event.stopPropagation()
+        }
       >
         <div
           className={
@@ -1061,45 +1740,103 @@ function RealLeadRow({
         />
 
         <select
-          value={lead.assigned_to || ""}
-          disabled={updatingAssignment}
-          onChange={(event) =>
-            onAssignmentChange(event.target.value)
+          value={
+            lead.assigned_to ||
+            ""
+          }
+          disabled={
+            updatingAssignment
+          }
+          onChange={(
+            event
+          ) =>
+            onAssignmentChange(
+              event.target
+                .value
+            )
           }
         >
-          <option value="">Unassigned</option>
-          <option value="Ahmed">Ahmed</option>
-          <option value="Sarah">Sarah</option>
-          <option value="Ali">Ali</option>
-          <option value="Sales Team A">Sales Team A</option>
+          <option value="">
+            Unassigned
+          </option>
+
+          <option value="Ahmed">
+            Ahmed
+          </option>
+
+          <option value="Sarah">
+            Sarah
+          </option>
+
+          <option value="Ali">
+            Ali
+          </option>
+
+          <option value="Sales Team A">
+            Sales Team A
+          </option>
         </select>
       </div>
 
       <div
         className="leadControlCell"
-        onClick={(event) => event.stopPropagation()}
+        onClick={(
+          event
+        ) =>
+          event.stopPropagation()
+        }
       >
-        <StatusDot status={lead.lead_status} />
+        <StatusDot
+          status={
+            lead.lead_status
+          }
+        />
 
         <select
-          value={lead.lead_status || "Qualified"}
-          disabled={updatingStatus}
-          onChange={(event) =>
-            onStatusChange(event.target.value)
+          value={
+            lead.lead_status ||
+            "Qualified"
+          }
+          disabled={
+            updatingStatus
+          }
+          onChange={(
+            event
+          ) =>
+            onStatusChange(
+              event.target
+                .value
+            )
           }
         >
-          {STATUS_OPTIONS.map((status) => (
-            <option key={status} value={status}>
-              {status}
-            </option>
-          ))}
+          {STATUS_OPTIONS.map(
+            (
+              status
+            ) => (
+              <option
+                key={
+                  status
+                }
+                value={
+                  status
+                }
+              >
+                {
+                  status
+                }
+              </option>
+            )
+          )}
         </select>
       </div>
 
       <button
         className="leadOpenButton"
-        onClick={(event) => {
+        onClick={(
+          event
+        ) => {
           event.stopPropagation();
+
           onOpen();
         }}
         title="Open lead"
@@ -1110,15 +1847,21 @@ function RealLeadRow({
   );
 }
 
-function StatusDot({ status }) {
+function StatusDot({
+  status,
+}) {
   return (
     <span
-      className={`statusDot ${getStatusDotClass(status)}`}
+      className={`statusDot ${getStatusDotClass(
+        status
+      )}`}
     />
   );
 }
 
-function StatusBadge({ status }) {
+function StatusBadge({
+  status,
+}) {
   return (
     <div
       className={`statusBadge ${getStatusBadgeClass(
@@ -1126,13 +1869,22 @@ function StatusBadge({ status }) {
       )}`}
     >
       <span />
-      {status || "Qualified"}
+
+      {status ||
+        "Qualified"}
     </div>
   );
 }
 
-function QualityRing({ score }) {
-  const degrees = Math.round((score / 100) * 360);
+function QualityRing({
+  score,
+}) {
+  const degrees =
+    Math.round(
+      (score /
+        100) *
+        360
+    );
 
   return (
     <div
@@ -1144,21 +1896,40 @@ function QualityRing({ score }) {
         )`,
       }}
     >
-      <div className="qualityRingInner">
-        <strong>{score}</strong>
-        <span>QUALITY SCORE</span>
+      <div
+        className="qualityRingInner"
+      >
+        <strong>
+          {score}
+        </strong>
+
+        <span>
+          QUALITY SCORE
+        </span>
       </div>
     </div>
   );
 }
 
-function QualityLine({ label, value, good }) {
+function QualityLine({
+  label,
+  value,
+  good,
+}) {
   return (
-    <div className="qualityLine">
-      <span>{label}</span>
+    <div
+      className="qualityLine"
+    >
+      <span>
+        {label}
+      </span>
 
       <strong
-        className={good ? "qualityGood" : "qualityMissing"}
+        className={
+          good
+            ? "qualityGood"
+            : "qualityMissing"
+        }
       >
         {value}
       </strong>
@@ -1168,14 +1939,25 @@ function QualityLine({ label, value, good }) {
 
 function DashboardLoading() {
   return (
-    <div className="loadingState">
-      <div className="loadingOrbit">
+    <div
+      className="loadingState"
+    >
+      <div
+        className="loadingOrbit"
+      >
         <span />
       </div>
 
-      <strong>Loading sales intelligence</strong>
+      <strong>
+        Loading sales
+        intelligence
+      </strong>
 
-      <p>Retrieving live NOMAD opportunities...</p>
+      <p>
+        Retrieving live
+        NOMAD
+        opportunities...
+      </p>
     </div>
   );
 }
@@ -1186,10 +1968,18 @@ function EmptyState({
   onReset,
 }) {
   return (
-    <div className="emptyState">
-      <div className="emptyIcon">◌</div>
+    <div
+      className="emptyState"
+    >
+      <div
+        className="emptyIcon"
+      >
+        ◌
+      </div>
 
-      <strong>No matching leads</strong>
+      <strong>
+        No matching leads
+      </strong>
 
       <p>
         {searchQuery
@@ -1197,128 +1987,246 @@ function EmptyState({
           : `There are currently no ${statusFilter.toLowerCase()} leads.`}
       </p>
 
-      <button onClick={onReset}>Show all leads</button>
+      <button
+        onClick={
+          onReset
+        }
+      >
+        Show all leads
+      </button>
     </div>
   );
 }
 
 function NoSelectedLead() {
   return (
-    <div className="noSelectedLead">
-      <div>◌</div>
+    <div
+      className="noSelectedLead"
+    >
+      <div>
+        ◌
+      </div>
 
-      <strong>No opportunity selected</strong>
+      <strong>
+        No opportunity
+        selected
+      </strong>
 
       <p>
-        Select a lead from the opportunity feed to view
-        NOMAD intelligence.
+        Select a lead from
+        the opportunity feed
+        to view NOMAD
+        intelligence.
       </p>
     </div>
   );
 }
 
-function getInitials(name) {
+function getInitials(
+  name
+) {
   if (!name) {
     return "N";
   }
 
-  const pieces = String(name)
-    .trim()
-    .split(/\s+/)
-    .filter(Boolean);
+  const pieces =
+    String(name)
+      .trim()
+      .split(/\s+/)
+      .filter(
+        Boolean
+      );
 
-  if (pieces.length === 1) {
-    return pieces[0].slice(0, 2).toUpperCase();
+  if (
+    pieces.length ===
+    1
+  ) {
+    return pieces[0]
+      .slice(0, 2)
+      .toUpperCase();
   }
 
   return (
-    pieces[0][0] + pieces[pieces.length - 1][0]
+    pieces[0][0] +
+    pieces[
+      pieces.length -
+        1
+    ][0]
   ).toUpperCase();
 }
 
-function formatIntent(intent) {
+function formatIntent(
+  intent
+) {
   if (!intent) {
     return "Intent unknown";
   }
 
-  const normalized = String(intent).toLowerCase();
+  const normalized =
+    String(
+      intent
+    ).toLowerCase();
 
-  if (normalized === "buy") {
+  if (
+    normalized ===
+    "buy"
+  ) {
     return "Purchase";
   }
 
-  if (normalized === "rent") {
+  if (
+    normalized ===
+    "rent"
+  ) {
     return "Rental";
   }
 
-  return capitalize(intent);
+  return capitalize(
+    intent
+  );
 }
 
-function formatProperty(lead) {
+function formatProperty(
+  lead
+) {
   if (!lead) {
     return "Property requirement";
   }
 
-  const bedrooms = lead.bedrooms
-    ? `${lead.bedrooms}BR`
-    : "";
+  const bedrooms =
+    lead.bedrooms
+      ? `${lead.bedrooms}BR`
+      : "";
 
-  const type = lead.property_type
-    ? capitalize(
-        String(lead.property_type).replaceAll("-", " ")
-      )
-    : "";
+  const type =
+    lead.property_type
+      ? capitalize(
+          String(
+            lead.property_type
+          ).replaceAll(
+            "-",
+            " "
+          )
+        )
+      : "";
 
-  const parts = [bedrooms, type].filter(Boolean);
+  const parts = [
+    bedrooms,
+    type,
+  ].filter(Boolean);
 
-  if (parts.length === 0) {
+  if (
+    parts.length ===
+    0
+  ) {
     return "Property requirement";
   }
 
-  return parts.join(" ");
+  return parts.join(
+    " "
+  );
 }
 
-function capitalize(value) {
+function capitalize(
+  value
+) {
   if (!value) {
     return "";
   }
 
-  return String(value)
-    .replaceAll("-", " ")
-    .replace(/\b\w/g, (letter) => letter.toUpperCase());
+  return String(
+    value
+  )
+    .replaceAll(
+      "-",
+      " "
+    )
+    .replace(
+      /\b\w/g,
+      (letter) =>
+        letter.toUpperCase()
+    );
 }
 
-function formatExcelDate(value) {
+function formatExcelDate(
+  value
+) {
   if (!value) {
     return "";
   }
 
-  const date = new Date(value);
+  const date =
+    new Date(
+      value
+    );
 
-  if (Number.isNaN(date.getTime())) {
-    return String(value);
+  if (
+    Number.isNaN(
+      date.getTime()
+    )
+  ) {
+    return String(
+      value
+    );
   }
 
-  return date.toLocaleString("en-AE", {
-    year: "numeric",
-    month: "short",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  return date.toLocaleString(
+    "en-AE",
+    {
+      year:
+        "numeric",
+      month:
+        "short",
+      day:
+        "2-digit",
+      hour:
+        "2-digit",
+      minute:
+        "2-digit",
+    }
+  );
 }
 
-function getFilterCount(leads, filter) {
-  if (filter === "All") {
+/* =========================================================
+   FILTER COUNTS
+
+   Assigned = has assigned_to value.
+   Other filters = lead_status.
+   ========================================================= */
+
+function getFilterCount(
+  leads,
+  filter
+) {
+  if (
+    filter ===
+    "All"
+  ) {
     return leads.length;
   }
 
+  if (
+    filter ===
+    "Assigned"
+  ) {
+    return leads.filter(
+      (lead) =>
+        Boolean(
+          lead.assigned_to
+        )
+    ).length;
+  }
+
   return leads.filter(
-    (lead) => lead.lead_status === filter
+    (lead) =>
+      lead.lead_status ===
+      filter
   ).length;
 }
 
-function calculateLeadQuality(lead) {
+function calculateLeadQuality(
+  lead
+) {
   if (!lead) {
     return 0;
   }
@@ -1335,50 +2243,87 @@ function calculateLeadQuality(lead) {
   ];
 
   if (
-    String(lead.intent || "").toLowerCase() === "buy"
+    String(
+      lead.intent ||
+        ""
+    ).toLowerCase() ===
+    "buy"
   ) {
-    fields.push(lead.financing);
-    fields.push(lead.property_status);
+    fields.push(
+      lead.financing
+    );
+
+    fields.push(
+      lead.property_status
+    );
   }
 
   if (
-    String(lead.property_type || "").toLowerCase() !==
+    String(
+      lead.property_type ||
+        ""
+    ).toLowerCase() !==
     "studio"
   ) {
-    fields.push(lead.bedrooms);
+    fields.push(
+      lead.bedrooms
+    );
   }
 
-  const completed = fields.filter(Boolean).length;
+  const completed =
+    fields.filter(
+      Boolean
+    ).length;
 
-  return Math.round((completed / fields.length) * 100);
+  return Math.round(
+    (completed /
+      fields.length) *
+      100
+  );
 }
 
-function buildRecommendation(lead) {
+function buildRecommendation(
+  lead
+) {
   if (!lead) {
     return "";
   }
 
-  if (!lead.assigned_to) {
+  if (
+    !lead.assigned_to
+  ) {
     return "Lead requirements are captured. Assign this opportunity to a sales consultant for follow-up.";
   }
 
-  if (lead.lead_status === "Won") {
+  if (
+    lead.lead_status ===
+    "Won"
+  ) {
     return `Opportunity is marked as won and assigned to ${lead.assigned_to}.`;
   }
 
-  if (lead.lead_status === "Lost") {
+  if (
+    lead.lead_status ===
+    "Lost"
+  ) {
     return "Opportunity is marked as lost. Review the conversation if further context is required.";
   }
 
-  if (lead.callback_time) {
+  if (
+    lead.callback_time
+  ) {
     return `${lead.assigned_to} has the customer context and callback preference available for follow-up.`;
   }
 
   return `${lead.assigned_to} has the captured property requirements available for consultant follow-up.`;
 }
 
-function getStatusDotClass(status) {
-  switch (status) {
+function getStatusDotClass(
+  status
+) {
+  switch (
+    status
+  ) {
     case "Qualified":
       return "statusDotQualified";
 
@@ -1402,8 +2347,12 @@ function getStatusDotClass(status) {
   }
 }
 
-function getStatusBadgeClass(status) {
-  switch (status) {
+function getStatusBadgeClass(
+  status
+) {
+  switch (
+    status
+  ) {
     case "Won":
       return "statusBadgeWon";
 
