@@ -1047,6 +1047,7 @@ export default function Home() {
 
           <HeroBottomFade />
         </section>
+
         {/* ===================================================
             INTELLIGENCE LAB
             =================================================== */}
@@ -1062,7 +1063,7 @@ export default function Home() {
               <div>
                 <Eyebrow light>
                   Watch intelligence happen
-                </Eybrow>
+                </Eyebrow>
 
                 <h2 className="sectionTitleLight">
                   Conversation
@@ -1881,6 +1882,7 @@ export default function Home() {
     </main>
   );
 }
+
 /* =========================================================
    GLOBAL CSS
    ========================================================= */
@@ -1933,10 +1935,6 @@ function GlobalStyles() {
         background: rgba(8, 47, 39, .16);
         border-radius: 20px;
       }
-
-      /* =====================================================
-         NAV
-         ===================================================== */
 
       .siteNav {
         width: 100%;
@@ -2022,10 +2020,6 @@ function GlobalStyles() {
         box-shadow:
           0 18px 48px rgba(8,47,39,.27);
       }
-
-      /* =====================================================
-         HERO
-         ===================================================== */
 
       .heroOuter {
         width: 100%;
@@ -2198,10 +2192,6 @@ function GlobalStyles() {
         background: #A9844D;
         flex-shrink: 0;
       }
-
-      /* =====================================================
-         HERO PRODUCT
-         ===================================================== */
 
       .heroProductStage {
         position: relative;
@@ -2403,10 +2393,6 @@ function GlobalStyles() {
         flex-shrink: 0;
       }
 
-      /* =====================================================
-         HERO INTELLIGENCE TAGS
-         ===================================================== */
-
       .floatingIntelligenceTag {
         position: absolute;
         z-index: 10;
@@ -2473,10 +2459,6 @@ function GlobalStyles() {
           transform: translateY(-7px);
         }
       }
-
-      /* =====================================================
-         HERO ORBIT
-         ===================================================== */
 
       .heroOrbit {
         position: absolute;
@@ -2565,10 +2547,6 @@ function GlobalStyles() {
         pointer-events: none;
       }
 
-      /* =====================================================
-         SHARED SECTIONS
-         ===================================================== */
-
       .sectionInner {
         width: 100%;
         max-width: 1220px;
@@ -2632,10 +2610,6 @@ function GlobalStyles() {
         line-height: 1.85;
         max-width: 470px;
       }
-
-      /* =====================================================
-         INTELLIGENCE SECTION
-         ===================================================== */
 
       .intelligenceSection {
         position: relative;
@@ -2824,10 +2798,6 @@ function GlobalStyles() {
         font-weight: 750;
       }
 
-      /* =====================================================
-         INTELLIGENCE CORE
-         ===================================================== */
-
       .intelligenceCore {
         position: relative;
         height: 360px;
@@ -3010,10 +2980,6 @@ function GlobalStyles() {
         }
       }
 
-      /* =====================================================
-         STRUCTURED OUTPUT
-         ===================================================== */
-
       .structuredLeadTop {
         display: flex;
         justify-content: space-between;
@@ -3184,10 +3150,6 @@ function GlobalStyles() {
         width: 100%;
       }
 
-      /* =====================================================
-         PERSPECTIVE SECTION
-         ===================================================== */
-
       .perspectiveSection {
         position: relative;
         background: #F7F3EB;
@@ -3267,10 +3229,6 @@ function GlobalStyles() {
           translateY(15px);
         pointer-events: none;
       }
-
-      /* =====================================================
-         CUSTOMER PERSPECTIVE
-         ===================================================== */
 
       .customerPerspective {
         min-height: 590px;
@@ -3485,10 +3443,6 @@ function GlobalStyles() {
         line-height: 1.55;
       }
 
-      /* =====================================================
-         SALES PERSPECTIVE
-         ===================================================== */
-
       .salesPerspective {
         min-height: 590px;
         border-radius: 28px;
@@ -3679,10 +3633,6 @@ function GlobalStyles() {
         font-size: 7px;
       }
 
-      /* =====================================================
-         CHANNEL SECTION
-         ===================================================== */
-
       .channelSection {
         position: relative;
         padding: 110px 34px;
@@ -3822,10 +3772,6 @@ function GlobalStyles() {
         justify-content: center;
         min-width: 0;
       }
-
-      /* =====================================================
-         CHANNEL UNIVERSE
-         ===================================================== */
 
       .channelUniverse {
         position: relative;
@@ -4005,10 +3951,6 @@ function GlobalStyles() {
         transform:
           rotate(30deg);
       }
-
-      /* =====================================================
-         VISION SECTION
-         ===================================================== */
 
       .visionSection {
         padding: 112px 34px;
@@ -4494,10 +4436,6 @@ function GlobalStyles() {
         letter-spacing: .8px;
       }
 
-      /* =====================================================
-         STORY
-         ===================================================== */
-
       .storySection {
         padding: 74px 34px;
         background: #FFFDF8;
@@ -4551,10 +4489,6 @@ function GlobalStyles() {
             rgba(185,152,98,.10)
           );
       }
-
-      /* =====================================================
-         FINAL CTA
-         ===================================================== */
 
       .finalCTASection {
         position: relative;
@@ -4666,10 +4600,6 @@ function GlobalStyles() {
           0 23px 55px rgba(0,0,0,.25);
       }
 
-      /* =====================================================
-         FOOTER
-         ===================================================== */
-
       .siteFooter {
         padding: 30px 38px;
         background: #101814;
@@ -4694,11 +4624,6 @@ function GlobalStyles() {
         font-size: 8px;
         letter-spacing: .8px;
       }
-
-      /* =====================================================
-         LIVE EXPERIENCE PAGE
-         IMPORTANT: FIXED TO FIT VIEWPORT
-         ===================================================== */
 
       .liveDemoPage {
         height: 100dvh;
@@ -4907,10 +4832,6 @@ function GlobalStyles() {
         line-height: 1.6;
       }
 
-      /* =====================================================
-         CHAT SHELL
-         ===================================================== */
-
       .chatShell {
         min-width: 0;
         min-height: 0;
@@ -5082,10 +5003,6 @@ function GlobalStyles() {
         letter-spacing: 2px;
       }
 
-      /* =====================================================
-         CUSTOMER SUCCESS
-         ===================================================== */
-
       .requestReceived {
         margin-top: 22px;
         padding: 20px;
@@ -5158,10 +5075,6 @@ function GlobalStyles() {
         line-height: 1.65;
       }
 
-      /* =====================================================
-         COMPOSER
-         ===================================================== */
-
       .chatComposerArea {
         flex: 0 0 auto;
         padding: 12px 14px 14px;
@@ -5231,10 +5144,6 @@ function GlobalStyles() {
         letter-spacing: .4px;
       }
 
-      /* =====================================================
-         LARGE TABLET / SMALL LAPTOP
-         ===================================================== */
-
       @media (max-width: 1120px) {
         .heroGrid,
         .sectionHeaderSplit,
@@ -5269,10 +5178,6 @@ function GlobalStyles() {
           font-size: 44px;
         }
       }
-
-      /* =====================================================
-         TABLET
-         ===================================================== */
 
       @media (max-width: 960px) {
         .desktopNavLinks {
@@ -5405,10 +5310,6 @@ function GlobalStyles() {
           min-height: 0;
         }
       }
-
-      /* =====================================================
-         MOBILE
-         ===================================================== */
 
       @media (max-width: 620px) {
         .siteNav {
@@ -5719,11 +5620,6 @@ function GlobalStyles() {
           grid-template-columns: 1fr;
         }
 
-        /* ================================================
-           MOBILE CHANNELS
-           Proper 320px layout instead of scaling 540px
-           ================================================ */
-
         .channelExperience {
           margin-top: 42px;
           gap: 26px;
@@ -5950,11 +5846,6 @@ function GlobalStyles() {
           padding: 28px 18px;
         }
 
-        /* ================================================
-           MOBILE LIVE DEMO
-           Chat fills phone and composer stays visible
-           ================================================ */
-
         .liveDemoPage {
           height: 100dvh;
           min-height: 100dvh;
@@ -6083,10 +5974,6 @@ function GlobalStyles() {
         }
       }
 
-      /* =====================================================
-         VERY SMALL MOBILE
-         ===================================================== */
-
       @media (max-width: 380px) {
         .siteNav {
           padding:
@@ -6188,11 +6075,6 @@ function GlobalStyles() {
           font-size: 12.5px;
         }
       }
-
-      /* =====================================================
-         SHORT DESKTOP / LAPTOP SCREENS
-         This fixes the screenshot where composer was cut off
-         ===================================================== */
 
       @media (
         min-width: 961px
@@ -6304,6 +6186,7 @@ function GlobalStyles() {
     `}</style>
   );
 }
+
 /* =========================================================
    SMALL SHARED COMPONENTS
    ========================================================= */
