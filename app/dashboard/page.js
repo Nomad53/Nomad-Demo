@@ -11,33 +11,11 @@ import * as XLSX from "xlsx";
 
 /* =========================================================
    NOMAD SALES INTELLIGENCE
-   Real operational dashboard
+   FINAL DASHBOARD
    ========================================================= */
-
-const colors = {
-  ink: "#101814",
-  forest: "#082F27",
-  forest2: "#0A2E27",
-  forest3: "#0D352D",
-  forest4: "#164F42",
-
-  emerald: "#78C6A6",
-  emeraldStrong: "#75D0AC",
-
-  champagne: "#B99862",
-  champagneSoft: "#D8C6A6",
-
-  paper: "#FFFDF8",
-  ivory: "#F7F3EB",
-
-  whiteSoft: "rgba(255,255,255,.72)",
-  whiteMuted: "rgba(255,255,255,.38)",
-  line: "rgba(255,255,255,.065)",
-};
 
 const STATUS_OPTIONS = [
   "Qualified",
-  "Assigned",
   "Contacted",
   "Follow-up",
   "Won",
@@ -62,18 +40,60 @@ const FILTERS = [
   "Lost",
 ];
 
+const ANALYTICS_PERIODS = [
+  {
+    value: "7",
+    label: "7 Days",
+  },
+  {
+    value: "30",
+    label: "30 Days",
+  },
+  {
+    value: "90",
+    label: "90 Days",
+  },
+  {
+    value: "all",
+    label: "All Time",
+  },
+];
+
+const TEAM_MEMBERS = [
+  "Ahmed",
+  "Sarah",
+  "Ali",
+  "Sales Team A",
+];
+
 /* =========================================================
    MAIN DASHBOARD
    ========================================================= */
 
 export default function Dashboard() {
-  const router = useRouter();
+  const router =
+    useRouter();
 
-  const [leads, setLeads] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [updatingStatusId, setUpdatingStatusId] =
-    useState(null);
+  const [
+    leads,
+    setLeads,
+  ] = useState([]);
+
+  const [
+    loading,
+    setLoading,
+  ] = useState(true);
+
+  const [
+    refreshing,
+    setRefreshing,
+  ] = useState(false);
+
+  const [
+    updatingStatusId,
+    setUpdatingStatusId,
+  ] = useState(null);
+
   const [
     updatingAssignmentId,
     setUpdatingAssignmentId,
@@ -104,9 +124,18 @@ export default function Dashboard() {
     setSidebarOpen,
   ] = useState(false);
 
+  const [
+    analyticsPeriod,
+    setAnalyticsPeriod,
+  ] = useState("30");
+
   useEffect(() => {
     loadLeads();
   }, []);
+
+  /* =========================================================
+     LOAD LEADS
+     ========================================================= */
 
   async function loadLeads({
     silent = false,
@@ -118,12 +147,14 @@ export default function Dashboard() {
     }
 
     try {
-      const response = await fetch(
-        "/api/leads",
-        {
-          cache: "no-store",
-        }
-      );
+      const response =
+        await fetch(
+          "/api/leads",
+          {
+            cache:
+              "no-store",
+          }
+        );
 
       const data =
         await response.json();
@@ -177,6 +208,10 @@ export default function Dashboard() {
     }
   }
 
+  /* =========================================================
+     UPDATE STATUS
+     ========================================================= */
+
   async function updateLeadStatus(
     id,
     lead_status
@@ -190,7 +225,8 @@ export default function Dashboard() {
         await fetch(
           "/api/update-lead-status",
           {
-            method: "POST",
+            method:
+              "POST",
 
             headers: {
               "Content-Type":
@@ -240,6 +276,10 @@ export default function Dashboard() {
     }
   }
 
+  /* =========================================================
+     UPDATE ASSIGNMENT
+     ========================================================= */
+
   async function updateLeadAssignment(
     id,
     assigned_to
@@ -253,7 +293,8 @@ export default function Dashboard() {
         await fetch(
           "/api/update-lead-assignment",
           {
-            method: "POST",
+            method:
+              "POST",
 
             headers: {
               "Content-Type":
@@ -303,13 +344,17 @@ export default function Dashboard() {
     }
   }
 
-  function openLead(id) {
+  function openLead(
+    id
+  ) {
     router.push(
       `/dashboard/lead/${id}`
     );
   }
 
-  function selectLead(id) {
+  function selectLead(
+    id
+  ) {
     setSelectedLeadId(
       id
     );
@@ -317,7 +362,6 @@ export default function Dashboard() {
 
   /* =========================================================
      EXCEL EXPORT
-     Exports ALL loaded leads, not just filtered leads
      ========================================================= */
 
   function exportLeadsToExcel() {
@@ -325,7 +369,8 @@ export default function Dashboard() {
       !Array.isArray(
         leads
       ) ||
-      leads.length === 0
+      leads.length ===
+        0
     ) {
       window.alert(
         "There are no leads to export yet."
@@ -350,8 +395,7 @@ export default function Dashboard() {
             lead.name || "",
 
           Phone:
-            lead.phone ||
-            "",
+            lead.phone || "",
 
           Intent:
             formatIntent(
@@ -368,16 +412,13 @@ export default function Dashboard() {
               : "",
 
           Bedrooms:
-            lead.bedrooms ||
-            "",
+            lead.bedrooms || "",
 
           Budget:
-            lead.budget ||
-            "",
+            lead.budget || "",
 
           Location:
-            lead.location ||
-            "",
+            lead.location || "",
 
           "Property Status":
             lead.property_status
@@ -398,8 +439,7 @@ export default function Dashboard() {
               : "",
 
           Timeline:
-            lead.timeline ||
-            "",
+            lead.timeline || "",
 
           "Callback Time":
             lead.callback_time ||
@@ -410,16 +450,18 @@ export default function Dashboard() {
             "Unassigned",
 
           "Lead Status":
-            lead.lead_status ||
-            "Qualified",
+            normalizeStatus(
+              lead.lead_status
+            ),
+
+          "Sales Notes":
+            lead.notes || "",
 
           "AI Summary":
-            lead.summary ||
-            "",
+            lead.summary || "",
 
           Source:
-            lead.source ||
-            "",
+            lead.source || "",
 
           "Created At":
             formatExcelDate(
@@ -454,6 +496,7 @@ export default function Dashboard() {
       { wch: 22 },
       { wch: 18 },
       { wch: 16 },
+      { wch: 45 },
       { wch: 55 },
       { wch: 18 },
       { wch: 22 },
@@ -487,7 +530,10 @@ export default function Dashboard() {
     const dateStamp =
       new Date()
         .toISOString()
-        .slice(0, 10);
+        .slice(
+          0,
+          10
+        );
 
     XLSX.writeFile(
       workbook,
@@ -496,11 +542,7 @@ export default function Dashboard() {
   }
 
   /* =========================================================
-     FILTERED LEADS
-
-     IMPORTANT:
-     "Assigned" now means the lead has an assigned_to value.
-     It does NOT require lead_status === "Assigned".
+     OPERATIONAL FILTERS
      ========================================================= */
 
   const filteredLeads =
@@ -528,7 +570,9 @@ export default function Dashboard() {
             "All"
           ) {
             matchesStatus =
-              lead.lead_status ===
+              normalizeStatus(
+                lead.lead_status
+              ) ===
               statusFilter;
           }
 
@@ -563,7 +607,9 @@ export default function Dashboard() {
               .filter(
                 Boolean
               )
-              .join(" ")
+              .join(
+                " "
+              )
               .toLowerCase();
 
           return searchable.includes(
@@ -577,13 +623,26 @@ export default function Dashboard() {
       searchQuery,
     ]);
 
+  /* =========================================================
+     SELECTED LEAD
+
+     Selected preview now respects the active filter.
+     ========================================================= */
+
   const selectedLead =
     useMemo(() => {
+      if (
+        filteredLeads.length ===
+        0
+      ) {
+        return null;
+      }
+
       if (
         selectedLeadId
       ) {
         const matching =
-          leads.find(
+          filteredLeads.find(
             (lead) =>
               lead.id ===
               selectedLeadId
@@ -596,14 +655,16 @@ export default function Dashboard() {
 
       return (
         filteredLeads[0] ||
-        leads[0] ||
         null
       );
     }, [
-      leads,
       filteredLeads,
       selectedLeadId,
     ]);
+
+  /* =========================================================
+     TOP DASHBOARD STATS
+     ========================================================= */
 
   const stats =
     useMemo(() => {
@@ -613,7 +674,9 @@ export default function Dashboard() {
       const qualified =
         leads.filter(
           (lead) =>
-            lead.lead_status ===
+            normalizeStatus(
+              lead.lead_status
+            ) ===
             "Qualified"
         ).length;
 
@@ -625,20 +688,44 @@ export default function Dashboard() {
             )
         ).length;
 
-      const followUps =
+      const contacted =
         leads.filter(
           (lead) =>
-            lead.lead_status ===
-              "Follow-up" ||
-            lead.lead_status ===
-              "Contacted"
+            normalizeStatus(
+              lead.lead_status
+            ) ===
+            "Contacted"
         ).length;
+
+      const followUp =
+        leads.filter(
+          (lead) =>
+            normalizeStatus(
+              lead.lead_status
+            ) ===
+            "Follow-up"
+        ).length;
+
+      const followUps =
+        contacted +
+        followUp;
 
       const won =
         leads.filter(
           (lead) =>
-            lead.lead_status ===
+            normalizeStatus(
+              lead.lead_status
+            ) ===
             "Won"
+        ).length;
+
+      const lost =
+        leads.filter(
+          (lead) =>
+            normalizeStatus(
+              lead.lead_status
+            ) ===
+            "Lost"
         ).length;
 
       const unassigned =
@@ -651,18 +738,299 @@ export default function Dashboard() {
         total,
         qualified,
         assigned,
+        contacted,
+        followUp,
         followUps,
         won,
+        lost,
         unassigned,
       };
-    }, [leads]);
+    }, [
+      leads,
+    ]);
+
+  /* =========================================================
+     ANALYTICS PERIOD DATA
+     ========================================================= */
+
+  const analyticsLeads =
+    useMemo(() => {
+      return filterLeadsByPeriod(
+        leads,
+        analyticsPeriod
+      );
+    }, [
+      leads,
+      analyticsPeriod,
+    ]);
+
+  /* =========================================================
+     ANALYTICS
+     ========================================================= */
+
+  const analytics =
+    useMemo(() => {
+      const total =
+        analyticsLeads.length;
+
+      const assigned =
+        analyticsLeads.filter(
+          (lead) =>
+            Boolean(
+              lead.assigned_to
+            )
+        ).length;
+
+      const unassigned =
+        total -
+        assigned;
+
+      const won =
+        analyticsLeads.filter(
+          (lead) =>
+            normalizeStatus(
+              lead.lead_status
+            ) ===
+            "Won"
+        ).length;
+
+      const qualityScores =
+        analyticsLeads.map(
+          (lead) =>
+            calculateLeadQuality(
+              lead
+            )
+        );
+
+      const averageQuality =
+        qualityScores.length >
+        0
+          ? Math.round(
+              qualityScores.reduce(
+                (
+                  totalScore,
+                  score
+                ) =>
+                  totalScore +
+                  score,
+                0
+              ) /
+                qualityScores.length
+            )
+          : 0;
+
+      const assignmentRate =
+        total > 0
+          ? Math.round(
+              (assigned /
+                total) *
+                100
+            )
+          : 0;
+
+      const winRate =
+        total > 0
+          ? Math.round(
+              (won /
+                total) *
+                100
+            )
+          : 0;
+
+      const statusData =
+        [
+          "Qualified",
+          "Contacted",
+          "Follow-up",
+          "Won",
+          "Lost",
+        ].map(
+          (status) => ({
+            label:
+              status,
+
+            value:
+              analyticsLeads.filter(
+                (lead) =>
+                  normalizeStatus(
+                    lead.lead_status
+                  ) ===
+                  status
+              ).length,
+          })
+        );
+
+      const assignmentData =
+        [
+          ...TEAM_MEMBERS,
+          "Unassigned",
+        ].map(
+          (
+            person
+          ) => ({
+            label:
+              person,
+
+            value:
+              person ===
+              "Unassigned"
+                ? analyticsLeads.filter(
+                    (
+                      lead
+                    ) =>
+                      !lead.assigned_to
+                  ).length
+                : analyticsLeads.filter(
+                    (
+                      lead
+                    ) =>
+                      lead.assigned_to ===
+                      person
+                  ).length,
+          })
+        );
+
+      const buyCount =
+        analyticsLeads.filter(
+          (lead) =>
+            String(
+              lead.intent ||
+                ""
+            ).toLowerCase() ===
+            "buy"
+        ).length;
+
+      const rentCount =
+        analyticsLeads.filter(
+          (lead) =>
+            String(
+              lead.intent ||
+                ""
+            ).toLowerCase() ===
+            "rent"
+        ).length;
+
+      const otherIntent =
+        Math.max(
+          0,
+          total -
+            buyCount -
+            rentCount
+        );
+
+      const intentData =
+        [
+          {
+            label:
+              "Buy",
+            value:
+              buyCount,
+          },
+          {
+            label:
+              "Rent",
+            value:
+              rentCount,
+          },
+          {
+            label:
+              "Other",
+            value:
+              otherIntent,
+          },
+        ];
+
+      const locationMap =
+        {};
+
+      analyticsLeads.forEach(
+        (lead) => {
+          const location =
+            cleanLocation(
+              lead.location
+            );
+
+          if (
+            !location
+          ) {
+            return;
+          }
+
+          locationMap[
+            location
+          ] =
+            (
+              locationMap[
+                location
+              ] ||
+              0
+            ) + 1;
+        }
+      );
+
+      const topLocations =
+        Object.entries(
+          locationMap
+        )
+          .map(
+            ([
+              label,
+              value,
+            ]) => ({
+              label,
+              value,
+            })
+          )
+          .sort(
+            (
+              a,
+              b
+            ) =>
+              b.value -
+              a.value
+          )
+          .slice(
+            0,
+            5
+          );
+
+      const trendData =
+        buildLeadTrend(
+          analyticsLeads,
+          analyticsPeriod
+        );
+
+      return {
+        total,
+        assigned,
+        unassigned,
+        won,
+        averageQuality,
+        assignmentRate,
+        winRate,
+        statusData,
+        assignmentData,
+        intentData,
+        topLocations,
+        trendData,
+      };
+    }, [
+      analyticsLeads,
+      analyticsPeriod,
+    ]);
 
   const qualityScore =
     useMemo(() => {
       return calculateLeadQuality(
         selectedLead
       );
-    }, [selectedLead]);
+    }, [
+      selectedLead,
+    ]);
+
+  /* =========================================================
+     RENDER
+     ========================================================= */
 
   return (
     <main
@@ -685,6 +1053,10 @@ export default function Dashboard() {
       <div
         className="dashboardShell"
       >
+        {/* ===================================================
+            SIDEBAR
+            =================================================== */}
+
         <aside
           className={
             sidebarOpen
@@ -793,11 +1165,7 @@ export default function Dashboard() {
                   "Follow-up"
                 }
                 count={
-                  leads.filter(
-                    (lead) =>
-                      lead.lead_status ===
-                      "Follow-up"
-                  ).length
+                  stats.followUp
                 }
                 onClick={() => {
                   setStatusFilter(
@@ -876,9 +1244,17 @@ export default function Dashboard() {
           </div>
         </aside>
 
+        {/* ===================================================
+            MAIN
+            =================================================== */}
+
         <section
           className="dashboardMain"
         >
+          {/* =================================================
+              HEADER
+              ================================================= */}
+
           <header
             className="dashboardHeader"
           >
@@ -916,6 +1292,7 @@ export default function Dashboard() {
                 className="headerLive"
               >
                 <span />
+
                 Live data
               </div>
 
@@ -969,6 +1346,10 @@ export default function Dashboard() {
             </div>
           </header>
 
+          {/* =================================================
+              TOP KPI CARDS
+              ================================================= */}
+
           <div
             className="statsGrid"
           >
@@ -1002,9 +1383,266 @@ export default function Dashboard() {
               value={
                 stats.followUps
               }
-              detail="Contacted or due"
+              detail="Contacted + follow-up"
             />
           </div>
+
+          {/* =================================================
+              ANALYTICS SECTION
+              ================================================= */}
+
+          <section
+            className="analyticsSection"
+          >
+            <div
+              className="analyticsHeader"
+            >
+              <div>
+                <span
+                  className="sectionEyebrow"
+                >
+                  MANAGEMENT ANALYTICS
+                </span>
+
+                <h2>
+                  Performance overview
+                </h2>
+
+                <p>
+                  Live analysis of lead flow,
+                  team allocation and conversion
+                  signals.
+                </p>
+              </div>
+
+              <div
+                className="analyticsPeriodSelector"
+              >
+                {ANALYTICS_PERIODS.map(
+                  (
+                    period
+                  ) => (
+                    <button
+                      key={
+                        period.value
+                      }
+                      className={
+                        analyticsPeriod ===
+                        period.value
+                          ? "analyticsPeriodButton analyticsPeriodButtonActive"
+                          : "analyticsPeriodButton"
+                      }
+                      onClick={() =>
+                        setAnalyticsPeriod(
+                          period.value
+                        )
+                      }
+                    >
+                      {
+                        period.label
+                      }
+                    </button>
+                  )
+                )}
+              </div>
+            </div>
+
+            <div
+              className="analyticsKpiGrid"
+            >
+              <AnalyticsKpi
+                label="Leads in period"
+                value={
+                  analytics.total
+                }
+                detail={
+                  getAnalyticsPeriodLabel(
+                    analyticsPeriod
+                  )
+                }
+              />
+
+              <AnalyticsKpi
+                label="Average quality"
+                value={`${analytics.averageQuality}%`}
+                detail="Qualification completeness"
+              />
+
+              <AnalyticsKpi
+                label="Assignment rate"
+                value={`${analytics.assignmentRate}%`}
+                detail={`${analytics.assigned} of ${analytics.total} allocated`}
+              />
+
+              <AnalyticsKpi
+                label="Win rate"
+                value={`${analytics.winRate}%`}
+                detail={`${analytics.won} won opportunities`}
+              />
+            </div>
+
+            <div
+              className="analyticsGrid"
+            >
+              <div
+                className="analyticsCard analyticsTrendCard"
+              >
+                <AnalyticsCardHeader
+                  eyebrow="LEAD MOMENTUM"
+                  title="Lead creation trend"
+                  caption={getAnalyticsPeriodLabel(
+                    analyticsPeriod
+                  )}
+                />
+
+                <TrendChart
+                  data={
+                    analytics.trendData
+                  }
+                />
+              </div>
+
+              <div
+                className="analyticsCard"
+              >
+                <AnalyticsCardHeader
+                  eyebrow="PIPELINE"
+                  title="Status distribution"
+                  caption={`${analytics.total} leads`}
+                />
+
+                <AnalyticsBarList
+                  data={
+                    analytics.statusData
+                  }
+                  emptyText="No lead status data yet."
+                />
+              </div>
+
+              <div
+                className="analyticsCard"
+              >
+                <AnalyticsCardHeader
+                  eyebrow="SALES OWNERSHIP"
+                  title="Team allocation"
+                  caption={`${analytics.assigned} assigned`}
+                />
+
+                <AnalyticsBarList
+                  data={
+                    analytics.assignmentData
+                  }
+                  emptyText="No assignment data yet."
+                />
+              </div>
+
+              <div
+                className="analyticsCard analyticsSplitCard"
+              >
+                <AnalyticsCardHeader
+                  eyebrow="ASSIGNMENT HEALTH"
+                  title="Assigned vs unassigned"
+                  caption={`${analytics.assignmentRate}% coverage`}
+                />
+
+                <DonutChart
+                  centerValue={`${analytics.assignmentRate}%`}
+                  centerLabel="Assigned"
+                  items={[
+                    {
+                      label:
+                        "Assigned",
+                      value:
+                        analytics.assigned,
+                      color:
+                        "#D8C6A6",
+                    },
+                    {
+                      label:
+                        "Unassigned",
+                      value:
+                        analytics.unassigned,
+                      color:
+                        "rgba(255,255,255,.12)",
+                    },
+                  ]}
+                />
+              </div>
+
+              <div
+                className="analyticsCard analyticsSplitCard"
+              >
+                <AnalyticsCardHeader
+                  eyebrow="CUSTOMER INTENT"
+                  title="Buy vs rent"
+                  caption={`${analytics.total} enquiries`}
+                />
+
+                <DonutChart
+                  centerValue={
+                    analytics.total
+                  }
+                  centerLabel="Leads"
+                  items={[
+                    {
+                      label:
+                        "Buy",
+                      value:
+                        getAnalyticsValue(
+                          analytics.intentData,
+                          "Buy"
+                        ),
+                      color:
+                        "#78C6A6",
+                    },
+                    {
+                      label:
+                        "Rent",
+                      value:
+                        getAnalyticsValue(
+                          analytics.intentData,
+                          "Rent"
+                        ),
+                      color:
+                        "#D8C6A6",
+                    },
+                    {
+                      label:
+                        "Other",
+                      value:
+                        getAnalyticsValue(
+                          analytics.intentData,
+                          "Other"
+                        ),
+                      color:
+                        "rgba(255,255,255,.16)",
+                    },
+                  ]}
+                />
+              </div>
+
+              <div
+                className="analyticsCard"
+              >
+                <AnalyticsCardHeader
+                  eyebrow="DEMAND MAP"
+                  title="Top locations"
+                  caption="Most requested areas"
+                />
+
+                <AnalyticsBarList
+                  data={
+                    analytics.topLocations
+                  }
+                  emptyText="Location data will appear here as leads grow."
+                />
+              </div>
+            </div>
+          </section>
+
+          {/* =================================================
+              OPERATIONAL TOOLBAR
+              ================================================= */}
 
           <div
             className="dashboardToolbar"
@@ -1082,6 +1720,10 @@ export default function Dashboard() {
               )}
             </div>
           </div>
+
+          {/* =================================================
+              OPERATIONAL LEAD FEED
+              ================================================= */}
 
           <div
             className="dashboardContentGrid"
@@ -1243,25 +1885,29 @@ export default function Dashboard() {
                   <div
                     className="tableFooter"
                   >
-                    Showing{" "}
-                    {
-                      filteredLeads.length
-                    }{" "}
-                    of{" "}
-                    {
-                      leads.length
-                    }{" "}
-                    leads
+                    <span>
+                      Showing{" "}
+                      {
+                        filteredLeads.length
+                      }{" "}
+                      of{" "}
+                      {
+                        leads.length
+                      }{" "}
+                      leads
+                    </span>
 
                     <span>
-                      Click any row
-                      to preview ·
-                      Open for full
-                      conversation
+                      Click any row to preview ·
+                      Open for full conversation
                     </span>
                   </div>
                 )}
             </section>
+
+            {/* ===============================================
+                SELECTED LEAD INTELLIGENCE
+                =============================================== */}
 
             <aside
               className="intelligencePanel"
@@ -1275,19 +1921,19 @@ export default function Dashboard() {
                       <span
                         className="panelEyebrow champagneText"
                       >
-                        NOMAD
-                        INTELLIGENCE
+                        NOMAD INTELLIGENCE
                       </span>
 
                       <h2>
-                        Opportunity
-                        quality
+                        Opportunity quality
                       </h2>
                     </div>
 
                     <StatusBadge
                       status={
-                        selectedLead.lead_status
+                        normalizeStatus(
+                          selectedLead.lead_status
+                        )
                       }
                     />
                   </div>
@@ -1402,8 +2048,7 @@ export default function Dashboard() {
                       className="intelligenceSummary"
                     >
                       <span>
-                        Lead
-                        summary
+                        Lead summary
                       </span>
 
                       <p>
@@ -1418,8 +2063,7 @@ export default function Dashboard() {
                     className="intelligenceControlGroup"
                   >
                     <label>
-                      Assigned
-                      to
+                      Assigned to
                     </label>
 
                     <select
@@ -1442,26 +2086,24 @@ export default function Dashboard() {
                         )
                       }
                     >
-                      <option value="">
-                        Unassigned
-                      </option>
-
-                      <option value="Ahmed">
-                        Ahmed
-                      </option>
-
-                      <option value="Sarah">
-                        Sarah
-                      </option>
-
-                      <option value="Ali">
-                        Ali
-                      </option>
-
-                      <option value="Sales Team A">
-                        Sales Team
-                        A
-                      </option>
+                      {ASSIGNMENT_OPTIONS.map(
+                        (
+                          person
+                        ) => (
+                          <option
+                            key={
+                              person ||
+                              "unassigned"
+                            }
+                            value={
+                              person
+                            }
+                          >
+                            {person ||
+                              "Unassigned"}
+                          </option>
+                        )
+                      )}
                     </select>
                   </div>
 
@@ -1469,14 +2111,14 @@ export default function Dashboard() {
                     className="intelligenceControlGroup"
                   >
                     <label>
-                      Lead
-                      status
+                      Lead status
                     </label>
 
                     <select
                       value={
-                        selectedLead.lead_status ||
-                        "Qualified"
+                        normalizeStatus(
+                          selectedLead.lead_status
+                        )
                       }
                       disabled={
                         updatingStatusId ===
@@ -1534,8 +2176,7 @@ export default function Dashboard() {
                       )
                     }
                   >
-                    Open full
-                    lead
+                    Open full lead
 
                     <span>
                       ↗
@@ -1552,6 +2193,10 @@ export default function Dashboard() {
     </main>
   );
 }
+
+/* =========================================================
+   SIDEBAR
+   ========================================================= */
 
 function SidebarItem({
   icon,
@@ -1611,6 +2256,10 @@ function SidebarMiniStat({
   );
 }
 
+/* =========================================================
+   TOP STATS
+   ========================================================= */
+
 function DashboardStat({
   label,
   value,
@@ -1640,6 +2289,557 @@ function DashboardStat({
   );
 }
 
+/* =========================================================
+   ANALYTICS COMPONENTS
+   ========================================================= */
+
+function AnalyticsKpi({
+  label,
+  value,
+  detail,
+}) {
+  return (
+    <div
+      className="analyticsKpi"
+    >
+      <span>
+        {label}
+      </span>
+
+      <strong>
+        {value}
+      </strong>
+
+      <small>
+        {detail}
+      </small>
+    </div>
+  );
+}
+
+function AnalyticsCardHeader({
+  eyebrow,
+  title,
+  caption,
+}) {
+  return (
+    <div
+      className="analyticsCardHeader"
+    >
+      <div>
+        <span>
+          {eyebrow}
+        </span>
+
+        <h3>
+          {title}
+        </h3>
+      </div>
+
+      {caption && (
+        <small>
+          {caption}
+        </small>
+      )}
+    </div>
+  );
+}
+
+function AnalyticsBarList({
+  data,
+  emptyText,
+}) {
+  const usable =
+    Array.isArray(
+      data
+    )
+      ? data.filter(
+          (item) =>
+            item.value >
+            0
+        )
+      : [];
+
+  if (
+    usable.length ===
+    0
+  ) {
+    return (
+      <div
+        className="analyticsEmpty"
+      >
+        {emptyText}
+      </div>
+    );
+  }
+
+  const max =
+    Math.max(
+      ...usable.map(
+        (item) =>
+          item.value
+      ),
+      1
+    );
+
+  return (
+    <div
+      className="analyticsBars"
+    >
+      {usable.map(
+        (
+          item
+        ) => (
+          <div
+            className="analyticsBarRow"
+            key={
+              item.label
+            }
+          >
+            <div
+              className="analyticsBarMeta"
+            >
+              <span>
+                {
+                  item.label
+                }
+              </span>
+
+              <strong>
+                {
+                  item.value
+                }
+              </strong>
+            </div>
+
+            <div
+              className="analyticsBarTrack"
+            >
+              <div
+                className="analyticsBarFill"
+                style={{
+                  width:
+                    `${Math.max(
+                      7,
+                      Math.round(
+                        (
+                          item.value /
+                          max
+                        ) *
+                          100
+                      )
+                    )}%`,
+                }}
+              />
+            </div>
+          </div>
+        )
+      )}
+    </div>
+  );
+}
+
+function DonutChart({
+  centerValue,
+  centerLabel,
+  items,
+}) {
+  const usable =
+    items.filter(
+      (item) =>
+        item.value >
+        0
+    );
+
+  const total =
+    usable.reduce(
+      (
+        sum,
+        item
+      ) =>
+        sum +
+        item.value,
+      0
+    );
+
+  let current =
+    0;
+
+  const segments =
+    usable.map(
+      (
+        item
+      ) => {
+        const start =
+          total >
+          0
+            ? (
+                current /
+                total
+              ) *
+              360
+            : 0;
+
+        current +=
+          item.value;
+
+        const end =
+          total >
+          0
+            ? (
+                current /
+                total
+              ) *
+              360
+            : 0;
+
+        return `${item.color} ${start}deg ${end}deg`;
+      }
+    );
+
+  const background =
+    total > 0
+      ? `conic-gradient(${segments.join(
+          ", "
+        )})`
+      : "rgba(255,255,255,.06)";
+
+  return (
+    <div
+      className="donutLayout"
+    >
+      <div
+        className="donutChart"
+        style={{
+          background,
+        }}
+      >
+        <div
+          className="donutInner"
+        >
+          <strong>
+            {centerValue}
+          </strong>
+
+          <span>
+            {centerLabel}
+          </span>
+        </div>
+      </div>
+
+      <div
+        className="donutLegend"
+      >
+        {items.map(
+          (
+            item
+          ) => (
+            <div
+              className="donutLegendRow"
+              key={
+                item.label
+              }
+            >
+              <div>
+                <span
+                  className="donutLegendDot"
+                  style={{
+                    background:
+                      item.color,
+                  }}
+                />
+
+                <span>
+                  {
+                    item.label
+                  }
+                </span>
+              </div>
+
+              <strong>
+                {
+                  item.value
+                }
+              </strong>
+            </div>
+          )
+        )}
+      </div>
+    </div>
+  );
+}
+
+function TrendChart({
+  data,
+}) {
+  if (
+    !Array.isArray(
+      data
+    ) ||
+    data.length ===
+      0
+  ) {
+    return (
+      <div
+        className="analyticsEmpty analyticsTrendEmpty"
+      >
+        Lead trend will appear as new
+        enquiries are captured.
+      </div>
+    );
+  }
+
+  const width =
+    640;
+
+  const height =
+    220;
+
+  const padX =
+    28;
+
+  const padTop =
+    22;
+
+  const padBottom =
+    40;
+
+  const chartHeight =
+    height -
+    padTop -
+    padBottom;
+
+  const maxValue =
+    Math.max(
+      ...data.map(
+        (item) =>
+          item.value
+      ),
+      1
+    );
+
+  const stepX =
+    data.length >
+    1
+      ? (
+          width -
+          padX *
+            2
+        ) /
+        (
+          data.length -
+          1
+        )
+      : 0;
+
+  const points =
+    data.map(
+      (
+        item,
+        index
+      ) => {
+        const x =
+          padX +
+          index *
+            stepX;
+
+        const y =
+          padTop +
+          chartHeight -
+          (
+            item.value /
+            maxValue
+          ) *
+            chartHeight;
+
+        return {
+          x,
+          y,
+          ...item,
+        };
+      }
+    );
+
+  const linePoints =
+    points
+      .map(
+        (
+          point
+        ) =>
+          `${point.x},${point.y}`
+      )
+      .join(
+        " "
+      );
+
+  const areaPoints =
+    [
+      `${points[0].x},${height - padBottom}`,
+      ...points.map(
+        (
+          point
+        ) =>
+          `${point.x},${point.y}`
+      ),
+      `${points[points.length - 1].x},${height - padBottom}`,
+    ].join(
+      " "
+    );
+
+  return (
+    <div
+      className="trendChartWrap"
+    >
+      <svg
+        className="trendChart"
+        viewBox={`0 0 ${width} ${height}`}
+        role="img"
+      >
+        <defs>
+          <linearGradient
+            id="nomadTrendArea"
+            x1="0"
+            y1="0"
+            x2="0"
+            y2="1"
+          >
+            <stop
+              offset="0%"
+              stopColor="#D8C6A6"
+              stopOpacity=".22"
+            />
+
+            <stop
+              offset="100%"
+              stopColor="#D8C6A6"
+              stopOpacity="0"
+            />
+          </linearGradient>
+        </defs>
+
+        {[0.25, 0.5, 0.75, 1].map(
+          (
+            step
+          ) => {
+            const y =
+              padTop +
+              chartHeight -
+              chartHeight *
+                step;
+
+            return (
+              <line
+                key={
+                  step
+                }
+                x1={
+                  padX
+                }
+                x2={
+                  width -
+                  padX
+                }
+                y1={
+                  y
+                }
+                y2={
+                  y
+                }
+                stroke="rgba(255,255,255,.06)"
+                strokeWidth="1"
+              />
+            );
+          }
+        )}
+
+        <polygon
+          points={
+            areaPoints
+          }
+          fill="url(#nomadTrendArea)"
+        />
+
+        <polyline
+          points={
+            linePoints
+          }
+          fill="none"
+          stroke="#D8C6A6"
+          strokeWidth="3"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+
+        {points.map(
+          (
+            point,
+            index
+          ) => (
+            <g
+              key={`${point.label}-${index}`}
+            >
+              <circle
+                cx={
+                  point.x
+                }
+                cy={
+                  point.y
+                }
+                r="5"
+                fill="#0D352D"
+                stroke="#D8C6A6"
+                strokeWidth="3"
+              />
+
+              <text
+                x={
+                  point.x
+                }
+                y={
+                  Math.max(
+                    14,
+                    point.y -
+                      11
+                  )
+                }
+                textAnchor="middle"
+                fill="rgba(255,255,255,.82)"
+                fontSize="11"
+                fontWeight="700"
+              >
+                {
+                  point.value
+                }
+              </text>
+
+              <text
+                x={
+                  point.x
+                }
+                y={
+                  height -
+                  13
+                }
+                textAnchor="middle"
+                fill="rgba(255,255,255,.38)"
+                fontSize="10"
+              >
+                {
+                  point.label
+                }
+              </text>
+            </g>
+          )
+        )}
+      </svg>
+    </div>
+  );
+}
+
+/* =========================================================
+   LEAD ROW
+   ========================================================= */
+
 function RealLeadRow({
   lead,
   selected,
@@ -1653,6 +2853,11 @@ function RealLeadRow({
   onStatusChange,
   onAssignmentChange,
 }) {
+  const normalizedStatus =
+    normalizeStatus(
+      lead.lead_status
+    );
+
   return (
     <div
       className={
@@ -1756,25 +2961,24 @@ function RealLeadRow({
             )
           }
         >
-          <option value="">
-            Unassigned
-          </option>
-
-          <option value="Ahmed">
-            Ahmed
-          </option>
-
-          <option value="Sarah">
-            Sarah
-          </option>
-
-          <option value="Ali">
-            Ali
-          </option>
-
-          <option value="Sales Team A">
-            Sales Team A
-          </option>
+          {ASSIGNMENT_OPTIONS.map(
+            (
+              person
+            ) => (
+              <option
+                key={
+                  person ||
+                  "unassigned"
+                }
+                value={
+                  person
+                }
+              >
+                {person ||
+                  "Unassigned"}
+              </option>
+            )
+          )}
         </select>
       </div>
 
@@ -1788,14 +2992,13 @@ function RealLeadRow({
       >
         <StatusDot
           status={
-            lead.lead_status
+            normalizedStatus
           }
         />
 
         <select
           value={
-            lead.lead_status ||
-            "Qualified"
+            normalizedStatus
           }
           disabled={
             updatingStatus
@@ -1847,6 +3050,10 @@ function RealLeadRow({
   );
 }
 
+/* =========================================================
+   STATUS
+   ========================================================= */
+
 function StatusDot({
   status,
 }) {
@@ -1876,13 +3083,19 @@ function StatusBadge({
   );
 }
 
+/* =========================================================
+   QUALITY
+   ========================================================= */
+
 function QualityRing({
   score,
 }) {
   const degrees =
     Math.round(
-      (score /
-        100) *
+      (
+        score /
+        100
+      ) *
         360
     );
 
@@ -1937,6 +3150,10 @@ function QualityLine({
   );
 }
 
+/* =========================================================
+   EMPTY / LOADING
+   ========================================================= */
+
 function DashboardLoading() {
   return (
     <div
@@ -1949,13 +3166,11 @@ function DashboardLoading() {
       </div>
 
       <strong>
-        Loading sales
-        intelligence
+        Loading sales intelligence
       </strong>
 
       <p>
-        Retrieving live
-        NOMAD
+        Retrieving live NOMAD
         opportunities...
       </p>
     </div>
@@ -2008,18 +3223,41 @@ function NoSelectedLead() {
       </div>
 
       <strong>
-        No opportunity
-        selected
+        No opportunity selected
       </strong>
 
       <p>
-        Select a lead from
-        the opportunity feed
-        to view NOMAD
-        intelligence.
+        Select a lead from the opportunity
+        feed to view NOMAD intelligence.
       </p>
     </div>
   );
+}
+
+/* =========================================================
+   DATA HELPERS
+   ========================================================= */
+
+function normalizeStatus(
+  status
+) {
+  if (
+    !status ||
+    status ===
+      "Assigned"
+  ) {
+    return "Qualified";
+  }
+
+  if (
+    STATUS_OPTIONS.includes(
+      status
+    )
+  ) {
+    return status;
+  }
+
+  return "Qualified";
 }
 
 function getInitials(
@@ -2042,7 +3280,10 @@ function getInitials(
     1
   ) {
     return pieces[0]
-      .slice(0, 2)
+      .slice(
+        0,
+        2
+      )
       .toUpperCase();
   }
 
@@ -2110,10 +3351,13 @@ function formatProperty(
         )
       : "";
 
-  const parts = [
-    bedrooms,
-    type,
-  ].filter(Boolean);
+  const parts =
+    [
+      bedrooms,
+      type,
+    ].filter(
+      Boolean
+    );
 
   if (
     parts.length ===
@@ -2143,7 +3387,9 @@ function capitalize(
     )
     .replace(
       /\b\w/g,
-      (letter) =>
+      (
+        letter
+      ) =>
         letter.toUpperCase()
     );
 }
@@ -2175,24 +3421,21 @@ function formatExcelDate(
     {
       year:
         "numeric",
+
       month:
         "short",
+
       day:
         "2-digit",
+
       hour:
         "2-digit",
+
       minute:
         "2-digit",
     }
   );
 }
-
-/* =========================================================
-   FILTER COUNTS
-
-   Assigned = has assigned_to value.
-   Other filters = lead_status.
-   ========================================================= */
 
 function getFilterCount(
   leads,
@@ -2219,7 +3462,9 @@ function getFilterCount(
 
   return leads.filter(
     (lead) =>
-      lead.lead_status ===
+      normalizeStatus(
+        lead.lead_status
+      ) ===
       filter
   ).length;
 }
@@ -2231,16 +3476,17 @@ function calculateLeadQuality(
     return 0;
   }
 
-  const fields = [
-    lead.intent,
-    lead.property_type,
-    lead.budget,
-    lead.location,
-    lead.timeline,
-    lead.name,
-    lead.phone,
-    lead.callback_time,
-  ];
+  const fields =
+    [
+      lead.intent,
+      lead.property_type,
+      lead.budget,
+      lead.location,
+      lead.timeline,
+      lead.name,
+      lead.phone,
+      lead.callback_time,
+    ];
 
   if (
     String(
@@ -2276,8 +3522,10 @@ function calculateLeadQuality(
     ).length;
 
   return Math.round(
-    (completed /
-      fields.length) *
+    (
+      completed /
+      fields.length
+    ) *
       100
   );
 }
@@ -2295,18 +3543,23 @@ function buildRecommendation(
     return "Lead requirements are captured. Assign this opportunity to a sales consultant for follow-up.";
   }
 
+  const status =
+    normalizeStatus(
+      lead.lead_status
+    );
+
   if (
-    lead.lead_status ===
+    status ===
     "Won"
   ) {
     return `Opportunity is marked as won and assigned to ${lead.assigned_to}.`;
   }
 
   if (
-    lead.lead_status ===
+    status ===
     "Lost"
   ) {
-    return "Opportunity is marked as lost. Review the conversation if further context is required.";
+    return "Opportunity is marked as lost. Review the conversation and sales notes if further context is required.";
   }
 
   if (
@@ -2322,13 +3575,12 @@ function getStatusDotClass(
   status
 ) {
   switch (
-    status
+    normalizeStatus(
+      status
+    )
   ) {
     case "Qualified":
       return "statusDotQualified";
-
-    case "Assigned":
-      return "statusDotAssigned";
 
     case "Contacted":
       return "statusDotContacted";
@@ -2351,7 +3603,9 @@ function getStatusBadgeClass(
   status
 ) {
   switch (
-    status
+    normalizeStatus(
+      status
+    )
   ) {
     case "Won":
       return "statusBadgeWon";
@@ -2365,16 +3619,440 @@ function getStatusBadgeClass(
     case "Contacted":
       return "statusBadgeContacted";
 
-    case "Assigned":
-      return "statusBadgeAssigned";
-
     default:
       return "statusBadgeQualified";
   }
 }
 
 /* =========================================================
-   CSS
+   ANALYTICS HELPERS
+   ========================================================= */
+
+function filterLeadsByPeriod(
+  leads,
+  period
+) {
+  if (
+    period ===
+    "all"
+  ) {
+    return leads;
+  }
+
+  const days =
+    Number(
+      period
+    );
+
+  if (
+    !Number.isFinite(
+      days
+    )
+  ) {
+    return leads;
+  }
+
+  const cutoff =
+    new Date();
+
+  cutoff.setHours(
+    0,
+    0,
+    0,
+    0
+  );
+
+  cutoff.setDate(
+    cutoff.getDate() -
+      (
+        days -
+        1
+      )
+  );
+
+  return leads.filter(
+    (lead) => {
+      if (
+        !lead.created_at
+      ) {
+        return false;
+      }
+
+      const created =
+        new Date(
+          lead.created_at
+        );
+
+      if (
+        Number.isNaN(
+          created.getTime()
+        )
+      ) {
+        return false;
+      }
+
+      return (
+        created >=
+        cutoff
+      );
+    }
+  );
+}
+
+function getAnalyticsPeriodLabel(
+  period
+) {
+  if (
+    period ===
+    "all"
+  ) {
+    return "All-time performance";
+  }
+
+  return `Last ${period} days`;
+}
+
+function cleanLocation(
+  value
+) {
+  if (!value) {
+    return "";
+  }
+
+  return String(
+    value
+  )
+    .trim()
+    .replace(
+      /\s+/g,
+      " "
+    );
+}
+
+function getAnalyticsValue(
+  data,
+  label
+) {
+  return (
+    data.find(
+      (item) =>
+        item.label ===
+        label
+    )?.value ||
+    0
+  );
+}
+
+function buildLeadTrend(
+  leads,
+  period
+) {
+  if (
+    period ===
+    "7"
+  ) {
+    return buildDayBuckets(
+      leads,
+      7,
+      1
+    );
+  }
+
+  if (
+    period ===
+    "30"
+  ) {
+    return buildDayBuckets(
+      leads,
+      30,
+      5
+    );
+  }
+
+  if (
+    period ===
+    "90"
+  ) {
+    return buildDayBuckets(
+      leads,
+      90,
+      15
+    );
+  }
+
+  return buildMonthBuckets(
+    leads
+  );
+}
+
+function buildDayBuckets(
+  leads,
+  totalDays,
+  bucketDays
+) {
+  const now =
+    new Date();
+
+  now.setHours(
+    23,
+    59,
+    59,
+    999
+  );
+
+  const bucketCount =
+    Math.ceil(
+      totalDays /
+        bucketDays
+    );
+
+  const buckets =
+    [];
+
+  for (
+    let i =
+      bucketCount -
+      1;
+    i >= 0;
+    i -= 1
+  ) {
+    const end =
+      new Date(
+        now
+      );
+
+    end.setDate(
+      end.getDate() -
+        i *
+          bucketDays
+    );
+
+    const start =
+      new Date(
+        end
+      );
+
+    start.setDate(
+      start.getDate() -
+        (
+          bucketDays -
+          1
+        )
+    );
+
+    start.setHours(
+      0,
+      0,
+      0,
+      0
+    );
+
+    end.setHours(
+      23,
+      59,
+      59,
+      999
+    );
+
+    const value =
+      leads.filter(
+        (lead) => {
+          if (
+            !lead.created_at
+          ) {
+            return false;
+          }
+
+          const date =
+            new Date(
+              lead.created_at
+            );
+
+          return (
+            !Number.isNaN(
+              date.getTime()
+            ) &&
+            date >=
+              start &&
+            date <=
+              end
+          );
+        }
+      ).length;
+
+    buckets.push({
+      label:
+        bucketDays ===
+        1
+          ? formatShortDate(
+              end
+            )
+          : `${formatShortDate(
+              start
+            )}`,
+
+      value,
+    });
+  }
+
+  return buckets;
+}
+
+function buildMonthBuckets(
+  leads
+) {
+  const validDates =
+    leads
+      .map(
+        (lead) =>
+          lead.created_at
+            ? new Date(
+                lead.created_at
+              )
+            : null
+      )
+      .filter(
+        (date) =>
+          date &&
+          !Number.isNaN(
+            date.getTime()
+          )
+      );
+
+  if (
+    validDates.length ===
+    0
+  ) {
+    return [];
+  }
+
+  let earliest =
+    new Date(
+      Math.min(
+        ...validDates.map(
+          (date) =>
+            date.getTime()
+        )
+      )
+    );
+
+  const latest =
+    new Date();
+
+  earliest =
+    new Date(
+      earliest.getFullYear(),
+      earliest.getMonth(),
+      1
+    );
+
+  const months =
+    [];
+
+  let cursor =
+    new Date(
+      earliest
+    );
+
+  while (
+    cursor <=
+      latest &&
+    months.length <
+      24
+  ) {
+    const monthStart =
+      new Date(
+        cursor.getFullYear(),
+        cursor.getMonth(),
+        1
+      );
+
+    const monthEnd =
+      new Date(
+        cursor.getFullYear(),
+        cursor.getMonth() +
+          1,
+        0,
+        23,
+        59,
+        59,
+        999
+      );
+
+    const value =
+      leads.filter(
+        (lead) => {
+          if (
+            !lead.created_at
+          ) {
+            return false;
+          }
+
+          const date =
+            new Date(
+              lead.created_at
+            );
+
+          return (
+            !Number.isNaN(
+              date.getTime()
+            ) &&
+            date >=
+              monthStart &&
+            date <=
+              monthEnd
+          );
+        }
+      ).length;
+
+    months.push({
+      label:
+        monthStart.toLocaleDateString(
+          "en-AE",
+          {
+            month:
+              "short",
+          }
+        ),
+
+      value,
+    });
+
+    cursor.setMonth(
+      cursor.getMonth() +
+        1
+    );
+  }
+
+  if (
+    months.length >
+    12
+  ) {
+    return months.slice(
+      -12
+    );
+  }
+
+  return months;
+}
+
+function formatShortDate(
+  date
+) {
+  return date.toLocaleDateString(
+    "en-AE",
+    {
+      day:
+        "numeric",
+
+      month:
+        "short",
+    }
+  );
+}
+
+/* =========================================================
+   FINAL CSS
    ========================================================= */
 
 function DashboardStyles() {
@@ -2402,12 +4080,12 @@ function DashboardStyles() {
       }
 
       ::selection {
-        background: rgba(216, 198, 166, .25);
+        background: rgba(216,198,166,.25);
       }
 
       ::-webkit-scrollbar {
-        width: 8px;
-        height: 8px;
+        width: 9px;
+        height: 9px;
       }
 
       ::-webkit-scrollbar-track {
@@ -2415,7 +4093,7 @@ function DashboardStyles() {
       }
 
       ::-webkit-scrollbar-thumb {
-        background: rgba(216,198,166,.16);
+        background: rgba(216,198,166,.18);
         border-radius: 999px;
       }
 
@@ -2423,9 +4101,14 @@ function DashboardStyles() {
         min-height: 100vh;
         background:
           radial-gradient(
-            circle at 80% 5%,
-            rgba(11,118,99,.08),
-            transparent 30%
+            circle at 82% 4%,
+            rgba(12,120,101,.11),
+            transparent 28%
+          ),
+          radial-gradient(
+            circle at 10% 65%,
+            rgba(216,198,166,.03),
+            transparent 25%
           ),
           #082F27;
         color: white;
@@ -2441,14 +4124,20 @@ function DashboardStyles() {
       .dashboardShell {
         min-height: 100vh;
         display: grid;
-        grid-template-columns: 220px minmax(0, 1fr);
+        grid-template-columns:
+          232px
+          minmax(0,1fr);
       }
+
+      /* =====================================================
+         SIDEBAR
+         ===================================================== */
 
       .dashboardSidebar {
         position: sticky;
         top: 0;
         height: 100vh;
-        padding: 26px 20px;
+        padding: 28px 21px;
         background: #082F27;
         border-right: 1px solid rgba(255,255,255,.07);
         display: flex;
@@ -2460,68 +4149,76 @@ function DashboardStyles() {
       .sidebarBrand {
         display: flex;
         align-items: center;
-        gap: 10px;
+        gap: 11px;
       }
 
       .sidebarBrandIcon {
-        width: 36px;
-        height: 36px;
+        width: 39px;
+        height: 39px;
         border-radius: 50%;
-        background: #164F42;
+        background:
+          linear-gradient(
+            145deg,
+            #1B5D4E,
+            #123F35
+          );
         color: white;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 11px;
+        font-size: 13px;
         font-weight: 850;
-        border: 1px solid rgba(216,198,166,.14);
-        box-shadow: 0 10px 28px rgba(0,0,0,.12);
+        border: 1px solid rgba(216,198,166,.16);
+        box-shadow: 0 12px 30px rgba(0,0,0,.15);
       }
 
       .sidebarBrand strong {
         display: block;
         color: white;
-        font-size: 14px;
+        font-size: 16px;
         letter-spacing: .5px;
       }
 
       .sidebarBrand span {
         display: block;
-        margin-top: 2px;
-        color: rgba(255,255,255,.42);
-        font-size: 9px;
-        letter-spacing: .7px;
+        margin-top: 3px;
+        color: rgba(255,255,255,.46);
+        font-size: 11px;
+        letter-spacing: .5px;
       }
 
       .sidebarSectionLabel {
-        margin: 38px 10px 11px;
-        color: rgba(255,255,255,.32);
-        font-size: 9px;
+        margin: 40px 10px 12px;
+        color: rgba(255,255,255,.34);
+        font-size: 10px;
         font-weight: 800;
-        letter-spacing: 1.2px;
+        letter-spacing: 1.25px;
         text-transform: uppercase;
       }
 
       .sidebarSecondLabel {
-        margin-top: 34px;
+        margin-top: 36px;
       }
 
       .sidebarMenu {
         display: grid;
-        gap: 5px;
+        gap: 6px;
       }
 
       .sidebarMenuItem {
         width: 100%;
-        min-height: 42px;
-        padding: 0 11px;
+        min-height: 46px;
+        padding: 0 12px;
         border: none;
-        border-radius: 10px;
+        border-radius: 11px;
         background: transparent;
-        color: rgba(255,255,255,.48);
+        color: rgba(255,255,255,.56);
         display: grid;
-        grid-template-columns: 18px 1fr auto;
-        gap: 9px;
+        grid-template-columns:
+          20px
+          1fr
+          auto;
+        gap: 10px;
         align-items: center;
         text-align: left;
         cursor: pointer;
@@ -2532,86 +4229,95 @@ function DashboardStyles() {
       }
 
       .sidebarMenuItem:hover {
-        color: rgba(255,255,255,.82);
-        background: rgba(255,255,255,.035);
+        color: rgba(255,255,255,.88);
+        background: rgba(255,255,255,.04);
         transform: translateX(2px);
       }
 
       .sidebarMenuItemActive {
         color: white;
-        background: rgba(255,255,255,.065);
+        background:
+          linear-gradient(
+            90deg,
+            rgba(216,198,166,.09),
+            rgba(255,255,255,.04)
+          );
+        box-shadow:
+          inset 2px 0 0 rgba(216,198,166,.45);
       }
 
       .sidebarMenuIcon {
         color: #D8C6A6;
         text-align: center;
-        font-size: 11px;
+        font-size: 13px;
       }
 
       .sidebarMenuLabel {
-        font-size: 10px;
+        font-size: 12px;
         font-weight: 650;
       }
 
       .sidebarMenuCount {
-        min-width: 22px;
-        padding: 3px 6px;
+        min-width: 25px;
+        padding: 4px 7px;
         border-radius: 999px;
-        background: rgba(255,255,255,.04);
-        color: rgba(255,255,255,.45);
+        background: rgba(255,255,255,.05);
+        color: rgba(255,255,255,.52);
         text-align: center;
-        font-size: 8px;
+        font-size: 10px;
       }
 
       .sidebarMenuItemActive .sidebarMenuCount {
         color: #D8C6A6;
-        background: rgba(216,198,166,.08);
+        background: rgba(216,198,166,.10);
       }
 
       .sidebarMiniStats {
         display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 7px;
+        grid-template-columns:
+          1fr
+          1fr;
+        gap: 8px;
       }
 
       .sidebarMiniStat {
-        padding: 11px;
-        border-radius: 10px;
-        border: 1px solid rgba(255,255,255,.05);
-        background: rgba(255,255,255,.028);
+        padding: 13px;
+        border-radius: 11px;
+        border: 1px solid rgba(255,255,255,.055);
+        background: rgba(255,255,255,.03);
       }
 
       .sidebarMiniStat span {
         display: block;
-        color: rgba(255,255,255,.38);
-        font-size: 8px;
+        color: rgba(255,255,255,.42);
+        font-size: 10px;
       }
 
       .sidebarMiniStat strong {
         display: block;
-        margin-top: 6px;
+        margin-top: 7px;
         color: white;
-        font-size: 17px;
+        font-size: 20px;
         font-weight: 620;
       }
 
       .sidebarSystem {
-        padding: 13px;
-        border-radius: 12px;
-        background: rgba(255,255,255,.038);
-        border: 1px solid rgba(255,255,255,.05);
+        padding: 14px;
+        border-radius: 13px;
+        background: rgba(255,255,255,.04);
+        border: 1px solid rgba(255,255,255,.055);
         display: flex;
         align-items: center;
-        gap: 10px;
+        gap: 11px;
       }
 
       .systemPulse {
-        width: 7px;
-        height: 7px;
+        width: 8px;
+        height: 8px;
         flex-shrink: 0;
         border-radius: 50%;
         background: #78C6A6;
-        box-shadow: 0 0 0 5px rgba(120,198,166,.06);
+        box-shadow: 0 0 0 5px rgba(120,198,166,.07);
         animation: systemPulse 2s ease-in-out infinite;
       }
 
@@ -2623,7 +4329,7 @@ function DashboardStyles() {
         }
 
         50% {
-          transform: scale(1.2);
+          transform: scale(1.22);
           opacity: 1;
         }
       }
@@ -2631,19 +4337,23 @@ function DashboardStyles() {
       .sidebarSystem strong {
         display: block;
         color: white;
-        font-size: 10px;
+        font-size: 11px;
       }
 
       .sidebarSystem span {
         display: block;
-        margin-top: 2px;
-        color: rgba(255,255,255,.40);
-        font-size: 8px;
+        margin-top: 3px;
+        color: rgba(255,255,255,.43);
+        font-size: 9px;
       }
+
+      /* =====================================================
+         MAIN
+         ===================================================== */
 
       .dashboardMain {
         min-width: 0;
-        padding: 30px;
+        padding: 32px;
         background:
           linear-gradient(
             145deg,
@@ -2651,6 +4361,10 @@ function DashboardStyles() {
             #082B24
           );
       }
+
+      /* =====================================================
+         HEADER
+         ===================================================== */
 
       .dashboardHeader {
         display: flex;
@@ -2662,22 +4376,22 @@ function DashboardStyles() {
       .headerIdentity {
         display: flex;
         align-items: center;
-        gap: 14px;
+        gap: 15px;
       }
 
       .headerEyebrow {
-        color: rgba(255,255,255,.42);
-        font-size: 10px;
+        color: rgba(255,255,255,.46);
+        font-size: 11px;
         font-weight: 750;
-        letter-spacing: 1.2px;
+        letter-spacing: 1.25px;
       }
 
       .dashboardHeader h1 {
-        margin: 6px 0 0;
+        margin: 7px 0 0;
         color: white;
-        font-size: 28px;
+        font-size: 32px;
         line-height: 1;
-        letter-spacing: -.8px;
+        letter-spacing: -1px;
         font-weight: 620;
       }
 
@@ -2688,82 +4402,73 @@ function DashboardStyles() {
       }
 
       .headerLive {
-        height: 36px;
-        padding: 0 12px;
-        border-radius: 9px;
-        border: 1px solid rgba(255,255,255,.055);
+        height: 39px;
+        padding: 0 13px;
+        border-radius: 10px;
+        border: 1px solid rgba(255,255,255,.06);
         background: rgba(255,255,255,.03);
-        color: rgba(255,255,255,.58);
+        color: rgba(255,255,255,.64);
         display: flex;
         align-items: center;
         gap: 7px;
-        font-size: 9px;
+        font-size: 11px;
       }
 
       .headerLive span {
-        width: 5px;
-        height: 5px;
+        width: 6px;
+        height: 6px;
         border-radius: 50%;
         background: #78C6A6;
       }
 
-      .exportButton {
-        height: 36px;
-        padding: 0 13px;
-        border-radius: 9px;
-        border: 1px solid rgba(216,198,166,.16);
-        background: rgba(216,198,166,.08);
-        color: #D8C6A6;
+      .exportButton,
+      .refreshButton {
+        height: 39px;
+        padding: 0 14px;
+        border-radius: 10px;
         display: flex;
         align-items: center;
-        gap: 7px;
+        gap: 8px;
         cursor: pointer;
-        font-size: 9px;
-        font-weight: 750;
+        font-size: 11px;
+        font-weight: 700;
         transition:
           background .2s ease,
           border .2s ease,
           transform .2s ease;
       }
 
+      .exportButton {
+        border: 1px solid rgba(216,198,166,.18);
+        background: rgba(216,198,166,.09);
+        color: #D8C6A6;
+      }
+
       .exportButton:hover:not(:disabled) {
-        background: rgba(216,198,166,.13);
-        border-color: rgba(216,198,166,.24);
+        background: rgba(216,198,166,.14);
+        border-color: rgba(216,198,166,.27);
         transform: translateY(-1px);
       }
 
-      .exportButton:disabled {
+      .refreshButton {
+        border: 1px solid rgba(255,255,255,.07);
+        background: rgba(255,255,255,.04);
+        color: rgba(255,255,255,.76);
+      }
+
+      .refreshButton:hover:not(:disabled) {
+        background: rgba(255,255,255,.07);
+      }
+
+      .exportButton:disabled,
+      .refreshButton:disabled {
         cursor: not-allowed;
-        opacity: .35;
+        opacity: .4;
       }
 
       .exportIcon {
-        font-size: 13px;
+        font-size: 15px;
         line-height: 1;
-      }
-
-      .refreshButton {
-        height: 36px;
-        padding: 0 12px;
-        border-radius: 9px;
-        border: 1px solid rgba(255,255,255,.06);
-        background: rgba(255,255,255,.04);
-        color: rgba(255,255,255,.72);
-        display: flex;
-        align-items: center;
-        gap: 7px;
-        cursor: pointer;
-        font-size: 9px;
-        transition: background .2s ease;
-      }
-
-      .refreshButton:hover {
-        background: rgba(255,255,255,.065);
-      }
-
-      .refreshButton:disabled {
-        cursor: not-allowed;
-        opacity: .55;
       }
 
       .refreshIcon {
@@ -2782,8 +4487,8 @@ function DashboardStyles() {
 
       .mobileMenuButton {
         display: none;
-        width: 36px;
-        height: 36px;
+        width: 39px;
+        height: 39px;
         border-radius: 10px;
         border: 1px solid rgba(255,255,255,.07);
         background: rgba(255,255,255,.04);
@@ -2791,67 +4496,432 @@ function DashboardStyles() {
         cursor: pointer;
       }
 
+      /* =====================================================
+         TOP KPI CARDS
+         ===================================================== */
+
       .statsGrid {
-        margin-top: 26px;
+        margin-top: 28px;
         display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 10px;
+        grid-template-columns:
+          repeat(
+            4,
+            minmax(0,1fr)
+          );
+        gap: 11px;
       }
 
       .dashboardStat {
-        min-height: 108px;
-        padding: 17px;
-        border-radius: 13px;
-        border: 1px solid rgba(255,255,255,.055);
-        background: rgba(255,255,255,.038);
+        min-height: 122px;
+        padding: 20px;
+        border-radius: 15px;
+        border: 1px solid rgba(255,255,255,.06);
+        background: rgba(255,255,255,.04);
         position: relative;
         overflow: hidden;
         transition:
           transform .25s ease,
-          background .25s ease;
+          background .25s ease,
+          border .25s ease;
       }
 
       .dashboardStat:hover {
         transform: translateY(-2px);
-        background: rgba(255,255,255,.05);
+        background: rgba(255,255,255,.052);
+        border-color: rgba(255,255,255,.085);
       }
 
       .dashboardStatAccent::after {
         content: "";
         position: absolute;
-        width: 110px;
-        height: 110px;
+        width: 125px;
+        height: 125px;
         border-radius: 50%;
-        right: -55px;
-        top: -55px;
-        border: 1px solid rgba(216,198,166,.09);
+        right: -62px;
+        top: -62px;
+        border: 1px solid rgba(216,198,166,.10);
       }
 
       .dashboardStat > span {
-        color: rgba(255,255,255,.42);
-        font-size: 9px;
+        color: rgba(255,255,255,.47);
+        font-size: 11px;
         text-transform: uppercase;
-        letter-spacing: .85px;
+        letter-spacing: .8px;
       }
 
       .dashboardStat strong {
         display: block;
-        margin-top: 8px;
+        margin-top: 10px;
         color: white;
-        font-size: 27px;
+        font-size: 32px;
         line-height: 1;
         font-weight: 620;
       }
 
       .dashboardStat small {
         display: block;
-        margin-top: 8px;
+        margin-top: 10px;
         color: #78C6A6;
-        font-size: 9px;
+        font-size: 11px;
       }
 
+      /* =====================================================
+         ANALYTICS
+         ===================================================== */
+
+      .analyticsSection {
+        margin-top: 22px;
+        padding: 22px;
+        border-radius: 18px;
+        border: 1px solid rgba(255,255,255,.06);
+        background:
+          linear-gradient(
+            145deg,
+            rgba(255,255,255,.042),
+            rgba(255,255,255,.022)
+          );
+        box-shadow:
+          0 24px 70px rgba(0,0,0,.08);
+      }
+
+      .analyticsHeader {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 30px;
+      }
+
+      .sectionEyebrow {
+        display: block;
+        color: #D8C6A6;
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: 1.15px;
+      }
+
+      .analyticsHeader h2 {
+        margin: 7px 0 0;
+        color: white;
+        font-size: 22px;
+        font-weight: 650;
+        letter-spacing: -.35px;
+      }
+
+      .analyticsHeader p {
+        margin: 7px 0 0;
+        color: rgba(255,255,255,.44);
+        font-size: 12px;
+        line-height: 1.55;
+      }
+
+      .analyticsPeriodSelector {
+        display: flex;
+        align-items: center;
+        padding: 4px;
+        border-radius: 12px;
+        border: 1px solid rgba(255,255,255,.06);
+        background: rgba(255,255,255,.025);
+      }
+
+      .analyticsPeriodButton {
+        min-height: 34px;
+        padding: 0 12px;
+        border: none;
+        border-radius: 9px;
+        background: transparent;
+        color: rgba(255,255,255,.46);
+        cursor: pointer;
+        font-size: 10px;
+        font-weight: 650;
+        white-space: nowrap;
+        transition:
+          color .2s ease,
+          background .2s ease;
+      }
+
+      .analyticsPeriodButton:hover {
+        color: rgba(255,255,255,.78);
+      }
+
+      .analyticsPeriodButtonActive {
+        background: rgba(216,198,166,.11);
+        color: #D8C6A6;
+      }
+
+      .analyticsKpiGrid {
+        margin-top: 20px;
+        display: grid;
+        grid-template-columns:
+          repeat(
+            4,
+            minmax(0,1fr)
+          );
+        gap: 10px;
+      }
+
+      .analyticsKpi {
+        min-height: 102px;
+        padding: 16px;
+        border-radius: 13px;
+        background: rgba(3,24,20,.25);
+        border: 1px solid rgba(255,255,255,.05);
+      }
+
+      .analyticsKpi > span {
+        display: block;
+        color: rgba(255,255,255,.43);
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: .7px;
+      }
+
+      .analyticsKpi strong {
+        display: block;
+        margin-top: 9px;
+        color: white;
+        font-size: 25px;
+        line-height: 1;
+        font-weight: 620;
+      }
+
+      .analyticsKpi small {
+        display: block;
+        margin-top: 9px;
+        color: rgba(255,255,255,.42);
+        font-size: 10px;
+        line-height: 1.35;
+      }
+
+      .analyticsGrid {
+        margin-top: 11px;
+        display: grid;
+        grid-template-columns:
+          repeat(
+            3,
+            minmax(0,1fr)
+          );
+        gap: 11px;
+      }
+
+      .analyticsCard {
+        min-width: 0;
+        min-height: 285px;
+        padding: 18px;
+        border-radius: 14px;
+        background: rgba(5,29,24,.30);
+        border: 1px solid rgba(255,255,255,.05);
+        overflow: hidden;
+      }
+
+      .analyticsTrendCard {
+        grid-column:
+          span 2;
+      }
+
+      .analyticsCardHeader {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 15px;
+      }
+
+      .analyticsCardHeader > div > span {
+        display: block;
+        color: rgba(216,198,166,.82);
+        font-size: 9px;
+        font-weight: 800;
+        letter-spacing: .95px;
+      }
+
+      .analyticsCardHeader h3 {
+        margin: 6px 0 0;
+        color: white;
+        font-size: 16px;
+        font-weight: 650;
+      }
+
+      .analyticsCardHeader > small {
+        color: rgba(255,255,255,.35);
+        font-size: 9px;
+        text-align: right;
+      }
+
+      .analyticsEmpty {
+        min-height: 190px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        color: rgba(255,255,255,.34);
+        font-size: 11px;
+        line-height: 1.6;
+      }
+
+      .analyticsTrendEmpty {
+        min-height: 210px;
+      }
+
+      /* ANALYTICS BARS */
+
+      .analyticsBars {
+        margin-top: 20px;
+        display: grid;
+        gap: 16px;
+      }
+
+      .analyticsBarRow {
+        min-width: 0;
+      }
+
+      .analyticsBarMeta {
+        margin-bottom: 7px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+      }
+
+      .analyticsBarMeta span {
+        color: rgba(255,255,255,.60);
+        font-size: 11px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .analyticsBarMeta strong {
+        color: rgba(255,255,255,.88);
+        font-size: 11px;
+        font-weight: 700;
+      }
+
+      .analyticsBarTrack {
+        width: 100%;
+        height: 7px;
+        overflow: hidden;
+        border-radius: 999px;
+        background: rgba(255,255,255,.06);
+      }
+
+      .analyticsBarFill {
+        height: 100%;
+        border-radius: 999px;
+        background:
+          linear-gradient(
+            90deg,
+            #B99862,
+            #D8C6A6
+          );
+        box-shadow:
+          0 0 18px rgba(216,198,166,.08);
+      }
+
+      /* DONUT */
+
+      .donutLayout {
+        margin-top: 22px;
+        display: grid;
+        grid-template-columns:
+          145px
+          minmax(0,1fr);
+        align-items: center;
+        gap: 22px;
+      }
+
+      .donutChart {
+        width: 145px;
+        height: 145px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .donutInner {
+        width: 108px;
+        height: 108px;
+        border-radius: 50%;
+        background: #0B3028;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        box-shadow:
+          inset 0 0 0 1px rgba(255,255,255,.025);
+      }
+
+      .donutInner strong {
+        color: white;
+        font-size: 27px;
+        font-weight: 620;
+      }
+
+      .donutInner span {
+        margin-top: 4px;
+        color: rgba(255,255,255,.38);
+        font-size: 9px;
+        text-transform: uppercase;
+        letter-spacing: .6px;
+      }
+
+      .donutLegend {
+        display: grid;
+        gap: 10px;
+      }
+
+      .donutLegendRow {
+        min-height: 31px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        border-bottom: 1px solid rgba(255,255,255,.045);
+      }
+
+      .donutLegendRow > div {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-width: 0;
+      }
+
+      .donutLegendDot {
+        width: 7px;
+        height: 7px;
+        flex-shrink: 0;
+        border-radius: 50%;
+      }
+
+      .donutLegendRow span {
+        color: rgba(255,255,255,.55);
+        font-size: 10px;
+      }
+
+      .donutLegendRow strong {
+        color: rgba(255,255,255,.84);
+        font-size: 11px;
+      }
+
+      /* TREND */
+
+      .trendChartWrap {
+        width: 100%;
+        margin-top: 12px;
+        overflow: hidden;
+      }
+
+      .trendChart {
+        display: block;
+        width: 100%;
+        height: 220px;
+      }
+
+      /* =====================================================
+         TOOLBAR
+         ===================================================== */
+
       .dashboardToolbar {
-        margin-top: 18px;
+        margin-top: 22px;
         display: flex;
         align-items: center;
         justify-content: space-between;
@@ -2861,24 +4931,24 @@ function DashboardStyles() {
       .filterRail {
         display: flex;
         align-items: center;
-        gap: 6px;
+        gap: 7px;
         overflow-x: auto;
-        padding-bottom: 2px;
+        padding-bottom: 3px;
       }
 
       .filterButton {
         flex-shrink: 0;
-        min-height: 34px;
-        padding: 0 12px;
+        min-height: 38px;
+        padding: 0 14px;
         border-radius: 999px;
-        border: 1px solid rgba(255,255,255,.055);
+        border: 1px solid rgba(255,255,255,.06);
         background: rgba(255,255,255,.025);
-        color: rgba(255,255,255,.50);
+        color: rgba(255,255,255,.56);
         cursor: pointer;
-        font-size: 9px;
+        font-size: 11px;
         display: flex;
         align-items: center;
-        gap: 7px;
+        gap: 8px;
         transition:
           background .2s ease,
           color .2s ease,
@@ -2886,39 +4956,39 @@ function DashboardStyles() {
       }
 
       .filterButton span {
-        min-width: 18px;
-        padding: 2px 5px;
+        min-width: 21px;
+        padding: 3px 6px;
         border-radius: 999px;
-        background: rgba(255,255,255,.045);
-        font-size: 8px;
+        background: rgba(255,255,255,.05);
+        font-size: 9px;
       }
 
       .filterButton:hover {
-        color: rgba(255,255,255,.78);
+        color: rgba(255,255,255,.86);
       }
 
       .filterButtonActive {
-        border-color: rgba(216,198,166,.20);
-        background: rgba(216,198,166,.08);
+        border-color: rgba(216,198,166,.22);
+        background: rgba(216,198,166,.10);
         color: #D8C6A6;
       }
 
       .searchBox {
-        width: 280px;
-        min-height: 38px;
+        width: 300px;
+        min-height: 42px;
         flex-shrink: 0;
-        padding: 0 11px;
-        border-radius: 10px;
-        border: 1px solid rgba(255,255,255,.055);
-        background: rgba(255,255,255,.03);
+        padding: 0 13px;
+        border-radius: 11px;
+        border: 1px solid rgba(255,255,255,.06);
+        background: rgba(255,255,255,.035);
         display: flex;
         align-items: center;
-        gap: 8px;
+        gap: 9px;
       }
 
       .searchBox > span {
-        color: rgba(255,255,255,.36);
-        font-size: 13px;
+        color: rgba(255,255,255,.38);
+        font-size: 15px;
       }
 
       .searchBox input {
@@ -2928,7 +4998,7 @@ function DashboardStyles() {
         outline: none;
         background: transparent;
         color: white;
-        font-size: 10px;
+        font-size: 12px;
       }
 
       .searchBox input::placeholder {
@@ -2938,31 +5008,35 @@ function DashboardStyles() {
       .searchBox button {
         border: none;
         background: transparent;
-        color: rgba(255,255,255,.42);
+        color: rgba(255,255,255,.45);
         cursor: pointer;
-        font-size: 14px;
+        font-size: 17px;
       }
+
+      /* =====================================================
+         FEED + INTELLIGENCE
+         ===================================================== */
 
       .dashboardContentGrid {
         margin-top: 18px;
         display: grid;
         grid-template-columns:
-          minmax(0, 1.65fr)
-          minmax(250px, .62fr);
+          minmax(0,1.65fr)
+          minmax(270px,.62fr);
         gap: 14px;
         align-items: start;
       }
 
       .opportunityPanel,
       .intelligencePanel {
-        border-radius: 15px;
-        border: 1px solid rgba(255,255,255,.055);
-        background: rgba(255,255,255,.034);
+        border-radius: 16px;
+        border: 1px solid rgba(255,255,255,.06);
+        background: rgba(255,255,255,.037);
       }
 
       .opportunityPanel {
         min-width: 0;
-        padding: 18px;
+        padding: 20px;
       }
 
       .panelTop {
@@ -2974,8 +5048,8 @@ function DashboardStyles() {
 
       .panelEyebrow {
         display: block;
-        color: rgba(255,255,255,.40);
-        font-size: 9px;
+        color: rgba(255,255,255,.43);
+        font-size: 10px;
         font-weight: 750;
         letter-spacing: 1px;
         text-transform: uppercase;
@@ -2983,45 +5057,45 @@ function DashboardStyles() {
 
       .panelTop h2,
       .intelligenceTop h2 {
-        margin: 5px 0 0;
+        margin: 6px 0 0;
         color: white;
-        font-size: 16px;
+        font-size: 18px;
         font-weight: 650;
       }
 
       .liveChip {
         display: inline-flex;
         align-items: center;
-        gap: 6px;
-        padding: 6px 8px;
+        gap: 7px;
+        padding: 7px 10px;
         border-radius: 999px;
         color: #78C6A6;
-        background: rgba(120,198,166,.07);
-        font-size: 8px;
+        background: rgba(120,198,166,.08);
+        font-size: 10px;
       }
 
       .liveChip span {
-        width: 5px;
-        height: 5px;
+        width: 6px;
+        height: 6px;
         border-radius: 50%;
         background: #78C6A6;
       }
 
       .leadHeaderRow {
-        margin-top: 18px;
-        min-height: 32px;
+        margin-top: 19px;
+        min-height: 36px;
         display: grid;
         grid-template-columns:
-          minmax(210px, 1.55fr)
-          minmax(90px, .7fr)
-          minmax(112px, .8fr)
-          minmax(110px, .75fr)
-          30px;
+          minmax(220px,1.55fr)
+          minmax(100px,.7fr)
+          minmax(120px,.8fr)
+          minmax(120px,.75fr)
+          34px;
         gap: 10px;
         align-items: center;
-        padding: 0 8px;
-        color: rgba(255,255,255,.32);
-        font-size: 8px;
+        padding: 0 9px;
+        color: rgba(255,255,255,.35);
+        font-size: 9px;
         text-transform: uppercase;
         letter-spacing: .8px;
         border-bottom: 1px solid rgba(255,255,255,.05);
@@ -3032,27 +5106,27 @@ function DashboardStyles() {
       }
 
       .realLeadRow {
-        min-height: 76px;
+        min-height: 84px;
         display: grid;
         grid-template-columns:
-          minmax(210px, 1.55fr)
-          minmax(90px, .7fr)
-          minmax(112px, .8fr)
-          minmax(110px, .75fr)
-          30px;
+          minmax(220px,1.55fr)
+          minmax(100px,.7fr)
+          minmax(120px,.8fr)
+          minmax(120px,.75fr)
+          34px;
         gap: 10px;
         align-items: center;
-        padding: 10px 8px;
+        padding: 11px 9px;
         border-bottom: 1px solid rgba(255,255,255,.05);
         cursor: pointer;
-        border-radius: 9px;
+        border-radius: 10px;
         transition:
           background .22s ease,
           transform .22s ease;
       }
 
       .realLeadRowHovered {
-        background: rgba(255,255,255,.035);
+        background: rgba(255,255,255,.04);
         transform: translateX(2px);
       }
 
@@ -3060,33 +5134,33 @@ function DashboardStyles() {
         background:
           linear-gradient(
             90deg,
-            rgba(216,198,166,.07),
+            rgba(216,198,166,.085),
             rgba(255,255,255,.025)
           );
         box-shadow:
-          inset 2px 0 0 rgba(216,198,166,.52);
+          inset 2px 0 0 rgba(216,198,166,.60);
       }
 
       .leadPrimary {
         min-width: 0;
         display: flex;
         align-items: center;
-        gap: 10px;
+        gap: 11px;
       }
 
       .leadAvatar {
-        width: 34px;
-        height: 34px;
+        width: 39px;
+        height: 39px;
         flex-shrink: 0;
         border-radius: 50%;
-        background: rgba(216,198,166,.10);
+        background: rgba(216,198,166,.11);
         color: #D8C6A6;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 9px;
+        font-size: 11px;
         font-weight: 850;
-        border: 1px solid rgba(216,198,166,.08);
+        border: 1px solid rgba(216,198,166,.09);
       }
 
       .leadIdentity {
@@ -3099,45 +5173,45 @@ function DashboardStyles() {
         text-overflow: ellipsis;
         white-space: nowrap;
         color: white;
-        font-size: 11px;
+        font-size: 13px;
       }
 
       .leadIdentity span {
         display: block;
-        margin-top: 3px;
+        margin-top: 4px;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
-        color: rgba(255,255,255,.46);
-        font-size: 9px;
+        color: rgba(255,255,255,.51);
+        font-size: 11px;
       }
 
       .leadIdentity small {
         display: block;
-        margin-top: 3px;
-        color: rgba(255,255,255,.32);
-        font-size: 8px;
+        margin-top: 4px;
+        color: rgba(255,255,255,.36);
+        font-size: 10px;
       }
 
       .leadBudget strong {
         display: block;
-        color: rgba(255,255,255,.82);
-        font-size: 10px;
+        color: rgba(255,255,255,.85);
+        font-size: 12px;
         font-weight: 700;
       }
 
       .leadBudget span {
         display: block;
-        margin-top: 3px;
-        color: rgba(255,255,255,.39);
-        font-size: 8px;
+        margin-top: 4px;
+        color: rgba(255,255,255,.43);
+        font-size: 10px;
       }
 
       .leadControlCell {
         min-width: 0;
         display: flex;
         align-items: center;
-        gap: 6px;
+        gap: 7px;
       }
 
       .leadControlCell select {
@@ -3145,12 +5219,12 @@ function DashboardStyles() {
         width: 100%;
         border: none;
         outline: none;
-        padding: 7px 6px;
-        border-radius: 7px;
-        background: rgba(255,255,255,.04);
-        color: rgba(255,255,255,.76);
+        padding: 8px 7px;
+        border-radius: 8px;
+        background: rgba(255,255,255,.045);
+        color: rgba(255,255,255,.80);
         cursor: pointer;
-        font-size: 9px;
+        font-size: 11px;
         appearance: auto;
       }
 
@@ -3166,57 +5240,55 @@ function DashboardStyles() {
 
       .assignmentDot,
       .statusDot {
-        width: 5px;
-        height: 5px;
+        width: 6px;
+        height: 6px;
         flex-shrink: 0;
         border-radius: 50%;
       }
 
       .assignmentDot {
-        background: rgba(255,255,255,.16);
+        background: rgba(255,255,255,.18);
       }
 
       .assignmentDotActive {
         background: #D8C6A6;
-        box-shadow: 0 0 0 4px rgba(216,198,166,.05);
+        box-shadow: 0 0 0 4px rgba(216,198,166,.055);
       }
 
       .leadOpenButton {
-        width: 29px;
-        height: 29px;
-        border-radius: 8px;
-        border: 1px solid rgba(255,255,255,.055);
-        background: rgba(255,255,255,.025);
-        color: rgba(255,255,255,.46);
+        width: 32px;
+        height: 32px;
+        border-radius: 9px;
+        border: 1px solid rgba(255,255,255,.06);
+        background: rgba(255,255,255,.028);
+        color: rgba(255,255,255,.50);
         cursor: pointer;
-        font-size: 10px;
+        font-size: 12px;
         transition:
           background .2s ease,
           color .2s ease;
       }
 
       .leadOpenButton:hover {
-        background: rgba(216,198,166,.08);
+        background: rgba(216,198,166,.09);
         color: #D8C6A6;
       }
 
       .tableFooter {
-        margin-top: 13px;
-        padding-top: 11px;
+        margin-top: 14px;
+        padding-top: 12px;
         border-top: 1px solid rgba(255,255,255,.05);
-        color: rgba(255,255,255,.38);
-        font-size: 8px;
+        color: rgba(255,255,255,.41);
+        font-size: 10px;
         display: flex;
         justify-content: space-between;
         gap: 20px;
       }
 
+      /* STATUS COLORS */
+
       .statusDotQualified {
         background: #75D0AC;
-      }
-
-      .statusDotAssigned {
-        background: #D8C6A6;
       }
 
       .statusDotContacted {
@@ -3235,10 +5307,14 @@ function DashboardStyles() {
         background: #D98383;
       }
 
+      /* =====================================================
+         INTELLIGENCE PANEL
+         ===================================================== */
+
       .intelligencePanel {
         position: sticky;
         top: 30px;
-        padding: 20px;
+        padding: 22px;
       }
 
       .intelligenceTop {
@@ -3256,22 +5332,22 @@ function DashboardStyles() {
         display: inline-flex;
         align-items: center;
         gap: 6px;
-        max-width: 115px;
-        padding: 6px 8px;
+        max-width: 125px;
+        padding: 7px 10px;
         border-radius: 999px;
-        font-size: 8px;
+        font-size: 10px;
         font-weight: 750;
         white-space: nowrap;
       }
 
       .statusBadge span {
-        width: 5px;
-        height: 5px;
+        width: 6px;
+        height: 6px;
         border-radius: 50%;
       }
 
       .statusBadgeQualified {
-        background: rgba(117,208,172,.08);
+        background: rgba(117,208,172,.09);
         color: #75D0AC;
       }
 
@@ -3279,17 +5355,8 @@ function DashboardStyles() {
         background: #75D0AC;
       }
 
-      .statusBadgeAssigned {
-        background: rgba(216,198,166,.08);
-        color: #D8C6A6;
-      }
-
-      .statusBadgeAssigned span {
-        background: #D8C6A6;
-      }
-
       .statusBadgeContacted {
-        background: rgba(140,180,216,.08);
+        background: rgba(140,180,216,.09);
         color: #8CB4D8;
       }
 
@@ -3298,7 +5365,7 @@ function DashboardStyles() {
       }
 
       .statusBadgeFollow {
-        background: rgba(225,167,113,.08);
+        background: rgba(225,167,113,.09);
         color: #E1A771;
       }
 
@@ -3307,7 +5374,7 @@ function DashboardStyles() {
       }
 
       .statusBadgeWon {
-        background: rgba(102,206,144,.08);
+        background: rgba(102,206,144,.09);
         color: #66CE90;
       }
 
@@ -3316,7 +5383,7 @@ function DashboardStyles() {
       }
 
       .statusBadgeLost {
-        background: rgba(217,131,131,.08);
+        background: rgba(217,131,131,.09);
         color: #D98383;
       }
 
@@ -3325,19 +5392,20 @@ function DashboardStyles() {
       }
 
       .qualityRing {
-        margin: 25px auto 21px;
-        width: 145px;
-        height: 145px;
+        margin: 27px auto 23px;
+        width: 155px;
+        height: 155px;
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
-        box-shadow: 0 0 40px rgba(216,198,166,.04);
+        box-shadow:
+          0 0 45px rgba(216,198,166,.04);
       }
 
       .qualityRingInner {
-        width: 116px;
-        height: 116px;
+        width: 124px;
+        height: 124px;
         border-radius: 50%;
         background: #0D352D;
         display: flex;
@@ -3348,57 +5416,57 @@ function DashboardStyles() {
 
       .qualityRingInner strong {
         color: white;
-        font-size: 31px;
+        font-size: 35px;
         font-weight: 620;
       }
 
       .qualityRingInner span {
-        margin-top: 3px;
-        color: rgba(255,255,255,.40);
-        font-size: 8px;
-        letter-spacing: .7px;
+        margin-top: 4px;
+        color: rgba(255,255,255,.42);
+        font-size: 9px;
+        letter-spacing: .75px;
       }
 
       .selectedLeadIdentity {
         display: flex;
         align-items: center;
-        gap: 10px;
-        padding-bottom: 15px;
+        gap: 11px;
+        padding-bottom: 17px;
         border-bottom: 1px solid rgba(255,255,255,.05);
       }
 
       .selectedLeadAvatar {
-        width: 37px;
-        height: 37px;
+        width: 41px;
+        height: 41px;
         border-radius: 50%;
-        background: rgba(216,198,166,.10);
+        background: rgba(216,198,166,.11);
         color: #D8C6A6;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 9px;
+        font-size: 11px;
         font-weight: 850;
       }
 
       .selectedLeadIdentity strong {
         display: block;
         color: white;
-        font-size: 11px;
+        font-size: 13px;
       }
 
       .selectedLeadIdentity span {
         display: block;
-        margin-top: 3px;
-        color: rgba(255,255,255,.44);
-        font-size: 9px;
+        margin-top: 4px;
+        color: rgba(255,255,255,.48);
+        font-size: 11px;
       }
 
       .qualityDetails {
-        margin-top: 5px;
+        margin-top: 6px;
       }
 
       .qualityLine {
-        min-height: 39px;
+        min-height: 43px;
         border-bottom: 1px solid rgba(255,255,255,.05);
         display: flex;
         align-items: center;
@@ -3407,16 +5475,16 @@ function DashboardStyles() {
       }
 
       .qualityLine > span {
-        color: rgba(255,255,255,.43);
-        font-size: 9px;
+        color: rgba(255,255,255,.47);
+        font-size: 11px;
       }
 
       .qualityLine strong {
-        font-size: 9px;
+        font-size: 11px;
       }
 
       .qualityGood {
-        color: rgba(255,255,255,.78);
+        color: rgba(255,255,255,.82);
       }
 
       .qualityMissing {
@@ -3424,52 +5492,52 @@ function DashboardStyles() {
       }
 
       .intelligenceSummary {
-        margin-top: 16px;
-        padding: 13px;
-        border-radius: 11px;
-        background: rgba(255,255,255,.035);
-        border: 1px solid rgba(255,255,255,.05);
+        margin-top: 17px;
+        padding: 14px;
+        border-radius: 12px;
+        background: rgba(255,255,255,.038);
+        border: 1px solid rgba(255,255,255,.055);
       }
 
       .intelligenceSummary span {
         color: #D8C6A6;
-        font-size: 8px;
+        font-size: 9px;
         text-transform: uppercase;
         letter-spacing: .9px;
         font-weight: 750;
       }
 
       .intelligenceSummary p {
-        margin: 7px 0 0;
-        color: rgba(255,255,255,.58);
-        font-size: 9px;
-        line-height: 1.6;
+        margin: 8px 0 0;
+        color: rgba(255,255,255,.62);
+        font-size: 11px;
+        line-height: 1.65;
       }
 
       .intelligenceControlGroup {
-        margin-top: 13px;
+        margin-top: 15px;
       }
 
       .intelligenceControlGroup label {
         display: block;
-        margin-bottom: 6px;
-        color: rgba(255,255,255,.38);
-        font-size: 8px;
+        margin-bottom: 7px;
+        color: rgba(255,255,255,.42);
+        font-size: 9px;
         text-transform: uppercase;
         letter-spacing: .75px;
       }
 
       .intelligenceControlGroup select {
         width: 100%;
-        min-height: 38px;
-        padding: 0 10px;
-        border-radius: 9px;
-        border: 1px solid rgba(255,255,255,.055);
+        min-height: 42px;
+        padding: 0 11px;
+        border-radius: 10px;
+        border: 1px solid rgba(255,255,255,.06);
         outline: none;
-        background: rgba(255,255,255,.04);
-        color: rgba(255,255,255,.78);
+        background: rgba(255,255,255,.045);
+        color: rgba(255,255,255,.82);
         cursor: pointer;
-        font-size: 10px;
+        font-size: 11px;
       }
 
       .intelligenceControlGroup select option {
@@ -3478,35 +5546,35 @@ function DashboardStyles() {
       }
 
       .qualityRecommendation {
-        margin-top: 16px;
-        padding: 12px;
-        border-radius: 11px;
-        background: rgba(216,198,166,.07);
-        border: 1px solid rgba(216,198,166,.08);
-        color: rgba(255,255,255,.56);
-        font-size: 9px;
-        line-height: 1.6;
+        margin-top: 17px;
+        padding: 14px;
+        border-radius: 12px;
+        background: rgba(216,198,166,.075);
+        border: 1px solid rgba(216,198,166,.09);
+        color: rgba(255,255,255,.60);
+        font-size: 11px;
+        line-height: 1.65;
       }
 
       .qualityRecommendation > span {
         display: block;
-        margin-bottom: 4px;
+        margin-bottom: 5px;
         color: #D8C6A6;
-        font-size: 8px;
+        font-size: 9px;
         font-weight: 850;
         letter-spacing: .8px;
       }
 
       .openLeadButton {
         width: 100%;
-        min-height: 40px;
-        margin-top: 14px;
+        min-height: 44px;
+        margin-top: 15px;
         border: none;
-        border-radius: 10px;
+        border-radius: 11px;
         background: #D8C6A6;
         color: #082F27;
         cursor: pointer;
-        font-size: 10px;
+        font-size: 11px;
         font-weight: 850;
         transition:
           transform .2s ease,
@@ -3522,10 +5590,14 @@ function DashboardStyles() {
         background: #E2D3B9;
       }
 
+      /* =====================================================
+         LOADING / EMPTY
+         ===================================================== */
+
       .loadingState,
       .emptyState,
       .noSelectedLead {
-        min-height: 320px;
+        min-height: 340px;
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -3535,21 +5607,23 @@ function DashboardStyles() {
 
       .loadingOrbit {
         position: relative;
-        width: 58px;
-        height: 58px;
-        margin-bottom: 17px;
+        width: 62px;
+        height: 62px;
+        margin-bottom: 18px;
         border-radius: 50%;
-        border: 1px solid rgba(216,198,166,.15);
-        animation: loadingOrbitRotate 2s linear infinite;
+        border: 1px solid rgba(216,198,166,.16);
+        animation:
+          loadingOrbitRotate
+          2s linear infinite;
       }
 
       .loadingOrbit span {
         position: absolute;
-        width: 6px;
-        height: 6px;
+        width: 7px;
+        height: 7px;
         border-radius: 50%;
         top: -3px;
-        left: 26px;
+        left: 27px;
         background: #D8C6A6;
       }
 
@@ -3562,27 +5636,27 @@ function DashboardStyles() {
       .loadingState strong,
       .emptyState strong,
       .noSelectedLead strong {
-        color: rgba(255,255,255,.76);
-        font-size: 11px;
+        color: rgba(255,255,255,.80);
+        font-size: 13px;
       }
 
       .loadingState p,
       .emptyState p,
       .noSelectedLead p {
-        margin: 6px 0 0;
-        max-width: 260px;
-        color: rgba(255,255,255,.38);
-        font-size: 9px;
+        margin: 7px 0 0;
+        max-width: 280px;
+        color: rgba(255,255,255,.42);
+        font-size: 11px;
         line-height: 1.6;
       }
 
       .emptyIcon,
       .noSelectedLead > div {
-        width: 40px;
-        height: 40px;
-        margin-bottom: 12px;
+        width: 43px;
+        height: 43px;
+        margin-bottom: 13px;
         border-radius: 50%;
-        background: rgba(216,198,166,.06);
+        background: rgba(216,198,166,.07);
         color: #D8C6A6;
         display: flex;
         align-items: center;
@@ -3590,53 +5664,60 @@ function DashboardStyles() {
       }
 
       .emptyState button {
-        margin-top: 13px;
-        border: 1px solid rgba(216,198,166,.12);
-        background: rgba(216,198,166,.06);
+        margin-top: 15px;
+        border: 1px solid rgba(216,198,166,.13);
+        background: rgba(216,198,166,.07);
         color: #D8C6A6;
         border-radius: 999px;
-        padding: 8px 11px;
+        padding: 9px 13px;
         cursor: pointer;
-        font-size: 9px;
+        font-size: 10px;
       }
 
       .sidebarBackdrop {
         display: none;
       }
 
-      @media (max-width: 1180px) {
+      /* =====================================================
+         RESPONSIVE
+         ===================================================== */
+
+      @media (max-width: 1280px) {
         .dashboardShell {
-          grid-template-columns: 190px minmax(0, 1fr);
+          grid-template-columns:
+            205px
+            minmax(0,1fr);
         }
 
         .dashboardSidebar {
-          padding: 24px 15px;
+          padding:
+            25px
+            16px;
         }
 
         .dashboardMain {
-          padding: 24px;
+          padding:
+            27px;
         }
 
-        .dashboardContentGrid {
+        .analyticsGrid {
           grid-template-columns:
-            minmax(0, 1.5fr)
-            minmax(230px, .65fr);
+            repeat(
+              2,
+              minmax(0,1fr)
+            );
         }
 
-        .leadHeaderRow,
-        .realLeadRow {
-          grid-template-columns:
-            minmax(190px, 1.45fr)
-            85px
-            105px
-            103px
-            28px;
+        .analyticsTrendCard {
+          grid-column:
+            span 2;
         }
       }
 
-      @media (max-width: 980px) {
+      @media (max-width: 1080px) {
         .dashboardShell {
-          grid-template-columns: 1fr;
+          grid-template-columns:
+            1fr;
         }
 
         .dashboardSidebar {
@@ -3644,14 +5725,26 @@ function DashboardStyles() {
           z-index: 100;
           left: 0;
           top: 0;
-          width: 240px;
-          transform: translateX(-105%);
-          box-shadow: 18px 0 60px rgba(0,0,0,.25);
-          transition: transform .28s ease;
+          width: 255px;
+          transform:
+            translateX(
+              -105%
+            );
+          box-shadow:
+            18px
+            0
+            60px
+            rgba(0,0,0,.28);
+          transition:
+            transform
+            .28s ease;
         }
 
         .dashboardSidebarOpen {
-          transform: translateX(0);
+          transform:
+            translateX(
+              0
+            );
         }
 
         .sidebarBackdrop {
@@ -3660,8 +5753,17 @@ function DashboardStyles() {
           z-index: 90;
           inset: 0;
           border: none;
-          background: rgba(0,0,0,.46);
-          backdrop-filter: blur(4px);
+          background:
+            rgba(
+              0,
+              0,
+              0,
+              .48
+            );
+          backdrop-filter:
+            blur(
+              4px
+            );
         }
 
         .mobileMenuButton {
@@ -3669,7 +5771,8 @@ function DashboardStyles() {
         }
 
         .dashboardContentGrid {
-          grid-template-columns: 1fr;
+          grid-template-columns:
+            1fr;
         }
 
         .intelligencePanel {
@@ -3677,74 +5780,235 @@ function DashboardStyles() {
         }
 
         .statsGrid {
-          grid-template-columns: repeat(2, 1fr);
+          grid-template-columns:
+            repeat(
+              2,
+              1fr
+            );
+        }
+
+        .analyticsKpiGrid {
+          grid-template-columns:
+            repeat(
+              2,
+              minmax(0,1fr)
+            );
         }
       }
 
-      @media (max-width: 760px) {
+      @media (max-width: 820px) {
         .dashboardMain {
-          padding: 18px;
+          padding:
+            20px;
         }
 
         .dashboardHeader {
-          align-items: flex-start;
+          align-items:
+            flex-start;
         }
 
         .headerLive {
-          display: none;
+          display:
+            none;
         }
 
         .dashboardToolbar {
-          flex-direction: column;
-          align-items: stretch;
+          flex-direction:
+            column;
+          align-items:
+            stretch;
         }
 
         .searchBox {
-          width: 100%;
+          width:
+            100%;
+        }
+
+        .analyticsHeader {
+          flex-direction:
+            column;
+        }
+
+        .analyticsPeriodSelector {
+          width:
+            100%;
+          overflow-x:
+            auto;
+        }
+
+        .analyticsPeriodButton {
+          flex:
+            1;
+        }
+
+        .analyticsGrid {
+          grid-template-columns:
+            1fr;
+        }
+
+        .analyticsTrendCard {
+          grid-column:
+            auto;
         }
 
         .opportunityPanel {
-          overflow-x: auto;
+          overflow-x:
+            auto;
         }
 
         .leadHeaderRow,
         .realLeadRow {
-          min-width: 760px;
+          min-width:
+            800px;
         }
 
         .tableFooter {
-          min-width: 760px;
+          min-width:
+            800px;
         }
       }
 
-      @media (max-width: 540px) {
-        .statsGrid {
-          grid-template-columns: 1fr 1fr;
+      @media (max-width: 600px) {
+        .dashboardMain {
+          padding:
+            17px;
+        }
+
+        .dashboardHeader {
+          gap:
+            16px;
         }
 
         .dashboardHeader h1 {
-          font-size: 24px;
-        }
-
-        .dashboardStat {
-          min-height: 96px;
-        }
-
-        .dashboardStat strong {
-          font-size: 24px;
+          font-size:
+            27px;
         }
 
         .headerActions {
-          gap: 5px;
+          gap:
+            5px;
         }
 
         .exportButton,
         .refreshButton {
-          padding: 0 9px;
+          padding:
+            0
+            10px;
+          font-size:
+            9px;
         }
 
-        .exportButton {
-          font-size: 8px;
+        .statsGrid {
+          grid-template-columns:
+            1fr
+            1fr;
+          gap:
+            8px;
+        }
+
+        .dashboardStat {
+          min-height:
+            112px;
+          padding:
+            15px;
+        }
+
+        .dashboardStat > span {
+          font-size:
+            9px;
+        }
+
+        .dashboardStat strong {
+          font-size:
+            27px;
+        }
+
+        .dashboardStat small {
+          font-size:
+            9px;
+        }
+
+        .analyticsSection {
+          padding:
+            16px;
+        }
+
+        .analyticsHeader h2 {
+          font-size:
+            20px;
+        }
+
+        .analyticsKpiGrid {
+          grid-template-columns:
+            1fr
+            1fr;
+        }
+
+        .analyticsKpi {
+          padding:
+            13px;
+        }
+
+        .analyticsKpi strong {
+          font-size:
+            22px;
+        }
+
+        .donutLayout {
+          grid-template-columns:
+            1fr;
+          justify-items:
+            center;
+        }
+
+        .donutLegend {
+          width:
+            100%;
+        }
+
+        .analyticsCard {
+          min-height:
+            auto;
+        }
+
+        .trendChart {
+          min-width:
+            560px;
+        }
+
+        .trendChartWrap {
+          overflow-x:
+            auto;
+        }
+      }
+
+      @media (max-width: 430px) {
+        .statsGrid {
+          grid-template-columns:
+            1fr;
+        }
+
+        .analyticsKpiGrid {
+          grid-template-columns:
+            1fr;
+        }
+
+        .dashboardHeader {
+          flex-direction:
+            column;
+        }
+
+        .headerActions {
+          width:
+            100%;
+        }
+
+        .exportButton,
+        .refreshButton {
+          flex:
+            1;
+          justify-content:
+            center;
         }
       }
     `}</style>
