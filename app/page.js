@@ -2,7 +2,6 @@
 
 import {
   useEffect,
-  useMemo,
   useRef,
   useState,
 } from "react";
@@ -179,26 +178,14 @@ const commandCenterLeads = [
    ========================================================= */
 
 export default function Home() {
-  /* ---------------------------------------------------------
-     LIVE PRODUCT STATE
-     --------------------------------------------------------- */
-
   const [showDemo, setShowDemo] = useState(false);
-
   const [messages, setMessages] = useState(initialMessages);
-
   const [input, setInput] = useState("");
-
   const [loading, setLoading] = useState(false);
-
   const [leadSaved, setLeadSaved] = useState(false);
 
   const [leadMemory, setLeadMemory] =
     useState(initialLeadMemory);
-
-  /* ---------------------------------------------------------
-     EXPERIENCE STATE
-     --------------------------------------------------------- */
 
   const [pointer, setPointer] = useState({
     x: 0,
@@ -217,17 +204,8 @@ export default function Home() {
   const [dashboardHover, setDashboardHover] =
     useState(null);
 
-  /* ---------------------------------------------------------
-     REFS
-     --------------------------------------------------------- */
-
   const chatEndRef = useRef(null);
-
   const inputRef = useRef(null);
-
-  /* ---------------------------------------------------------
-     CHAT AUTO SCROLL
-     --------------------------------------------------------- */
 
   useEffect(() => {
     if (!showDemo) return;
@@ -242,10 +220,6 @@ export default function Home() {
     showDemo,
     leadSaved,
   ]);
-
-  /* ---------------------------------------------------------
-     CURSOR / INPUT AUTO FOCUS
-     --------------------------------------------------------- */
 
   useEffect(() => {
     if (!showDemo) return;
@@ -266,10 +240,6 @@ export default function Home() {
     leadSaved,
   ]);
 
-  /* ---------------------------------------------------------
-     LANDING INTELLIGENCE LOOP
-     --------------------------------------------------------- */
-
   useEffect(() => {
     if (showDemo) return;
 
@@ -285,10 +255,6 @@ export default function Home() {
     return () =>
       window.clearInterval(interval);
   }, [showDemo]);
-
-  /* ---------------------------------------------------------
-     HERO PARALLAX
-     --------------------------------------------------------- */
 
   function handleHeroPointer(event) {
     const rect =
@@ -317,17 +283,12 @@ export default function Home() {
     });
   }
 
-  /* ---------------------------------------------------------
-     DEMO CONTROLS
-     --------------------------------------------------------- */
-
   function openDemo() {
     setShowDemo(true);
   }
 
   function backToLanding() {
     if (loading) return;
-
     setShowDemo(false);
   }
 
@@ -335,22 +296,11 @@ export default function Home() {
     if (loading) return;
 
     setMessages(initialMessages);
-
     setInput("");
-
     setLoading(false);
-
     setLeadSaved(false);
-
-    setLeadMemory(
-      initialLeadMemory
-    );
+    setLeadMemory(initialLeadMemory);
   }
-
-  /* =========================================================
-     WORKING NOMAD ENGINE
-     Existing API architecture remains intact.
-     ========================================================= */
 
   async function sendMessage() {
     if (
@@ -371,20 +321,11 @@ export default function Home() {
       userMessage,
     ];
 
-    setMessages(
-      updatedMessages
-    );
-
+    setMessages(updatedMessages);
     setInput("");
-
     setLoading(true);
 
     try {
-      /* -----------------------------------------------------
-         STEP 1
-         Extract structured lead memory
-         ----------------------------------------------------- */
-
       const formattedMessages =
         updatedMessages.map(
           (message) => ({
@@ -442,11 +383,6 @@ export default function Home() {
           extractionData
         );
       }
-
-      /* -----------------------------------------------------
-         STEP 2
-         Build authoritative state
-         ----------------------------------------------------- */
 
       const currentState =
         extractionData.success
@@ -525,11 +461,6 @@ export default function Home() {
         });
       }
 
-      /* -----------------------------------------------------
-         STEP 3
-         Generate NOMAD response
-         ----------------------------------------------------- */
-
       const response =
         await fetch(
           "/api/chat",
@@ -583,11 +514,6 @@ export default function Home() {
         conversationWithReply
       );
 
-      /* -----------------------------------------------------
-         STEP 4
-         Qualified lead save
-         ----------------------------------------------------- */
-
       if (
         extractionData.success &&
         extractionData.lead
@@ -628,11 +554,6 @@ export default function Home() {
           console.log(
             "Lead saved successfully"
           );
-
-          /* -------------------------------------------------
-             STEP 5
-             Notification
-             ------------------------------------------------- */
 
           try {
             const notifyResponse =
@@ -708,10 +629,6 @@ export default function Home() {
     }
   }
 
-  /* =========================================================
-     LANDING EXPERIENCE
-     ========================================================= */
-
   if (!showDemo) {
     return (
       <main
@@ -733,10 +650,6 @@ export default function Home() {
         }}
       >
         <GlobalStyles />
-
-        {/* ===================================================
-            HERO
-            =================================================== */}
 
         <section
           onMouseMove={
@@ -764,10 +677,6 @@ export default function Home() {
               "center 48%",
           }}
         >
-          {/* -------------------------------------------------
-              SKYLINE DEPTH
-              ------------------------------------------------- */}
-
           <div
             style={{
               position:
@@ -794,10 +703,6 @@ export default function Home() {
             }}
           />
 
-          {/* -------------------------------------------------
-              LEFT READABILITY TREATMENT
-              ------------------------------------------------- */}
-
           <div
             style={{
               position:
@@ -810,10 +715,6 @@ export default function Home() {
             }}
           />
 
-          {/* -------------------------------------------------
-              VERTICAL FILM TREATMENT
-              ------------------------------------------------- */}
-
           <div
             style={{
               position:
@@ -825,10 +726,6 @@ export default function Home() {
                 "linear-gradient(180deg, rgba(255,252,245,.20), transparent 42%, rgba(8,32,27,.28))",
             }}
           />
-
-          {/* -------------------------------------------------
-              POINTER LIGHT
-              ------------------------------------------------- */}
 
           <div
             style={{
@@ -866,15 +763,7 @@ export default function Home() {
             }}
           />
 
-          {/* -------------------------------------------------
-              HERO GRID
-              ------------------------------------------------- */}
-
           <HeroGridOverlay />
-
-          {/* =================================================
-              NAV
-              ================================================= */}
 
           <nav
             className="siteNav"
@@ -931,20 +820,12 @@ export default function Home() {
             </div>
           </nav>
 
-          {/* =================================================
-              HERO CONTENT
-              ================================================= */}
-
           <div
             className="heroOuter"
           >
             <div
               className="heroGrid"
             >
-              {/* ---------------------------------------------
-                  LEFT
-                  --------------------------------------------- */}
-
               <div
                 className="heroCopy"
                 style={{
@@ -1038,10 +919,6 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* ---------------------------------------------
-                  RIGHT INTERACTIVE PRODUCT
-                  --------------------------------------------- */}
-
               <div
                 className="heroProductStage"
               >
@@ -1084,9 +961,7 @@ export default function Home() {
                   <div
                     className="previewConversation"
                   >
-                    <PreviewBubble
-                      assistant
-                    >
+                    <PreviewBubble assistant>
                       Hi 👋 Are you looking
                       to buy or rent a
                       property in Dubai?
@@ -1099,9 +974,7 @@ export default function Home() {
                       AED 4 million.
                     </PreviewBubble>
 
-                    <PreviewBubble
-                      assistant
-                    >
+                    <PreviewBubble assistant>
                       Are you considering
                       ready-to-move,
                       off-plan, or both?
@@ -1174,7 +1047,6 @@ export default function Home() {
 
           <HeroBottomFade />
         </section>
-
         {/* ===================================================
             INTELLIGENCE LAB
             =================================================== */}
@@ -1183,40 +1055,24 @@ export default function Home() {
           id="intelligence"
           className="intelligenceSection"
         >
-          <SectionOrb
-            position="left"
-          />
+          <SectionOrb position="left" />
 
-          <div
-            className="sectionInner"
-          >
-            <div
-              className="sectionHeaderSplit"
-            >
+          <div className="sectionInner">
+            <div className="sectionHeaderSplit">
               <div>
-                <Eyebrow
-                  light
-                >
+                <Eyebrow light>
                   Watch intelligence happen
-                </Eyebrow>
+                </Eyrow>
 
-                <h2
-                  className="sectionTitleLight"
-                >
+                <h2 className="sectionTitleLight">
                   Conversation
                   <br />
-
                   becomes
-                  <span>
-                    {" "}
-                    intelligence.
-                  </span>
+                  <span> intelligence.</span>
                 </h2>
               </div>
 
-              <p
-                className="sectionLeadLight"
-              >
+              <p className="sectionLeadLight">
                 NOMAD does not simply answer
                 questions. It continuously
                 understands what the customer
@@ -1226,33 +1082,19 @@ export default function Home() {
               </p>
             </div>
 
-            <div
-              className="intelligenceWorkspace"
-            >
-              {/* ---------------------------------------------
-                  LEFT INPUT
-                  --------------------------------------------- */}
-
-              <div
-                className="intelligenceInputPanel"
-              >
+            <div className="intelligenceWorkspace">
+              <div className="intelligenceInputPanel">
                 <PanelLabel>
                   Customer conversation
                 </PanelLabel>
 
-                <div
-                  className="intelligenceMessage"
-                >
-                  <div
-                    className="miniAvatar"
-                  >
+                <div className="intelligenceMessage">
+                  <div className="miniAvatar">
                     TM
                   </div>
 
                   <div>
-                    <div
-                      className="miniPersonName"
-                    >
+                    <div className="miniPersonName">
                       Incoming enquiry
                     </div>
 
@@ -1268,105 +1110,60 @@ export default function Home() {
                   </div>
                 </div>
 
-                <div
-                  className="signalDivider"
-                >
+                <div className="signalDivider">
                   <span />
-
                   NOMAD is understanding
                   the conversation
-
                   <span />
                 </div>
 
-                <div
-                  className="thinkingRows"
-                >
+                <div className="thinkingRows">
                   <ThinkingRow
-                    active={
-                      intelligenceStage >=
-                      1
-                    }
+                    active={intelligenceStage >= 1}
                     label="Intent"
                     value="Buy"
                   />
 
                   <ThinkingRow
-                    active={
-                      intelligenceStage >=
-                      2
-                    }
+                    active={intelligenceStage >= 2}
                     label="Property"
                     value="3BR Villa"
                   />
 
                   <ThinkingRow
-                    active={
-                      intelligenceStage >=
-                      3
-                    }
+                    active={intelligenceStage >= 3}
                     label="Budget"
                     value="AED 4M"
                   />
 
                   <ThinkingRow
-                    active={
-                      intelligenceStage >=
-                      4
-                    }
+                    active={intelligenceStage >= 4}
                     label="Location"
                     value="Dubai Hills"
                   />
 
                   <ThinkingRow
-                    active={
-                      intelligenceStage >=
-                      4
-                    }
+                    active={intelligenceStage >= 4}
                     label="Status"
                     value="Ready + Off-plan"
                   />
 
                   <ThinkingRow
-                    active={
-                      intelligenceStage >=
-                      3
-                    }
+                    active={intelligenceStage >= 3}
                     label="Financing"
                     value="Mortgage"
                   />
                 </div>
               </div>
 
-              {/* ---------------------------------------------
-                  CENTER NEURAL PIPE
-                  --------------------------------------------- */}
+              <div className="intelligenceCore">
+                <div className="coreRing ringOne" />
+                <div className="coreRing ringTwo" />
+                <div className="coreRing ringThree" />
+                <div className="coreGlow" />
 
-              <div
-                className="intelligenceCore"
-              >
-                <div
-                  className="coreRing ringOne"
-                />
-
-                <div
-                  className="coreRing ringTwo"
-                />
-
-                <div
-                  className="coreRing ringThree"
-                />
-
-                <div
-                  className="coreGlow"
-                />
-
-                <div
-                  className="coreNode"
-                >
-                  <div
-                    className="coreN"
-                  >
+                <div className="coreNode">
+                  <div className="coreN">
                     N
                   </div>
 
@@ -1375,29 +1172,13 @@ export default function Home() {
                   </span>
                 </div>
 
-                <div
-                  className="coreSignal signalOne"
-                />
-
-                <div
-                  className="coreSignal signalTwo"
-                />
-
-                <div
-                  className="coreSignal signalThree"
-                />
+                <div className="coreSignal signalOne" />
+                <div className="coreSignal signalTwo" />
+                <div className="coreSignal signalThree" />
               </div>
 
-              {/* ---------------------------------------------
-                  RIGHT STRUCTURED OUTPUT
-                  --------------------------------------------- */}
-
-              <div
-                className="structuredLeadPanel"
-              >
-                <div
-                  className="structuredLeadTop"
-                >
+              <div className="structuredLeadPanel">
+                <div className="structuredLeadTop">
                   <div>
                     <PanelLabel>
                       Sales intelligence
@@ -1408,11 +1189,8 @@ export default function Home() {
                     </h3>
                   </div>
 
-                  <div
-                    className="qualifiedBadge"
-                  >
+                  <div className="qualifiedBadge">
                     <span />
-
                     READY
                   </div>
                 </div>
@@ -1420,69 +1198,48 @@ export default function Home() {
                 <StructuredDataRow
                   label="Intent"
                   value="Purchase"
-                  active={
-                    intelligenceStage >=
-                    1
-                  }
+                  active={intelligenceStage >= 1}
                 />
 
                 <StructuredDataRow
                   label="Property"
                   value="3BR Villa"
-                  active={
-                    intelligenceStage >=
-                    2
-                  }
+                  active={intelligenceStage >= 2}
                 />
 
                 <StructuredDataRow
                   label="Budget"
                   value="AED 4M"
-                  active={
-                    intelligenceStage >=
-                    3
-                  }
+                  active={intelligenceStage >= 3}
                 />
 
                 <StructuredDataRow
                   label="Location"
                   value="Dubai Hills"
-                  active={
-                    intelligenceStage >=
-                    4
-                  }
+                  active={intelligenceStage >= 4}
                 />
 
                 <StructuredDataRow
                   label="Financing"
                   value="Mortgage"
-                  active={
-                    intelligenceStage >=
-                    3
-                  }
+                  active={intelligenceStage >= 3}
                 />
 
                 <StructuredDataRow
                   label="Availability"
                   value="Ready + Off-plan"
-                  active={
-                    intelligenceStage >=
-                    4
-                  }
+                  active={intelligenceStage >= 4}
                 />
 
                 <div
                   className={`handoffIndicator ${
                     intelligenceStage ===
-                    intelligenceStages.length -
-                      1
+                    intelligenceStages.length - 1
                       ? "handoffActive"
                       : ""
                   }`}
                 >
-                  <div
-                    className="handoffIcon"
-                  >
+                  <div className="handoffIcon">
                     ✓
                   </div>
 
@@ -1500,42 +1257,28 @@ export default function Home() {
               </div>
             </div>
 
-            <div
-              className="intelligenceStageRail"
-            >
+            <div className="intelligenceStageRail">
               {intelligenceStages.map(
-                (
-                  stage,
-                  index
-                ) => (
+                (stage, index) => (
                   <button
-                    key={
-                      stage.accent
-                    }
+                    key={stage.accent}
                     onClick={() =>
-                      setIntelligenceStage(
-                        index
-                      )
+                      setIntelligenceStage(index)
                     }
                     className={
-                      index ===
-                      intelligenceStage
+                      index === intelligenceStage
                         ? "stageRailItem stageRailItemActive"
                         : "stageRailItem"
                     }
                   >
                     <span>
-                      {String(
-                        index + 1
-                      ).padStart(
+                      {String(index + 1).padStart(
                         2,
                         "0"
                       )}
                     </span>
 
-                    {
-                      stage.accent
-                    }
+                    {stage.accent}
                   </button>
                 )
               )}
@@ -1551,20 +1294,14 @@ export default function Home() {
           id="perspective"
           className="perspectiveSection"
         >
-          <div
-            className="sectionInner"
-          >
-            <div
-              className="perspectiveHeading"
-            >
+          <div className="sectionInner">
+            <div className="perspectiveHeading">
               <Eyebrow>
                 One conversation.
                 Two realities.
               </Eyebrow>
 
-              <h2
-                className="sectionTitleDark"
-              >
+              <h2 className="sectionTitleDark">
                 Simple for the
                 customer.
                 <br />
@@ -1586,21 +1323,14 @@ export default function Home() {
             </div>
 
             <PerspectiveSwitcher
-              perspective={
-                perspective
-              }
-              setPerspective={
-                setPerspective
-              }
+              perspective={perspective}
+              setPerspective={setPerspective}
             />
 
-            <div
-              className="perspectiveStage"
-            >
+            <div className="perspectiveStage">
               <div
                 className={
-                  perspective ===
-                  "customer"
+                  perspective === "customer"
                     ? "perspectiveScene perspectiveSceneVisible"
                     : "perspectiveScene perspectiveSceneHidden"
                 }
@@ -1610,8 +1340,7 @@ export default function Home() {
 
               <div
                 className={
-                  perspective ===
-                  "sales"
+                  perspective === "sales"
                     ? "perspectiveScene perspectiveSceneVisible"
                     : "perspectiveScene perspectiveSceneHidden"
                 }
@@ -1632,22 +1361,14 @@ export default function Home() {
         >
           <ChannelBackground />
 
-          <div
-            className="sectionInner"
-          >
-            <div
-              className="channelHeader"
-            >
+          <div className="sectionInner">
+            <div className="channelHeader">
               <div>
-                <Eyebrow
-                  light
-                >
+                <Eyebrow light>
                   One intelligence layer
                 </Eyebrow>
 
-                <h2
-                  className="sectionTitleLight"
-                >
+                <h2 className="sectionTitleLight">
                   Meet the customer
                   <br />
 
@@ -1657,9 +1378,7 @@ export default function Home() {
                 </h2>
               </div>
 
-              <p
-                className="sectionLeadLight"
-              >
+              <p className="sectionLeadLight">
                 Website, campaigns,
                 portals or messaging. The
                 source can change. The
@@ -1668,18 +1387,12 @@ export default function Home() {
               </p>
             </div>
 
-            <div
-              className="channelExperience"
-            >
-              <div
-                className="channelList"
-              >
+            <div className="channelExperience">
+              <div className="channelList">
                 {channelData.map(
                   (channel) => (
                     <button
-                      key={
-                        channel.id
-                      }
+                      key={channel.id}
                       onClick={() =>
                         setActiveChannel(
                           channel.id
@@ -1692,31 +1405,21 @@ export default function Home() {
                           : "channelButton"
                       }
                     >
-                      <span
-                        className="channelNumber"
-                      >
-                        {
-                          channel.number
-                        }
+                      <span className="channelNumber">
+                        {channel.number}
                       </span>
 
                       <div>
                         <strong>
-                          {
-                            channel.title
-                          }
+                          {channel.title}
                         </strong>
 
                         <p>
-                          {
-                            channel.description
-                          }
+                          {channel.description}
                         </p>
                       </div>
 
-                      <span
-                        className="channelArrow"
-                      >
+                      <span className="channelArrow">
                         →
                       </span>
                     </button>
@@ -1724,13 +1427,9 @@ export default function Home() {
                 )}
               </div>
 
-              <div
-                className="channelMap"
-              >
+              <div className="channelMap">
                 <ChannelUniverse
-                  activeChannel={
-                    activeChannel
-                  }
+                  activeChannel={activeChannel}
                 />
               </div>
             </div>
@@ -1745,20 +1444,14 @@ export default function Home() {
           id="vision"
           className="visionSection"
         >
-          <div
-            className="sectionInner"
-          >
-            <div
-              className="visionTop"
-            >
+          <div className="sectionInner">
+            <div className="visionTop">
               <div>
                 <Eyebrow>
                   Product vision
                 </Eyebrow>
 
-                <h2
-                  className="sectionTitleDark"
-                >
+                <h2 className="sectionTitleDark">
                   From conversation
                   <br />
 
@@ -1770,9 +1463,7 @@ export default function Home() {
                 </h2>
               </div>
 
-              <div
-                className="visionSideCopy"
-              >
+              <div className="visionSideCopy">
                 <p>
                   Imagine every enquiry
                   arriving with context
@@ -1781,36 +1472,24 @@ export default function Home() {
                   a human sales team.
                 </p>
 
-                <div
-                  className="visionDisclaimer"
-                >
+                <div className="visionDisclaimer">
                   Conceptual platform
                   visualization
                 </div>
               </div>
             </div>
 
-            <div
-              className="commandCenter"
-            >
+            <div className="commandCenter">
               <CommandCenterSidebar />
 
-              <div
-                className="commandCenterMain"
-              >
+              <div className="commandCenterMain">
                 <CommandCenterHeader />
 
                 <CommandStats />
 
-                <div
-                  className="commandMainGrid"
-                >
-                  <div
-                    className="commandLeadTable"
-                  >
-                    <div
-                      className="tableTitleRow"
-                    >
+                <div className="commandMainGrid">
+                  <div className="commandLeadTable">
+                    <div className="tableTitleRow">
                       <div>
                         <span>
                           Live opportunity
@@ -1822,46 +1501,27 @@ export default function Home() {
                         </strong>
                       </div>
 
-                      <div
-                        className="liveChip"
-                      >
+                      <div className="liveChip">
                         <span />
-
                         Live
                       </div>
                     </div>
 
-                    <div
-                      className="leadRows"
-                    >
+                    <div className="leadRows">
                       {commandCenterLeads.map(
-                        (
-                          lead,
-                          index
-                        ) => (
+                        (lead, index) => (
                           <CommandLeadRow
-                            key={
-                              lead.name
-                            }
-                            lead={
-                              lead
-                            }
-                            index={
-                              index
-                            }
+                            key={lead.name}
+                            lead={lead}
+                            index={index}
                             active={
-                              dashboardHover ===
-                              index
+                              dashboardHover === index
                             }
                             onEnter={() =>
-                              setDashboardHover(
-                                index
-                              )
+                              setDashboardHover(index)
                             }
                             onLeave={() =>
-                              setDashboardHover(
-                                null
-                              )
+                              setDashboardHover(null)
                             }
                           />
                         )
@@ -1869,12 +1529,8 @@ export default function Home() {
                     </div>
                   </div>
 
-                  <div
-                    className="commandIntelligencePanel"
-                  >
-                    <div
-                      className="commandPanelLabel"
-                    >
+                  <div className="commandIntelligencePanel">
+                    <div className="commandPanelLabel">
                       NOMAD intelligence
                     </div>
 
@@ -1884,9 +1540,7 @@ export default function Home() {
 
                     <QualityRing />
 
-                    <div
-                      className="qualityDetails"
-                    >
+                    <div className="qualityDetails">
                       <QualityLine
                         label="Property intent"
                         value="Strong"
@@ -1908,9 +1562,7 @@ export default function Home() {
                       />
                     </div>
 
-                    <div
-                      className="qualityRecommendation"
-                    >
+                    <div className="qualityRecommendation">
                       <span>
                         NOMAD
                       </span>
@@ -1929,12 +1581,8 @@ export default function Home() {
             OPERATIONAL STORY
             =================================================== */}
 
-        <section
-          className="storySection"
-        >
-          <div
-            className="storyTrack"
-          >
+        <section className="storySection">
+          <div className="storyTrack">
             <StoryPoint
               number="01"
               title="Enquiry"
@@ -1971,17 +1619,11 @@ export default function Home() {
             CTA
             =================================================== */}
 
-        <section
-          className="finalCTASection"
-        >
+        <section className="finalCTASection">
           <FinalCTAVisual />
 
-          <div
-            className="finalCTAContent"
-          >
-            <Eyebrow
-              light
-            >
+          <div className="finalCTAContent">
+            <Eyebrow light>
               Experience NOMAD
             </Eyebrow>
 
@@ -2002,9 +1644,7 @@ export default function Home() {
             </p>
 
             <button
-              onClick={
-                openDemo
-              }
+              onClick={openDemo}
               className="finalCTAButton"
             >
               Launch Live NOMAD
@@ -2020,24 +1660,16 @@ export default function Home() {
             FOOTER
             =================================================== */}
 
-        <footer
-          className="siteFooter"
-        >
-          <BrandMark
-            dark
-          />
+        <footer className="siteFooter">
+          <BrandMark dark />
 
-          <div
-            className="footerMiddle"
-          >
+          <div className="footerMiddle">
             Intelligent property
             qualification for modern real
             estate teams.
           </div>
 
-          <div
-            className="footerRight"
-          >
+          <div className="footerRight">
             Dubai · UAE
           </div>
         </footer>
@@ -2050,49 +1682,26 @@ export default function Home() {
      ========================================================= */
 
   return (
-    <main
-      className="liveDemoPage"
-    >
+    <main className="liveDemoPage">
       <GlobalStyles />
 
-      <div
-        className="demoAmbientOne"
-      />
-
-      <div
-        className="demoAmbientTwo"
-      />
+      <div className="demoAmbientOne" />
+      <div className="demoAmbientTwo" />
 
       <button
         className="backToNomadButton"
-        onClick={
-          backToLanding
-        }
-        disabled={
-          loading
-        }
+        onClick={backToLanding}
+        disabled={loading}
       >
         ← Back to NOMAD
       </button>
 
-      <div
-        className="demoExperienceFrame"
-      >
-        {/* ===================================================
-            PRODUCT DEMO SIDE PANEL
-            =================================================== */}
-
-        <div
-          className="demoStoryPanel"
-        >
+      <div className="demoExperienceFrame">
+        <div className="demoStoryPanel">
           <div>
-            <BrandMark
-              dark
-            />
+            <BrandMark dark />
 
-            <div
-              className="demoStoryEyebrow"
-            >
+            <div className="demoStoryEyebrow">
               LIVE PRODUCT EXPERIENCE
             </div>
 
@@ -2117,81 +1726,48 @@ export default function Home() {
             </p>
           </div>
 
-          <div
-            className="demoStoryRail"
-          >
+          <div className="demoStoryRail">
             <DemoRailItem
               number="01"
               label="Conversation"
-              active={
-                !leadSaved
-              }
+              active={!leadSaved}
             />
 
             <DemoRailItem
               number="02"
               label="Qualification"
-              active={
-                loading
-              }
+              active={loading}
             />
 
             <DemoRailItem
               number="03"
               label="Handoff"
-              active={
-                leadSaved
-              }
+              active={leadSaved}
             />
           </div>
 
-          <div
-            className="demoStoryFooter"
-          >
+          <div className="demoStoryFooter">
             The customer sees a natural
             conversation.
-
             <br />
-
             Structured sales intelligence
             remains behind the scenes.
           </div>
         </div>
 
-        {/* ===================================================
-            CHAT
-            =================================================== */}
-
-        <div
-          className="chatShell"
-        >
-          {/* -------------------------------------------------
-              CHAT HEADER
-              ------------------------------------------------- */}
-
-          <div
-            className="chatHeader"
-          >
-            <div
-              className="chatIdentity"
-            >
-              <div
-                className="chatAvatar"
-              >
+        <div className="chatShell">
+          <div className="chatHeader">
+            <div className="chatIdentity">
+              <div className="chatAvatar">
                 N
               </div>
 
               <div>
-                <div
-                  className="chatTitle"
-                >
-                  NOMAD Property
-                  Assistant
+                <div className="chatTitle">
+                  NOMAD Property Assistant
                 </div>
 
-                <div
-                  className="chatStatus"
-                >
+                <div className="chatStatus">
                   <span
                     className={
                       loading
@@ -2211,43 +1787,24 @@ export default function Home() {
 
             <button
               className="newConversationButton"
-              onClick={
-                startNewConversation
-              }
-              disabled={
-                loading
-              }
+              onClick={startNewConversation}
+              disabled={loading}
               title="Start a new conversation"
             >
               ↻
             </button>
           </div>
 
-          {/* -------------------------------------------------
-              CHAT STREAM
-              ------------------------------------------------- */}
-
-          <div
-            className="chatBody"
-          >
-            <div
-              className="chatSessionLabel"
-            >
+          <div className="chatBody">
+            <div className="chatSessionLabel">
               Private Property Concierge
             </div>
 
             {messages.map(
-              (
-                message,
-                index
-              ) => (
+              (message, index) => (
                 <ChatMessage
-                  key={
-                    index
-                  }
-                  message={
-                    message
-                  }
+                  key={index}
+                  message={message}
                 />
               )
             )}
@@ -2256,28 +1813,14 @@ export default function Home() {
               <TypingMessage />
             )}
 
-            {/* -----------------------------------------------
-                CUSTOMER-FACING SUCCESS
-                ----------------------------------------------- */}
-
             {leadSaved && (
               <CustomerRequestReceived />
             )}
 
-            <div
-              ref={
-                chatEndRef
-              }
-            />
+            <div ref={chatEndRef} />
           </div>
 
-          {/* -------------------------------------------------
-              COMPOSER
-              ------------------------------------------------- */}
-
-          <div
-            className="chatComposerArea"
-          >
+          <div className="chatComposerArea">
             <div
               className={
                 leadSaved
@@ -2286,31 +1829,19 @@ export default function Home() {
               }
             >
               <input
-                ref={
-                  inputRef
-                }
-                value={
-                  input
-                }
-                onChange={(
-                  event
-                ) =>
+                ref={inputRef}
+                value={input}
+                onChange={(event) =>
                   setInput(
-                    event
-                      .target
-                      .value
+                    event.target.value
                   )
                 }
-                onKeyDown={(
-                  event
-                ) => {
+                onKeyDown={(event) => {
                   if (
-                    event.key ===
-                      "Enter" &&
+                    event.key === "Enter" &&
                     !event.shiftKey
                   ) {
                     event.preventDefault();
-
                     sendMessage();
                   }
                 }}
@@ -2326,9 +1857,7 @@ export default function Home() {
               />
 
               <button
-                onClick={
-                  sendMessage
-                }
+                onClick={sendMessage}
                 disabled={
                   loading ||
                   leadSaved ||
@@ -2341,9 +1870,7 @@ export default function Home() {
               </button>
             </div>
 
-            <div
-              className="composerFooter"
-            >
+            <div className="composerFooter">
               {leadSaved
                 ? "Your property request has been shared with the team."
                 : "Intelligent qualification · Real-time lead capture"}
@@ -2354,7 +1881,6 @@ export default function Home() {
     </main>
   );
 }
-
 /* =========================================================
    GLOBAL CSS
    ========================================================= */
@@ -2368,11 +1894,15 @@ function GlobalStyles() {
 
       html {
         scroll-behavior: smooth;
+        max-width: 100%;
+        overflow-x: hidden;
       }
 
       body {
         margin: 0;
         background: #FBF9F4;
+        max-width: 100%;
+        overflow-x: hidden;
       }
 
       button,
@@ -2480,6 +2010,7 @@ function GlobalStyles() {
         transition:
           transform .25s ease,
           box-shadow .25s ease;
+        white-space: nowrap;
       }
 
       .primaryPill span {
@@ -2516,6 +2047,7 @@ function GlobalStyles() {
 
       .heroCopy {
         padding-bottom: 20px;
+        min-width: 0;
       }
 
       .eyebrow {
@@ -2538,6 +2070,7 @@ function GlobalStyles() {
         height: 1px;
         background: currentColor;
         opacity: .8;
+        flex-shrink: 0;
       }
 
       .heroTitle {
@@ -2621,6 +2154,7 @@ function GlobalStyles() {
           0 0 0 5px rgba(11,118,99,.08);
         animation:
           tinyPulse 2s ease-in-out infinite;
+        flex-shrink: 0;
       }
 
       @keyframes tinyPulse {
@@ -2662,6 +2196,7 @@ function GlobalStyles() {
         width: 38px;
         height: 1px;
         background: #A9844D;
+        flex-shrink: 0;
       }
 
       /* =====================================================
@@ -2674,6 +2209,7 @@ function GlobalStyles() {
         display: flex;
         justify-content: center;
         align-items: center;
+        min-width: 0;
       }
 
       .heroArchitectureArc {
@@ -2755,6 +2291,7 @@ function GlobalStyles() {
           1px solid rgba(255,255,255,.14);
         font-weight: 850;
         font-size: 12px;
+        flex-shrink: 0;
       }
 
       .demoCardTitle {
@@ -2863,6 +2400,7 @@ function GlobalStyles() {
         align-items: center;
         justify-content: center;
         font-weight: 850;
+        flex-shrink: 0;
       }
 
       /* =====================================================
@@ -2985,10 +2523,6 @@ function GlobalStyles() {
           transform: rotate(360deg);
         }
       }
-
-      /* =====================================================
-         HERO GRID OVERLAY
-         ===================================================== */
 
       .heroGridOverlay {
         position: absolute;
@@ -3156,6 +2690,7 @@ function GlobalStyles() {
         padding: 24px;
         box-shadow:
           inset 0 1px 0 rgba(255,255,255,.04);
+        min-width: 0;
       }
 
       .panelLabel {
@@ -3823,6 +3358,7 @@ function GlobalStyles() {
         justify-content: center;
         font-size: 8px;
         font-weight: 850;
+        flex-shrink: 0;
       }
 
       .customerPhoneStage {
@@ -3852,6 +3388,7 @@ function GlobalStyles() {
 
       .customerPhone {
         width: 300px;
+        max-width: 100%;
         border-radius: 30px;
         background: #FAF8F3;
         overflow: hidden;
@@ -3882,6 +3419,7 @@ function GlobalStyles() {
         justify-content: center;
         font-size: 10px;
         font-weight: 850;
+        flex-shrink: 0;
       }
 
       .customerPhoneHeader strong {
@@ -4011,6 +3549,7 @@ function GlobalStyles() {
 
       .salesPerspectiveMain {
         padding: 36px;
+        min-width: 0;
       }
 
       .salesOpportunityTop {
@@ -4123,6 +3662,7 @@ function GlobalStyles() {
         align-items: center;
         justify-content: center;
         font-size: 9px;
+        flex-shrink: 0;
       }
 
       .salesHandoffStrip strong {
@@ -4209,6 +3749,7 @@ function GlobalStyles() {
       .channelList {
         display: grid;
         align-content: center;
+        min-width: 0;
       }
 
       .channelButton {
@@ -4279,6 +3820,7 @@ function GlobalStyles() {
         display: flex;
         align-items: center;
         justify-content: center;
+        min-width: 0;
       }
 
       /* =====================================================
@@ -4289,6 +3831,7 @@ function GlobalStyles() {
         position: relative;
         width: 540px;
         height: 540px;
+        flex: 0 0 auto;
       }
 
       .universeRing {
@@ -4461,35 +4004,6 @@ function GlobalStyles() {
       .linePortal {
         transform:
           rotate(30deg);
-      }
-
-      .flowParticle {
-        position: absolute;
-        z-index: 20;
-        width: 6px;
-        height: 6px;
-        border-radius: 50%;
-        background: #D8C6A6;
-        box-shadow:
-          0 0 16px rgba(216,198,166,.45);
-        animation:
-          flowParticle 2.4s ease-in-out infinite;
-      }
-
-      @keyframes flowParticle {
-        0% {
-          opacity: 0;
-          transform: scale(.6);
-        }
-
-        35% {
-          opacity: 1;
-        }
-
-        100% {
-          opacity: 0;
-          transform: scale(1.3);
-        }
       }
 
       /* =====================================================
@@ -4737,6 +4251,7 @@ function GlobalStyles() {
           1px solid rgba(255,255,255,.055);
         background:
           rgba(255,255,255,.035);
+        min-width: 0;
       }
 
       .commandLeadTable {
@@ -4824,6 +4339,10 @@ function GlobalStyles() {
         font-weight: 850;
       }
 
+      .commandLeadIdentity {
+        min-width: 0;
+      }
+
       .commandLeadIdentity strong {
         display: block;
         color: white;
@@ -4836,6 +4355,9 @@ function GlobalStyles() {
         color:
           rgba(255,255,255,.34);
         font-size: 7px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
       }
 
       .commandLeadBudget {
@@ -5175,10 +4697,12 @@ function GlobalStyles() {
 
       /* =====================================================
          LIVE EXPERIENCE PAGE
+         IMPORTANT: FIXED TO FIT VIEWPORT
          ===================================================== */
 
       .liveDemoPage {
-        min-height: 100vh;
+        height: 100dvh;
+        min-height: 100dvh;
         background:
           linear-gradient(
             135deg,
@@ -5195,7 +4719,7 @@ function GlobalStyles() {
           sans-serif;
         position: relative;
         overflow: hidden;
-        padding: 40px;
+        padding: 24px;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -5236,15 +4760,15 @@ function GlobalStyles() {
 
       .backToNomadButton {
         position: fixed;
-        top: 22px;
-        left: 22px;
+        top: 14px;
+        left: 14px;
         z-index: 30;
         border:
           1px solid rgba(16,24,20,.08);
         background:
           rgba(255,253,248,.88);
         color: #082F27;
-        padding: 10px 15px;
+        padding: 9px 14px;
         border-radius: 999px;
         cursor: pointer;
         font-size: 9px;
@@ -5256,15 +4780,17 @@ function GlobalStyles() {
       }
 
       .demoExperienceFrame {
-        width: min(1180px, 100%);
-        min-height: 760px;
+        width: min(1180px, calc(100vw - 48px));
+        height: min(760px, calc(100dvh - 48px));
+        min-height: 0;
         display: grid;
         grid-template-columns:
-          1fr 470px;
-        border-radius: 30px;
+          minmax(0, 1fr)
+          minmax(390px, 470px);
+        border-radius: 26px;
         overflow: hidden;
         box-shadow:
-          0 45px 110px rgba(16,24,20,.16);
+          0 35px 90px rgba(16,24,20,.16);
         border:
           1px solid rgba(16,24,20,.07);
         position: relative;
@@ -5272,7 +4798,9 @@ function GlobalStyles() {
       }
 
       .demoStoryPanel {
-        padding: 54px;
+        min-width: 0;
+        min-height: 0;
+        padding: clamp(28px, 3.5vw, 48px);
         background:
           linear-gradient(
             145deg,
@@ -5283,10 +4811,11 @@ function GlobalStyles() {
         display: flex;
         flex-direction: column;
         justify-content: space-between;
+        overflow: hidden;
       }
 
       .demoStoryEyebrow {
-        margin-top: 80px;
+        margin-top: clamp(28px, 6vh, 62px);
         color: #D8C6A6;
         font-size: 8px;
         letter-spacing: 1.6px;
@@ -5294,11 +4823,12 @@ function GlobalStyles() {
       }
 
       .demoStoryPanel h1 {
-        margin: 22px 0 0;
+        margin: 18px 0 0;
         max-width: 550px;
-        font-size: 58px;
-        line-height: 1;
-        letter-spacing: -3px;
+        font-size:
+          clamp(38px, 4vw, 54px);
+        line-height: .98;
+        letter-spacing: -2.6px;
         font-weight: 620;
       }
 
@@ -5313,12 +4843,12 @@ function GlobalStyles() {
       }
 
       .demoStoryPanel p {
-        margin: 27px 0 0;
+        margin: 20px 0 0;
         max-width: 510px;
         color:
           rgba(255,255,255,.47);
-        font-size: 13px;
-        line-height: 1.8;
+        font-size: 12px;
+        line-height: 1.65;
       }
 
       .demoStoryRail {
@@ -5331,7 +4861,7 @@ function GlobalStyles() {
 
       .demoRailItem {
         position: relative;
-        padding: 16px 7px 0;
+        padding: 13px 7px 0;
         color:
           rgba(255,255,255,.30);
         transition:
@@ -5383,17 +4913,19 @@ function GlobalStyles() {
 
       .chatShell {
         min-width: 0;
-        min-height: 760px;
+        min-height: 0;
+        height: 100%;
         background: #FFFDF8;
         display: flex;
         flex-direction: column;
+        overflow: hidden;
       }
 
       .chatHeader {
-        flex-shrink: 0;
+        flex: 0 0 auto;
         background: #082F27;
         color: white;
-        padding: 18px;
+        padding: 16px 18px;
         display: flex;
         align-items: center;
         justify-content:
@@ -5405,11 +4937,13 @@ function GlobalStyles() {
         display: flex;
         align-items: center;
         gap: 12px;
+        min-width: 0;
       }
 
       .chatAvatar {
-        width: 44px;
-        height: 44px;
+        width: 42px;
+        height: 42px;
+        flex-shrink: 0;
         border-radius: 50%;
         background:
           linear-gradient(
@@ -5455,6 +4989,7 @@ function GlobalStyles() {
       .newConversationButton {
         width: 38px;
         height: 38px;
+        flex-shrink: 0;
         border-radius: 50%;
         border:
           1px solid rgba(255,255,255,.13);
@@ -5466,16 +5001,18 @@ function GlobalStyles() {
       }
 
       .chatBody {
-        flex: 1;
+        flex: 1 1 auto;
         min-height: 0;
         overflow-y: auto;
+        overscroll-behavior: contain;
         background: #F9F6EF;
-        padding: 24px 18px 30px;
+        padding: 20px 18px 24px;
+        scroll-padding-bottom: 20px;
       }
 
       .chatSessionLabel {
         text-align: center;
-        margin-bottom: 24px;
+        margin-bottom: 20px;
         color: #B99862;
         font-size: 7px;
         font-weight: 850;
@@ -5519,6 +5056,7 @@ function GlobalStyles() {
         font-size: 12px;
         line-height: 1.58;
         white-space: pre-line;
+        overflow-wrap: anywhere;
         box-shadow:
           0 2px 8px rgba(16,24,20,.05);
       }
@@ -5625,8 +5163,8 @@ function GlobalStyles() {
          ===================================================== */
 
       .chatComposerArea {
-        flex-shrink: 0;
-        padding: 13px 14px 16px;
+        flex: 0 0 auto;
+        padding: 12px 14px 14px;
         background: #FFFDF8;
         border-top:
           1px solid rgba(16,24,20,.08);
@@ -5664,6 +5202,7 @@ function GlobalStyles() {
       .composer button {
         width: 40px;
         height: 40px;
+        flex-shrink: 0;
         border: none;
         border-radius: 50%;
         background: #082F27;
@@ -5685,7 +5224,7 @@ function GlobalStyles() {
       }
 
       .composerFooter {
-        margin-top: 9px;
+        margin-top: 8px;
         text-align: center;
         color: #999186;
         font-size: 7px;
@@ -5693,7 +5232,7 @@ function GlobalStyles() {
       }
 
       /* =====================================================
-         RESPONSIVE
+         LARGE TABLET / SMALL LAPTOP
          ===================================================== */
 
       @media (max-width: 1120px) {
@@ -5717,19 +5256,23 @@ function GlobalStyles() {
         }
 
         .demoExperienceFrame {
-          width: 100%;
           grid-template-columns:
-            .9fr 450px;
+            minmax(0, .9fr)
+            minmax(390px, 450px);
         }
 
         .demoStoryPanel {
-          padding: 42px;
+          padding: 34px;
         }
 
         .demoStoryPanel h1 {
-          font-size: 48px;
+          font-size: 44px;
         }
       }
+
+      /* =====================================================
+         TABLET
+         ===================================================== */
 
       @media (max-width: 960px) {
         .desktopNavLinks {
@@ -5841,9 +5384,16 @@ function GlobalStyles() {
           text-align: center;
         }
 
+        .liveDemoPage {
+          padding: 18px;
+        }
+
         .demoExperienceFrame {
-          max-width: 500px;
+          width: min(520px, calc(100vw - 36px));
+          height: calc(100dvh - 36px);
+          max-height: none;
           grid-template-columns: 1fr;
+          border-radius: 24px;
         }
 
         .demoStoryPanel {
@@ -5851,48 +5401,151 @@ function GlobalStyles() {
         }
 
         .chatShell {
-          min-height:
-            min(760px, calc(100vh - 80px));
+          height: 100%;
+          min-height: 0;
         }
       }
+
+      /* =====================================================
+         MOBILE
+         ===================================================== */
 
       @media (max-width: 620px) {
         .siteNav {
           padding:
-            20px 18px;
+            18px 16px;
+          align-items: center;
         }
 
-        .primaryPill {
+        .navRight {
+          gap: 10px;
+        }
+
+        .siteNav .primaryPill {
           padding:
-            11px 14px;
-          font-size: 9px;
+            10px 12px;
+          font-size: 8px;
+        }
+
+        .siteNav .primaryPill span {
+          margin-left: 6px;
         }
 
         .heroOuter {
           padding:
-            38px 18px 60px;
+            32px 18px 58px;
+        }
+
+        .heroGrid {
+          gap: 22px;
+        }
+
+        .heroCopy {
+          padding-bottom: 0;
+        }
+
+        .eyebrow {
+          gap: 8px;
+          font-size: 7.5px;
+          letter-spacing: 1.3px;
+        }
+
+        .eyebrowLine {
+          width: 24px;
         }
 
         .heroTitle {
-          font-size: 48px;
-          letter-spacing: -2.7px;
+          margin-top: 22px;
+          font-size:
+            clamp(44px, 13.5vw, 56px);
+          line-height: .96;
+          letter-spacing: -2.8px;
+        }
+
+        .heroTitle span {
+          letter-spacing: -2px;
         }
 
         .heroDescription {
+          margin-top: 24px;
           font-size: 13px;
+          line-height: 1.65;
+        }
+
+        .heroActions {
+          margin-top: 26px;
+          align-items: flex-start;
+          flex-direction: column;
+          gap: 14px;
+        }
+
+        .heroPrimaryButton {
+          width: 100%;
+          min-height: 48px;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          font-size: 11px;
+        }
+
+        .heroMicroCopy {
+          font-size: 10px;
         }
 
         .heroStats {
+          margin-top: 38px;
           grid-template-columns:
-            repeat(2, 1fr);
+            repeat(3, 1fr);
+          max-width: 100%;
+        }
+
+        .heroLocation {
+          margin-top: 28px;
+          font-size: 7px;
+          letter-spacing: 1.25px;
         }
 
         .heroProductStage {
-          min-height: 530px;
+          min-height: 460px;
+          width: 100%;
+          overflow: hidden;
         }
 
         .heroFloatingCard {
+          width: calc(100% - 18px);
           max-width: 390px;
+          border-radius: 22px;
+        }
+
+        .demoCardHeader {
+          padding: 15px 16px;
+        }
+
+        .demoMiniAvatar {
+          width: 34px;
+          height: 34px;
+          font-size: 10px;
+        }
+
+        .demoCardTitle {
+          font-size: 10px;
+        }
+
+        .demoCardStatus {
+          font-size: 8px;
+        }
+
+        .previewConversation {
+          padding: 20px 16px;
+        }
+
+        .previewBubble {
+          max-width: 88%;
+          font-size: 10px;
+        }
+
+        .previewInsight {
+          margin-top: 20px;
         }
 
         .floatingIntelligenceTag {
@@ -5901,7 +5554,20 @@ function GlobalStyles() {
 
         .heroArchitectureArc {
           width: 92%;
+          height: 82%;
           right: 4%;
+          top: 4%;
+        }
+
+        .heroArchitectureArc2 {
+          width: 72%;
+          right: 14%;
+          top: 13%;
+        }
+
+        .heroOrbit {
+          width: 360px;
+          height: 360px;
         }
 
         .intelligenceSection,
@@ -5909,52 +5575,315 @@ function GlobalStyles() {
         .channelSection,
         .visionSection {
           padding:
-            78px 18px;
+            72px 18px;
         }
 
         .sectionTitleLight,
         .sectionTitleDark {
-          font-size: 42px;
+          margin-top: 18px;
+          font-size:
+            clamp(38px, 11.5vw, 46px);
           letter-spacing: -2px;
+          line-height: 1.03;
+        }
+
+        .sectionLeadLight,
+        .perspectiveHeading p {
+          font-size: 13px;
+          line-height: 1.7;
+        }
+
+        .intelligenceWorkspace {
+          margin-top: 44px;
+          gap: 22px;
+          min-height: 0;
+        }
+
+        .intelligenceInputPanel,
+        .structuredLeadPanel {
+          padding: 18px;
+          border-radius: 18px;
+        }
+
+        .intelligenceMessage {
+          margin-top: 18px;
+          padding: 14px;
+        }
+
+        .intelligenceMessage p {
+          font-size: 11px;
+          line-height: 1.6;
+        }
+
+        .signalDivider {
+          white-space: normal;
+          text-align: center;
+          font-size: 6px;
+        }
+
+        .thinkingRow {
+          grid-template-columns:
+            26px 1fr auto;
+          gap: 8px;
+        }
+
+        .intelligenceCore {
+          height: 250px;
+          transform: scale(.82);
+        }
+
+        .structuredLeadTop {
+          flex-direction: column;
+          gap: 12px;
+        }
+
+        .qualifiedBadge {
+          align-self: flex-start;
+        }
+
+        .intelligenceStageRail {
+          margin-top: 28px;
+          grid-template-columns:
+            repeat(6, 105px);
+        }
+
+        .stageRailItem {
+          font-size: 7px;
+          padding: 14px 6px;
+        }
+
+        .perspectiveSwitcher {
+          width: 100%;
+          margin-top: 34px;
+        }
+
+        .perspectiveSwitcher button {
+          flex: 1;
+          padding: 11px 10px;
+          font-size: 8px;
+        }
+
+        .perspectiveStage {
+          margin-top: 26px;
+          min-height: 790px;
+        }
+
+        .customerPerspective,
+        .salesPerspective {
+          min-height: 760px;
+          border-radius: 22px;
         }
 
         .customerPerspectiveCopy {
-          padding: 35px 26px;
+          padding: 32px 22px;
         }
 
         .customerPerspectiveCopy h3 {
-          font-size: 34px;
+          font-size: 32px;
+          letter-spacing: -1.4px;
+        }
+
+        .customerPerspectiveCopy p {
+          font-size: 12px;
+          line-height: 1.65;
+        }
+
+        .customerPerspectivePoint {
+          font-size: 10px;
         }
 
         .customerPhoneStage {
-          padding: 30px 18px;
+          min-height: 420px;
+          padding: 24px 14px;
+        }
+
+        .customerPhone {
+          width: min(300px, 100%);
+          border-radius: 24px;
+        }
+
+        .customerPhoneBody {
+          min-height: 350px;
         }
 
         .salesPerspectiveMain,
         .salesPerspectiveSidebar {
-          padding: 28px 22px;
+          padding: 26px 20px;
+        }
+
+        .salesPerspectiveSidebar h3 {
+          font-size: 24px;
         }
 
         .salesStructuredGrid {
           grid-template-columns: 1fr;
         }
 
+        /* ================================================
+           MOBILE CHANNELS
+           Proper 320px layout instead of scaling 540px
+           ================================================ */
+
+        .channelExperience {
+          margin-top: 42px;
+          gap: 26px;
+          min-height: 0;
+        }
+
+        .channelMap {
+          min-height: 350px;
+          width: 100%;
+          overflow: hidden;
+        }
+
         .channelUniverse {
-          transform: scale(.78);
+          width: 320px;
+          height: 320px;
+          max-width: 100%;
+          margin: 0 auto;
+          transform: none;
+        }
+
+        .universeRingOne {
+          width: 145px;
+          height: 145px;
+        }
+
+        .universeRingTwo {
+          width: 225px;
+          height: 225px;
+        }
+
+        .universeRingThree {
+          width: 310px;
+          height: 310px;
+        }
+
+        .universeCore {
+          width: 92px;
+          height: 92px;
+        }
+
+        .universeCore strong {
+          font-size: 20px;
+        }
+
+        .universeCore span {
+          font-size: 5.5px;
+          letter-spacing: 1px;
+        }
+
+        .channelNode {
+          width: 92px;
+          height: 58px;
+          border-radius: 12px;
+        }
+
+        .channelNode strong {
+          font-size: 9px;
+        }
+
+        .channelNode span {
+          font-size: 6px;
+        }
+
+        .nodeWhatsapp {
+          left: 4px;
+          top: 44px;
+        }
+
+        .nodeWebsite {
+          right: 4px;
+          top: 44px;
+        }
+
+        .nodeCampaign {
+          left: 4px;
+          bottom: 44px;
+        }
+
+        .nodePortal {
+          right: 4px;
+          bottom: 44px;
+        }
+
+        .channelLine {
+          width: 105px;
+        }
+
+        .channelButton {
+          grid-template-columns:
+            26px 1fr 20px;
+          gap: 10px;
+          padding: 17px 4px;
+        }
+
+        .channelButtonActive {
+          padding-left: 8px;
+        }
+
+        .channelButton strong {
+          font-size: 12px;
+        }
+
+        .channelButton p {
+          font-size: 9px;
+          line-height: 1.5;
+        }
+
+        .visionTop {
+          gap: 24px;
+        }
+
+        .commandCenter {
+          margin-top: 42px;
+          min-height: 0;
+          border-radius: 20px;
         }
 
         .commandCenterMain {
-          padding: 19px;
+          padding: 16px;
+        }
+
+        .commandHeader {
+          align-items: flex-start;
+        }
+
+        .commandHeader h3 {
+          font-size: 18px;
+        }
+
+        .commandHeaderActions {
+          display: none;
         }
 
         .commandStats {
           grid-template-columns:
             repeat(2, 1fr);
+          gap: 8px;
+        }
+
+        .commandStat {
+          padding: 13px;
+        }
+
+        .commandStat strong {
+          font-size: 19px;
+        }
+
+        .commandMainGrid {
+          gap: 10px;
+        }
+
+        .commandLeadTable {
+          padding: 13px;
         }
 
         .commandLeadRow {
           grid-template-columns:
-            30px 1fr 50px;
+            30px minmax(0, 1fr) 36px;
+          gap: 8px;
+          padding: 11px 4px;
         }
 
         .commandLeadBudget,
@@ -5962,39 +5891,419 @@ function GlobalStyles() {
           display: none;
         }
 
+        .commandLeadIdentity strong {
+          font-size: 9px;
+        }
+
+        .commandLeadIdentity span {
+          font-size: 7px;
+        }
+
+        .commandLeadAge {
+          font-size: 7px;
+        }
+
+        .commandIntelligencePanel {
+          padding: 17px;
+        }
+
         .storySection {
           padding:
-            64px 18px;
+            62px 18px;
+        }
+
+        .storyTrack {
+          gap: 22px;
+        }
+
+        .storyPoint h3 {
+          font-size: 17px;
+        }
+
+        .storyPoint p {
+          font-size: 10px;
+          max-width: 230px;
+        }
+
+        .finalCTASection {
+          min-height: 600px;
+          padding: 70px 18px;
         }
 
         .finalCTAContent h2 {
-          font-size: 50px;
+          font-size:
+            clamp(44px, 13vw, 54px);
           letter-spacing: -2.6px;
         }
 
+        .finalCTAContent p {
+          font-size: 12px;
+        }
+
+        .finalCTAButton {
+          width: 100%;
+          max-width: 320px;
+          min-height: 48px;
+        }
+
+        .siteFooter {
+          padding: 28px 18px;
+        }
+
+        /* ================================================
+           MOBILE LIVE DEMO
+           Chat fills phone and composer stays visible
+           ================================================ */
+
         .liveDemoPage {
-          padding: 16px;
+          height: 100dvh;
+          min-height: 100dvh;
+          padding: 0;
+          display: block;
+          background: #FFFDF8;
+        }
+
+        .demoAmbientOne,
+        .demoAmbientTwo {
+          display: none;
         }
 
         .backToNomadButton {
-          top: 12px;
-          left: 12px;
+          top: max(10px, env(safe-area-inset-top));
+          left: 10px;
+          padding: 8px 12px;
+          font-size: 8px;
+          background:
+            rgba(255,253,248,.92);
         }
 
         .demoExperienceFrame {
-          min-height:
-            calc(100vh - 32px);
+          width: 100%;
+          height: 100dvh;
+          min-height: 100dvh;
+          max-height: none;
+          border-radius: 0;
+          border: none;
+          box-shadow: none;
         }
 
         .chatShell {
-          min-height:
-            calc(100vh - 32px);
+          height: 100dvh;
+          min-height: 0;
+        }
+
+        .chatHeader {
+          padding:
+            calc(14px + env(safe-area-inset-top))
+            14px
+            14px;
+          min-height: 74px;
+        }
+
+        .chatAvatar {
+          width: 38px;
+          height: 38px;
+          font-size: 11px;
+        }
+
+        .chatTitle {
+          font-size: 11px;
+        }
+
+        .chatStatus {
+          font-size: 7.5px;
+        }
+
+        .newConversationButton {
+          width: 36px;
+          height: 36px;
+        }
+
+        .chatBody {
+          padding:
+            18px 14px 22px;
+        }
+
+        .chatSessionLabel {
+          margin-bottom: 18px;
+          font-size: 6.5px;
+        }
+
+        .chatMessageRow {
+          margin-bottom: 12px;
+        }
+
+        .chatMiniAvatar {
+          width: 25px;
+          height: 25px;
+        }
+
+        .chatMessageBubble {
+          max-width: 84%;
+          padding: 11px 13px;
+          font-size: 13px;
+          line-height: 1.5;
+        }
+
+        .requestReceived {
+          padding: 16px;
+        }
+
+        .requestReceived p {
+          margin-left: 0;
+          font-size: 10px;
+        }
+
+        .chatComposerArea {
+          padding:
+            10px
+            12px
+            calc(10px + env(safe-area-inset-bottom));
+        }
+
+        .composer {
+          padding:
+            4px 4px 4px 14px;
+        }
+
+        .composer input {
+          min-height: 42px;
+          padding: 8px 0;
+          font-size: 16px;
+        }
+
+        .composer button {
+          width: 42px;
+          height: 42px;
+          font-size: 14px;
+        }
+
+        .composerFooter {
+          display: none;
+        }
+      }
+
+      /* =====================================================
+         VERY SMALL MOBILE
+         ===================================================== */
+
+      @media (max-width: 380px) {
+        .siteNav {
+          padding:
+            16px 12px;
+        }
+
+        .siteNav .primaryPill {
+          padding:
+            9px 10px;
+          font-size: 7px;
+        }
+
+        .heroOuter {
+          padding-left: 14px;
+          padding-right: 14px;
+        }
+
+        .heroTitle {
+          font-size: 42px;
+        }
+
+        .heroStats {
+          grid-template-columns:
+            repeat(3, 1fr);
+        }
+
+        .heroProductStage {
+          min-height: 430px;
+        }
+
+        .intelligenceSection,
+        .perspectiveSection,
+        .channelSection,
+        .visionSection {
+          padding-left: 14px;
+          padding-right: 14px;
+        }
+
+        .channelMap {
+          min-height: 325px;
+        }
+
+        .channelUniverse {
+          width: 300px;
+          height: 300px;
+        }
+
+        .universeRingOne {
+          width: 136px;
+          height: 136px;
+        }
+
+        .universeRingTwo {
+          width: 210px;
+          height: 210px;
+        }
+
+        .universeRingThree {
+          width: 290px;
+          height: 290px;
+        }
+
+        .universeCore {
+          width: 84px;
+          height: 84px;
+        }
+
+        .channelNode {
+          width: 84px;
+          height: 54px;
+        }
+
+        .nodeWhatsapp {
+          left: 2px;
+          top: 42px;
+        }
+
+        .nodeWebsite {
+          right: 2px;
+          top: 42px;
+        }
+
+        .nodeCampaign {
+          left: 2px;
+          bottom: 42px;
+        }
+
+        .nodePortal {
+          right: 2px;
+          bottom: 42px;
+        }
+
+        .channelLine {
+          width: 96px;
+        }
+
+        .chatMessageBubble {
+          max-width: 86%;
+          font-size: 12.5px;
+        }
+      }
+
+      /* =====================================================
+         SHORT DESKTOP / LAPTOP SCREENS
+         This fixes the screenshot where composer was cut off
+         ===================================================== */
+
+      @media (
+        min-width: 961px
+      ) and (
+        max-height: 820px
+      ) {
+        .liveDemoPage {
+          padding: 18px;
+        }
+
+        .demoExperienceFrame {
+          width: min(1140px, calc(100vw - 36px));
+          height: calc(100dvh - 36px);
+          grid-template-columns:
+            minmax(0, 1fr)
+            minmax(390px, 455px);
+        }
+
+        .demoStoryPanel {
+          padding: 30px 36px;
+        }
+
+        .demoStoryEyebrow {
+          margin-top: 30px;
+        }
+
+        .demoStoryPanel h1 {
+          margin-top: 15px;
+          font-size: 42px;
+        }
+
+        .demoStoryPanel p {
+          margin-top: 16px;
+          font-size: 11px;
+          line-height: 1.6;
+        }
+
+        .chatHeader {
+          padding: 13px 16px;
+        }
+
+        .chatAvatar {
+          width: 38px;
+          height: 38px;
+        }
+
+        .chatBody {
+          padding:
+            16px 16px 18px;
+        }
+
+        .chatSessionLabel {
+          margin-bottom: 16px;
+        }
+
+        .chatMessageRow {
+          margin-bottom: 11px;
+        }
+
+        .chatMessageBubble {
+          padding: 10px 12px;
+          font-size: 11px;
+          line-height: 1.5;
+        }
+
+        .chatComposerArea {
+          padding: 9px 12px 11px;
+        }
+
+        .composer input {
+          padding: 8px 0;
+        }
+
+        .composer button {
+          width: 36px;
+          height: 36px;
+        }
+
+        .composerFooter {
+          margin-top: 6px;
+        }
+      }
+
+      @media (
+        min-width: 961px
+      ) and (
+        max-height: 700px
+      ) {
+        .demoStoryEyebrow {
+          margin-top: 18px;
+        }
+
+        .demoStoryPanel h1 {
+          font-size: 36px;
+        }
+
+        .demoStoryPanel p {
+          font-size: 10px;
+        }
+
+        .demoStoryFooter {
+          display: none;
+        }
+
+        .chatBody {
+          padding-top: 13px;
         }
       }
     `}</style>
   );
 }
-
 /* =========================================================
    SMALL SHARED COMPONENTS
    ========================================================= */
@@ -6011,9 +6320,7 @@ function Eyebrow({
           : "eyebrow"
       }
     >
-      <span
-        className="eyebrowLine"
-      />
+      <span className="eyebrowLine" />
 
       {children}
     </div>
@@ -6027,20 +6334,14 @@ function Metric({
   return (
     <div
       style={{
-        paddingTop:
-          "18px",
+        paddingTop: "18px",
       }}
     >
       <div
         style={{
-          color:
-            colors.forest,
-
-          fontSize:
-            "17px",
-
-          fontWeight:
-            "850",
+          color: colors.forest,
+          fontSize: "17px",
+          fontWeight: "850",
         }}
       >
         {value}
@@ -6048,20 +6349,11 @@ function Metric({
 
       <div
         style={{
-          marginTop:
-            "4px",
-
-          color:
-            "#7F8882",
-
-          fontSize:
-            "8px",
-
-          textTransform:
-            "uppercase",
-
-          letterSpacing:
-            "1px",
+          marginTop: "4px",
+          color: "#7F8882",
+          fontSize: "8px",
+          textTransform: "uppercase",
+          letterSpacing: "1px",
         }}
       >
         {label}
@@ -6080,56 +6372,30 @@ function BrandMark({
   return (
     <div
       style={{
-        display:
-          "flex",
-
-        gap:
-          "12px",
-
-        alignItems:
-          "center",
+        display: "flex",
+        gap: "12px",
+        alignItems: "center",
       }}
     >
       <div
         style={{
-          width:
-            "44px",
-
-          height:
-            "44px",
-
-          borderRadius:
-            "50%",
-
-          background:
-            dark
-              ? colors.champagne
-              : colors.forest,
-
-          color:
-            dark
-              ? colors.ink
-              : "white",
-
-          display:
-            "flex",
-
-          alignItems:
-            "center",
-
-          justifyContent:
-            "center",
-
-          fontWeight:
-            "850",
-
-          fontSize:
-            "14px",
-
-          boxShadow:
-            dark
-              ? "none"
-              : "0 12px 28px rgba(8,47,39,.16)",
+          width: "44px",
+          height: "44px",
+          borderRadius: "50%",
+          background: dark
+            ? colors.champagne
+            : colors.forest,
+          color: dark
+            ? colors.ink
+            : "white",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontWeight: "850",
+          fontSize: "14px",
+          boxShadow: dark
+            ? "none"
+            : "0 12px 28px rgba(8,47,39,.16)",
         }}
       >
         N
@@ -6138,19 +6404,12 @@ function BrandMark({
       <div>
         <div
           style={{
-            fontSize:
-              "15px",
-
-            fontWeight:
-              "850",
-
-            letterSpacing:
-              "1px",
-
-            color:
-              dark
-                ? "white"
-                : colors.ink,
+            fontSize: "15px",
+            fontWeight: "850",
+            letterSpacing: "1px",
+            color: dark
+              ? "white"
+              : colors.ink,
           }}
         >
           NOMAD
@@ -6158,22 +6417,13 @@ function BrandMark({
 
         <div
           style={{
-            marginTop:
-              "2px",
-
-            color:
-              dark
-                ? "rgba(255,255,255,.44)"
-                : "#757D78",
-
-            fontSize:
-              "7px",
-
-            letterSpacing:
-              "1.8px",
-
-            textTransform:
-              "uppercase",
+            marginTop: "2px",
+            color: dark
+              ? "rgba(255,255,255,.44)"
+              : "#757D78",
+            fontSize: "7px",
+            letterSpacing: "1.8px",
+            textTransform: "uppercase",
           }}
         >
           Property Intelligence
@@ -6189,17 +6439,13 @@ function BrandMark({
 
 function HeroGridOverlay() {
   return (
-    <div
-      className="heroGridOverlay"
-    />
+    <div className="heroGridOverlay" />
   );
 }
 
 function HeroBottomFade() {
   return (
-    <div
-      className="heroBottomFade"
-    />
+    <div className="heroBottomFade" />
   );
 }
 
@@ -6213,50 +6459,34 @@ function HeroOrbit({
         transform: `translate(${pointer.x * 14}px, ${pointer.y * 10}px)`,
       }}
     >
-      <div
-        className="heroOrbitRing"
-      />
+      <div className="heroOrbitRing" />
     </div>
   );
 }
 
 function DemoCardHeader() {
   return (
-    <div
-      className="demoCardHeader"
-    >
-      <div
-        className="demoCardIdentity"
-      >
-        <div
-          className="demoMiniAvatar"
-        >
+    <div className="demoCardHeader">
+      <div className="demoCardIdentity">
+        <div className="demoMiniAvatar">
           N
         </div>
 
         <div>
-          <div
-            className="demoCardTitle"
-          >
-            NOMAD Property
-            Assistant
+          <div className="demoCardTitle">
+            NOMAD Property Assistant
           </div>
 
-          <div
-            className="demoCardStatus"
-          >
+          <div className="demoCardStatus">
             <span>
               ●
             </span>{" "}
-
             Available now
           </div>
         </div>
       </div>
 
-      <div
-        className="demoLiveLabel"
-      >
+      <div className="demoLiveLabel">
         LIVE
       </div>
     </div>
@@ -6275,9 +6505,7 @@ function PreviewBubble({
           : "previewBubbleRow previewBubbleUser"
       }
     >
-      <div
-        className="previewBubble"
-      >
+      <div className="previewBubble">
         {children}
       </div>
     </div>
@@ -6294,21 +6522,15 @@ function FloatingIntelligenceTag({
     <div
       className={`floatingIntelligenceTag ${className}`}
     >
-      <div
-        className="floatingIntelligenceTagLabel"
-      >
+      <div className="floatingIntelligenceTagLabel">
         {label}
       </div>
 
-      <div
-        className="floatingIntelligenceTagValue"
-      >
+      <div className="floatingIntelligenceTagValue">
         {value}
       </div>
 
-      <div
-        className="floatingIntelligenceTagDetail"
-      >
+      <div className="floatingIntelligenceTagDetail">
         {detail}
       </div>
     </div>
@@ -6337,9 +6559,7 @@ function PanelLabel({
   children,
 }) {
   return (
-    <div
-      className="panelLabel"
-    >
+    <div className="panelLabel">
       {children}
     </div>
   );
@@ -6358,23 +6578,17 @@ function ThinkingRow({
           : "thinkingRow"
       }
     >
-      <div
-        className="thinkingCheck"
-      >
+      <div className="thinkingCheck">
         {active
           ? "✓"
           : "·"}
       </div>
 
-      <div
-        className="thinkingLabel"
-      >
+      <div className="thinkingLabel">
         {label}
       </div>
 
-      <div
-        className="thinkingValue"
-      >
+      <div className="thinkingValue">
         {active
           ? value
           : "Reading"}
@@ -6396,15 +6610,11 @@ function StructuredDataRow({
           : "structuredDataRow"
       }
     >
-      <span
-        className="structuredDataLabel"
-      >
+      <span className="structuredDataLabel">
         {label}
       </span>
 
-      <strong
-        className="structuredDataValue"
-      >
+      <strong className="structuredDataValue">
         {active
           ? value
           : "—"}
@@ -6422,20 +6632,15 @@ function PerspectiveSwitcher({
   setPerspective,
 }) {
   return (
-    <div
-      className="perspectiveSwitcher"
-    >
+    <div className="perspectiveSwitcher">
       <button
         className={
-          perspective ===
-          "customer"
+          perspective === "customer"
             ? "perspectiveSwitcherActive"
             : ""
         }
         onClick={() =>
-          setPerspective(
-            "customer"
-          )
+          setPerspective("customer")
         }
       >
         CUSTOMER VIEW
@@ -6443,15 +6648,12 @@ function PerspectiveSwitcher({
 
       <button
         className={
-          perspective ===
-          "sales"
+          perspective === "sales"
             ? "perspectiveSwitcherActive"
             : ""
         }
         onClick={() =>
-          setPerspective(
-            "sales"
-          )
+          setPerspective("sales")
         }
       >
         SALES VIEW
@@ -6462,15 +6664,9 @@ function PerspectiveSwitcher({
 
 function CustomerPerspective() {
   return (
-    <div
-      className="customerPerspective"
-    >
-      <div
-        className="customerPerspectiveCopy"
-      >
-        <div
-          className="perspectiveMiniLabel"
-        >
+    <div className="customerPerspective">
+      <div className="customerPerspectiveCopy">
+        <div className="perspectiveMiniLabel">
           CUSTOMER EXPERIENCE
         </div>
 
@@ -6491,9 +6687,7 @@ function CustomerPerspective() {
           finishes with a human handoff.
         </p>
 
-        <div
-          className="customerPerspectiveList"
-        >
+        <div className="customerPerspectiveList">
           <CustomerPerspectivePoint>
             Natural conversation
           </CustomerPerspectivePoint>
@@ -6512,18 +6706,10 @@ function CustomerPerspective() {
         </div>
       </div>
 
-      <div
-        className="customerPhoneStage"
-      >
-        <div
-          className="customerPhone"
-        >
-          <div
-            className="customerPhoneHeader"
-          >
-            <div
-              className="customerPhoneAvatar"
-            >
+      <div className="customerPhoneStage">
+        <div className="customerPhone">
+          <div className="customerPhoneHeader">
+            <div className="customerPhoneAvatar">
               N
             </div>
 
@@ -6538,54 +6724,38 @@ function CustomerPerspective() {
             </div>
           </div>
 
-          <div
-            className="customerPhoneBody"
-          >
-            <div
-              className="customerPhoneBubble customerPhoneBubbleBot"
-            >
+          <div className="customerPhoneBody">
+            <div className="customerPhoneBubble customerPhoneBubbleBot">
               What type of property are
               you looking for?
             </div>
 
-            <div
-              className="customerPhoneBubble customerPhoneBubbleUser"
-            >
+            <div className="customerPhoneBubble customerPhoneBubbleUser">
               3-bedroom villa in Dubai
               Hills.
             </div>
 
-            <div
-              className="customerPhoneBubble customerPhoneBubbleBot"
-            >
+            <div className="customerPhoneBubble customerPhoneBubbleBot">
               Around what budget are you
               considering?
             </div>
 
-            <div
-              className="customerPhoneBubble customerPhoneBubbleUser"
-            >
+            <div className="customerPhoneBubble customerPhoneBubbleUser">
               Around AED 4 million.
             </div>
 
-            <div
-              className="customerPhoneBubble customerPhoneBubbleBot"
-            >
+            <div className="customerPhoneBubble customerPhoneBubbleBot">
               Perfect. When would be a
               convenient time for a
               property consultant to
               contact you?
             </div>
 
-            <div
-              className="customerPhoneBubble customerPhoneBubbleUser"
-            >
+            <div className="customerPhoneBubble customerPhoneBubbleUser">
               Tomorrow at 11 AM.
             </div>
 
-            <div
-              className="customerSuccessBubble"
-            >
+            <div className="customerSuccessBubble">
               <strong>
                 ✓ Request received
               </strong>
@@ -6609,9 +6779,7 @@ function CustomerPerspectivePoint({
   children,
 }) {
   return (
-    <div
-      className="customerPerspectivePoint"
-    >
+    <div className="customerPerspectivePoint">
       <span>
         ✓
       </span>
@@ -6623,16 +6791,10 @@ function CustomerPerspectivePoint({
 
 function SalesPerspective() {
   return (
-    <div
-      className="salesPerspective"
-    >
-      <div
-        className="salesPerspectiveSidebar"
-      >
+    <div className="salesPerspective">
+      <div className="salesPerspectiveSidebar">
         <div>
-          <div
-            className="perspectiveMiniLabel"
-          >
+          <div className="perspectiveMiniLabel">
             SALES INTELLIGENCE
           </div>
 
@@ -6648,57 +6810,37 @@ function SalesPerspective() {
           </p>
         </div>
 
-        <div
-          className="salesDataTags"
-        >
-          <span
-            className="salesDataTag"
-          >
+        <div className="salesDataTags">
+          <span className="salesDataTag">
             Intent
           </span>
 
-          <span
-            className="salesDataTag"
-          >
+          <span className="salesDataTag">
             Budget
           </span>
 
-          <span
-            className="salesDataTag"
-          >
+          <span className="salesDataTag">
             Location
           </span>
 
-          <span
-            className="salesDataTag"
-          >
+          <span className="salesDataTag">
             Financing
           </span>
 
-          <span
-            className="salesDataTag"
-          >
+          <span className="salesDataTag">
             Timeline
           </span>
 
-          <span
-            className="salesDataTag"
-          >
+          <span className="salesDataTag">
             Callback
           </span>
         </div>
       </div>
 
-      <div
-        className="salesPerspectiveMain"
-      >
-        <div
-          className="salesOpportunityTop"
-        >
+      <div className="salesPerspectiveMain">
+        <div className="salesOpportunityTop">
           <div>
-            <div
-              className="panelLabel"
-            >
+            <div className="panelLabel">
               NEW OPPORTUNITY
             </div>
 
@@ -6707,18 +6849,14 @@ function SalesPerspective() {
             </h3>
           </div>
 
-          <div
-            className="salesQualifiedBadge"
-          >
+          <div className="salesQualifiedBadge">
             <span />
 
             QUALIFIED
           </div>
         </div>
 
-        <div
-          className="salesLeadSummary"
-        >
+        <div className="salesLeadSummary">
           <p>
             Buyer looking for a
             3-bedroom villa in Dubai
@@ -6730,9 +6868,7 @@ function SalesPerspective() {
           </p>
         </div>
 
-        <div
-          className="salesStructuredGrid"
-        >
+        <div className="salesStructuredGrid">
           <SalesDataItem
             label="Intent"
             value="Buy"
@@ -6774,23 +6910,19 @@ function SalesPerspective() {
           />
         </div>
 
-        <div
-          className="salesHandoffStrip"
-        >
-          <div
-            className="salesHandoffIcon"
-          >
+        <div className="salesHandoffStrip">
+          <div className="salesHandoffIcon">
             ✓
           </div>
 
           <div>
             <strong>
-              Ready for consultant
+              Consultant ready
             </strong>
 
             <span>
-              Requirements captured before
-              the first human call
+              Full customer context is
+              available before the call.
             </span>
           </div>
         </div>
@@ -6804,9 +6936,7 @@ function SalesDataItem({
   value,
 }) {
   return (
-    <div
-      className="salesStructuredItem"
-    >
+    <div className="salesStructuredItem">
       <span>
         {label}
       </span>
@@ -6824,16 +6954,10 @@ function SalesDataItem({
 
 function ChannelBackground() {
   return (
-    <div
-      className="channelBackground"
-    >
-      <div
-        className="channelBackgroundGrid"
-      />
+    <div className="channelBackground">
+      <div className="channelBackgroundGrid" />
 
-      <div
-        className="channelBackgroundGlow"
-      />
+      <div className="channelBackgroundGlow" />
     </div>
   );
 }
@@ -6842,25 +6966,16 @@ function ChannelUniverse({
   activeChannel,
 }) {
   return (
-    <div
-      className="channelUniverse"
-    >
-      <div
-        className="universeRing universeRingOne"
-      />
+    <div className="channelUniverse">
+      <div className="universeRing universeRingOne" />
 
-      <div
-        className="universeRing universeRingTwo"
-      />
+      <div className="universeRing universeRingTwo" />
 
-      <div
-        className="universeRing universeRingThree"
-      />
+      <div className="universeRing universeRingThree" />
 
       <div
         className={
-          activeChannel ===
-          "whatsapp"
+          activeChannel === "whatsapp"
             ? "channelLine lineWhatsapp channelLineActive"
             : "channelLine lineWhatsapp"
         }
@@ -6868,8 +6983,7 @@ function ChannelUniverse({
 
       <div
         className={
-          activeChannel ===
-          "website"
+          activeChannel === "website"
             ? "channelLine lineWebsite channelLineActive"
             : "channelLine lineWebsite"
         }
@@ -6877,8 +6991,7 @@ function ChannelUniverse({
 
       <div
         className={
-          activeChannel ===
-          "campaign"
+          activeChannel === "campaign"
             ? "channelLine lineCampaign channelLineActive"
             : "channelLine lineCampaign"
         }
@@ -6886,8 +6999,7 @@ function ChannelUniverse({
 
       <div
         className={
-          activeChannel ===
-          "portal"
+          activeChannel === "portal"
             ? "channelLine linePortal channelLineActive"
             : "channelLine linePortal"
         }
@@ -6896,8 +7008,7 @@ function ChannelUniverse({
       <ChannelNode
         className="nodeWhatsapp"
         active={
-          activeChannel ===
-          "whatsapp"
+          activeChannel === "whatsapp"
         }
         title="WhatsApp"
         subtitle="Messaging"
@@ -6906,8 +7017,7 @@ function ChannelUniverse({
       <ChannelNode
         className="nodeWebsite"
         active={
-          activeChannel ===
-          "website"
+          activeChannel === "website"
         }
         title="Website"
         subtitle="Owned channel"
@@ -6916,8 +7026,7 @@ function ChannelUniverse({
       <ChannelNode
         className="nodeCampaign"
         active={
-          activeChannel ===
-          "campaign"
+          activeChannel === "campaign"
         }
         title="Campaign"
         subtitle="Paid demand"
@@ -6926,16 +7035,13 @@ function ChannelUniverse({
       <ChannelNode
         className="nodePortal"
         active={
-          activeChannel ===
-          "portal"
+          activeChannel === "portal"
         }
         title="Portal"
         subtitle="Property lead"
       />
 
-      <div
-        className="universeCore"
-      >
+      <div className="universeCore">
         <strong>
           N
         </strong>
@@ -6979,16 +7085,10 @@ function ChannelNode({
 
 function CommandCenterSidebar() {
   return (
-    <aside
-      className="commandSidebar"
-    >
+    <aside className="commandSidebar">
       <div>
-        <div
-          className="commandSidebarBrand"
-        >
-          <div
-            className="commandSidebarBrandIcon"
-          >
+        <div className="commandSidebarBrand">
+          <div className="commandSidebarBrandIcon">
             N
           </div>
 
@@ -7003,9 +7103,7 @@ function CommandCenterSidebar() {
           </div>
         </div>
 
-        <div
-          className="commandMenu"
-        >
+        <div className="commandMenu">
           <CommandMenuItem
             icon="⌂"
             label="Overview"
@@ -7034,9 +7132,7 @@ function CommandCenterSidebar() {
         </div>
       </div>
 
-      <div
-        className="commandSidebarBottom"
-      >
+      <div className="commandSidebarBottom">
         <strong>
           System active
         </strong>
@@ -7062,9 +7158,7 @@ function CommandMenuItem({
           : "commandMenuItem"
       }
     >
-      <span
-        className="commandMenuIcon"
-      >
+      <span className="commandMenuIcon">
         {icon}
       </span>
 
@@ -7075,9 +7169,7 @@ function CommandMenuItem({
 
 function CommandCenterHeader() {
   return (
-    <div
-      className="commandHeader"
-    >
+    <div className="commandHeader">
       <div>
         <span>
           LIVE OPERATIONS
@@ -7088,18 +7180,12 @@ function CommandCenterHeader() {
         </h3>
       </div>
 
-      <div
-        className="commandHeaderActions"
-      >
-        <div
-          className="commandHeaderButton"
-        >
+      <div className="commandHeaderActions">
+        <div className="commandHeaderButton">
           Today
         </div>
 
-        <div
-          className="commandHeaderButton"
-        >
+        <div className="commandHeaderButton">
           All sources
         </div>
       </div>
@@ -7109,9 +7195,7 @@ function CommandCenterHeader() {
 
 function CommandStats() {
   return (
-    <div
-      className="commandStats"
-    >
+    <div className="commandStats">
       <CommandStat
         label="New enquiries"
         value="14"
@@ -7145,9 +7229,7 @@ function CommandStat({
   detail,
 }) {
   return (
-    <div
-      className="commandStat"
-    >
+    <div className="commandStat">
       <span>
         {label}
       </span>
@@ -7173,24 +7255,21 @@ function CommandLeadRow({
     "commandLeadStatus";
 
   if (
-    lead.status ===
-    "Qualified"
+    lead.status === "Qualified"
   ) {
     statusClass +=
       " statusQualified";
   }
 
   if (
-    lead.status ===
-    "In progress"
+    lead.status === "In progress"
   ) {
     statusClass +=
       " statusProgress";
   }
 
   if (
-    lead.status ===
-    "Callback due"
+    lead.status === "Callback due"
   ) {
     statusClass +=
       " statusDue";
@@ -7203,22 +7282,14 @@ function CommandLeadRow({
           ? "commandLeadRow commandLeadRowActive"
           : "commandLeadRow"
       }
-      onMouseEnter={
-        onEnter
-      }
-      onMouseLeave={
-        onLeave
-      }
+      onMouseEnter={onEnter}
+      onMouseLeave={onLeave}
     >
-      <div
-        className="commandLeadAvatar"
-      >
+      <div className="commandLeadAvatar">
         {lead.initials}
       </div>
 
-      <div
-        className="commandLeadIdentity"
-      >
+      <div className="commandLeadIdentity">
         <strong>
           {lead.name}
         </strong>
@@ -7228,23 +7299,15 @@ function CommandLeadRow({
         </span>
       </div>
 
-      <div
-        className="commandLeadBudget"
-      >
+      <div className="commandLeadBudget">
         {lead.budget}
       </div>
 
-      <div
-        className={
-          statusClass
-        }
-      >
+      <div className={statusClass}>
         {lead.status}
       </div>
 
-      <div
-        className="commandLeadAge"
-      >
+      <div className="commandLeadAge">
         {lead.age}
       </div>
     </div>
@@ -7253,12 +7316,8 @@ function CommandLeadRow({
 
 function QualityRing() {
   return (
-    <div
-      className="qualityRing"
-    >
-      <div
-        className="qualityRingInner"
-      >
+    <div className="qualityRing">
+      <div className="qualityRingInner">
         <strong>
           86
         </strong>
@@ -7276,9 +7335,7 @@ function QualityLine({
   value,
 }) {
   return (
-    <div
-      className="qualityLine"
-    >
+    <div className="qualityLine">
       <span>
         {label}
       </span>
@@ -7300,12 +7357,8 @@ function StoryPoint({
   description,
 }) {
   return (
-    <div
-      className="storyPoint"
-    >
-      <div
-        className="storyPointNumber"
-      >
+    <div className="storyPoint">
+      <div className="storyPointNumber">
         {number}
       </div>
 
@@ -7322,9 +7375,7 @@ function StoryPoint({
 
 function StoryConnector() {
   return (
-    <div
-      className="storyConnector"
-    />
+    <div className="storyConnector" />
   );
 }
 
@@ -7334,20 +7385,12 @@ function StoryConnector() {
 
 function FinalCTAVisual() {
   return (
-    <div
-      className="finalCTAVisual"
-    >
-      <div
-        className="finalCTARing finalCTARing1"
-      />
+    <div className="finalCTAVisual">
+      <div className="finalCTARing finalCTARing1" />
 
-      <div
-        className="finalCTARing finalCTARing2"
-      />
+      <div className="finalCTARing finalCTARing2" />
 
-      <div
-        className="finalCTARing finalCTARing3"
-      />
+      <div className="finalCTARing finalCTARing3" />
     </div>
   );
 }
@@ -7384,8 +7427,7 @@ function ChatMessage({
   message,
 }) {
   const isUser =
-    message.role ===
-    "user";
+    message.role === "user";
 
   return (
     <div
@@ -7396,16 +7438,12 @@ function ChatMessage({
       }
     >
       {!isUser && (
-        <div
-          className="chatMiniAvatar"
-        >
+        <div className="chatMiniAvatar">
           N
         </div>
       )}
 
-      <div
-        className="chatMessageBubble"
-      >
+      <div className="chatMessageBubble">
         {message.text}
       </div>
     </div>
@@ -7414,18 +7452,12 @@ function ChatMessage({
 
 function TypingMessage() {
   return (
-    <div
-      className="chatMessageRow chatMessageAssistant"
-    >
-      <div
-        className="chatMiniAvatar"
-      >
+    <div className="chatMessageRow chatMessageAssistant">
+      <div className="chatMiniAvatar">
         N
       </div>
 
-      <div
-        className="typingBubble"
-      >
+      <div className="typingBubble">
         •••
       </div>
     </div>
@@ -7434,22 +7466,14 @@ function TypingMessage() {
 
 function CustomerRequestReceived() {
   return (
-    <div
-      className="requestReceived"
-    >
-      <div
-        className="requestReceivedTop"
-      >
-        <div
-          className="requestReceivedIcon"
-        >
+    <div className="requestReceived">
+      <div className="requestReceivedTop">
+        <div className="requestReceivedIcon">
           ✓
         </div>
 
         <div>
-          <div
-            className="requestReceivedLabel"
-          >
+          <div className="requestReceivedLabel">
             Confirmation
           </div>
 
