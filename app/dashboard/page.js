@@ -7,6 +7,7 @@ import {
 } from "react";
 
 import { useRouter } from "next/navigation";
+import * as XLSX from "xlsx";
 
 /* =========================================================
    NOMAD SALES INTELLIGENCE
@@ -214,6 +215,111 @@ export default function Dashboard() {
 
   function selectLead(id) {
     setSelectedLeadId(id);
+  }
+
+  /* =========================================================
+     EXCEL EXPORT
+     Exports ALL loaded leads, not just filtered leads
+     ========================================================= */
+
+  function exportLeadsToExcel() {
+    if (!Array.isArray(leads) || leads.length === 0) {
+      window.alert("There are no leads to export yet.");
+      return;
+    }
+
+    const exportRows = leads.map((lead, index) => ({
+      "Sr. No.": index + 1,
+      "Lead ID": lead.id || "",
+      Name: lead.name || "",
+      Phone: lead.phone || "",
+      Intent: formatIntent(lead.intent),
+
+      "Property Type": lead.property_type
+        ? capitalize(String(lead.property_type))
+        : "",
+
+      Bedrooms: lead.bedrooms || "",
+      Budget: lead.budget || "",
+      Location: lead.location || "",
+
+      "Property Status": lead.property_status
+        ? capitalize(String(lead.property_status))
+        : "",
+
+      Financing: lead.financing
+        ? capitalize(String(lead.financing))
+        : "",
+
+      Timeline: lead.timeline || "",
+      "Callback Time": lead.callback_time || "",
+
+      "Assigned To":
+        lead.assigned_to || "Unassigned",
+
+      "Lead Status":
+        lead.lead_status || "Qualified",
+
+      "AI Summary": lead.summary || "",
+
+      Source: lead.source || "",
+
+      "Created At": formatExcelDate(
+        lead.created_at
+      ),
+
+      "Updated At": formatExcelDate(
+        lead.updated_at
+      ),
+    }));
+
+    const worksheet =
+      XLSX.utils.json_to_sheet(exportRows);
+
+    worksheet["!cols"] = [
+      { wch: 8 },
+      { wch: 14 },
+      { wch: 22 },
+      { wch: 18 },
+      { wch: 14 },
+      { wch: 20 },
+      { wch: 12 },
+      { wch: 22 },
+      { wch: 22 },
+      { wch: 20 },
+      { wch: 16 },
+      { wch: 22 },
+      { wch: 22 },
+      { wch: 18 },
+      { wch: 16 },
+      { wch: 55 },
+      { wch: 18 },
+      { wch: 22 },
+      { wch: 22 },
+    ];
+
+    if (worksheet["!ref"]) {
+      worksheet["!autofilter"] = {
+        ref: worksheet["!ref"],
+      };
+    }
+
+    const workbook = XLSX.utils.book_new();
+
+    XLSX.utils.book_append_sheet(
+      workbook,
+      worksheet,
+      "NOMAD Leads"
+    );
+
+    const dateStamp = new Date()
+      .toISOString()
+      .slice(0, 10);
+
+    XLSX.writeFile(
+      workbook,
+      `NOMAD-Leads-${dateStamp}.xlsx`
+    );
   }
 
   const filteredLeads = useMemo(() => {
@@ -459,6 +565,16 @@ export default function Dashboard() {
                 <span />
                 Live data
               </div>
+
+              <button
+                className="exportButton"
+                onClick={exportLeadsToExcel}
+                disabled={loading || leads.length === 0}
+                title="Download all leads as an Excel file"
+              >
+                <span className="exportIcon">⇩</span>
+                Export Excel
+              </button>
 
               <button
                 className="refreshButton"
@@ -1172,6 +1288,26 @@ function capitalize(value) {
     .replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
+function formatExcelDate(value) {
+  if (!value) {
+    return "";
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return String(value);
+  }
+
+  return date.toLocaleString("en-AE", {
+    year: "numeric",
+    month: "short",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
 function getFilterCount(leads, filter) {
   if (filter === "All") {
     return leads.length;
@@ -1358,8 +1494,6 @@ function DashboardStyles() {
         display: grid;
         grid-template-columns: 220px minmax(0, 1fr);
       }
-
-      /* SIDEBAR */
 
       .dashboardSidebar {
         position: sticky;
@@ -1558,8 +1692,6 @@ function DashboardStyles() {
         font-size: 8px;
       }
 
-      /* MAIN */
-
       .dashboardMain {
         min-width: 0;
         padding: 30px;
@@ -1570,8 +1702,6 @@ function DashboardStyles() {
             #082B24
           );
       }
-
-      /* HEADER */
 
       .dashboardHeader {
         display: flex;
@@ -1628,6 +1758,41 @@ function DashboardStyles() {
         background: #78C6A6;
       }
 
+      .exportButton {
+        height: 36px;
+        padding: 0 13px;
+        border-radius: 9px;
+        border: 1px solid rgba(216,198,166,.16);
+        background: rgba(216,198,166,.08);
+        color: #D8C6A6;
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        cursor: pointer;
+        font-size: 9px;
+        font-weight: 750;
+        transition:
+          background .2s ease,
+          border .2s ease,
+          transform .2s ease;
+      }
+
+      .exportButton:hover:not(:disabled) {
+        background: rgba(216,198,166,.13);
+        border-color: rgba(216,198,166,.24);
+        transform: translateY(-1px);
+      }
+
+      .exportButton:disabled {
+        cursor: not-allowed;
+        opacity: .35;
+      }
+
+      .exportIcon {
+        font-size: 13px;
+        line-height: 1;
+      }
+
       .refreshButton {
         height: 36px;
         padding: 0 12px;
@@ -1676,8 +1841,6 @@ function DashboardStyles() {
         color: white;
         cursor: pointer;
       }
-
-      /* STATS */
 
       .statsGrid {
         margin-top: 26px;
@@ -1737,8 +1900,6 @@ function DashboardStyles() {
         color: #78C6A6;
         font-size: 9px;
       }
-
-      /* TOOLBAR */
 
       .dashboardToolbar {
         margin-top: 18px;
@@ -1832,8 +1993,6 @@ function DashboardStyles() {
         cursor: pointer;
         font-size: 14px;
       }
-
-      /* CONTENT */
 
       .dashboardContentGrid {
         margin-top: 18px;
@@ -2103,8 +2262,6 @@ function DashboardStyles() {
         gap: 20px;
       }
 
-      /* STATUS COLORS */
-
       .statusDotQualified {
         background: #75D0AC;
       }
@@ -2128,8 +2285,6 @@ function DashboardStyles() {
       .statusDotLost {
         background: #D98383;
       }
-
-      /* INTELLIGENCE */
 
       .intelligencePanel {
         position: sticky;
@@ -2418,8 +2573,6 @@ function DashboardStyles() {
         background: #E2D3B9;
       }
 
-      /* LOADING / EMPTY */
-
       .loadingState,
       .emptyState,
       .noSelectedLead {
@@ -2497,8 +2650,6 @@ function DashboardStyles() {
         cursor: pointer;
         font-size: 9px;
       }
-
-      /* RESPONSIVE */
 
       .sidebarBackdrop {
         display: none;
@@ -2638,8 +2789,13 @@ function DashboardStyles() {
           gap: 5px;
         }
 
+        .exportButton,
         .refreshButton {
           padding: 0 9px;
+        }
+
+        .exportButton {
+          font-size: 8px;
         }
       }
     `}</style>
